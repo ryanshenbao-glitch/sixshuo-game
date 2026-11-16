@@ -1,0 +1,1194 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>新創競技場 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700;900&family=Chakra+Petch:wght@600;700&display=swap">
+<style>
+/* Layout: full-screen white-model Taipei boulevard leading to Taipei 101; white glass HUD at the corners, cards open center-stage. Single white look by design. */
+:root{
+  --glass:rgba(255,255,255,.9); --glass2:rgba(29,34,51,.04); --line:rgba(29,34,51,.14);
+  --ink:#1d2233; --muted:#5d6579; --gold:#2b6fb0; --good:#1f9a55; --bad:#d48a1f;
+  --stage:#2b6fb0;
+  --f-head:"Noto Serif TC","Songti TC",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-num:"Chakra Petch","Noto Sans TC",sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%;overflow:hidden}
+body{background:#ffffff;color:var(--ink);font-family:var(--f-body);-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+
+.hud{position:fixed;z-index:5;pointer-events:none}
+.glass{background:var(--glass);border:1.5px solid var(--line);border-radius:12px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#stats{top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:7px;padding:10px 12px}
+.me-chip{display:flex;align-items:center;gap:8px;font-family:var(--f-head);font-weight:900;font-size:15px}
+.me-dot{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3px var(--line)}
+.meters{display:grid;grid-template-columns:repeat(4,auto);gap:4px 14px}
+.meter{display:flex;flex-direction:column;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.06em}
+.meter b{display:inline-block;transform-origin:left center;font-family:var(--f-num);font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums;line-height:1.1}
+.meter.bump b{animation:bump .6s}
+@keyframes bump{30%{color:var(--gold);transform:scale(1.2)}}
+#progress{top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;gap:6px;padding:8px 10px;flex-wrap:wrap;justify-content:flex-end;max-width:56vw}
+.pill{font-size:12px;font-weight:900;padding:4px 9px;border-radius:999px;border:1.5px solid rgba(29,34,51,.15);color:#98a0ad;font-family:var(--f-head)}
+.pill.cur{color:var(--ink);border-color:var(--gold);box-shadow:0 0 10px rgba(43,111,176,.3)}
+.pill.done{color:#fff;border-color:transparent}
+#crosshair{left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(29,34,51,.6)}
+#crosshair.on{width:22px;height:22px;margin:-11px 0 0 -11px;background:transparent;border:2.5px solid var(--gold);box-shadow:0 0 12px rgba(43,111,176,.5)}
+#prompt{left:50%;bottom:calc(120px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);padding:9px 16px;font-weight:700;font-size:15px;white-space:nowrap}
+#prompt kbd{display:inline-block;background:var(--gold);color:#fff;border-radius:6px;padding:0 7px;margin-right:8px;font-family:var(--f-num);font-weight:700}
+#tip{left:50%;top:calc(70px + env(safe-area-inset-top,0px));transform:translateX(-50%);font-weight:700;font-size:14px;padding:8px 14px;max-width:calc(100vw - 32px);text-align:center}
+#keys{left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--muted);padding:7px 11px;line-height:1.75}
+#keys kbd{font-family:var(--f-num);background:rgba(29,34,51,.08);color:var(--ink);border-radius:5px;padding:0 5px;margin:0 2px}
+#cardBtn{pointer-events:auto;right:max(12px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px))}
+#banner{left:50%;top:28%;transform:translateX(-50%);text-align:center;font-family:var(--f-head);color:var(--ink);text-shadow:0 0 18px #fff,0 0 4px #fff;opacity:0;transition:opacity .8s}
+#banner.show{opacity:1}
+#banner small{display:block;font-size:15px;letter-spacing:.3em;font-family:var(--f-body);font-weight:700;color:var(--muted)}
+#banner b{display:block;font-size:56px;font-weight:900;letter-spacing:.12em}
+#banner span{display:block;width:220px;height:2px;margin:6px auto 0;background:linear-gradient(90deg,transparent,var(--ink),transparent)}
+
+.btn{font-family:var(--f-body);font-weight:900;font-size:16px;color:#fff;background:var(--gold);border:1.5px solid rgba(255,255,255,.6);border-radius:10px;padding:11px 18px;cursor:pointer;transition:transform .08s,box-shadow .2s}
+.btn:hover{box-shadow:0 0 14px rgba(43,111,176,.35)}
+.btn:active{transform:translateY(2px)}
+.btn:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.stage{background:var(--stage);color:#fff}
+.btn.small{font-size:13px;padding:6px 12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+#overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.6);padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#panel{position:relative;background:#ffffff;border:1.5px solid var(--line);border-radius:16px;box-shadow:0 20px 60px rgba(29,34,51,.16);width:100%;max-width:660px;max-height:100%;overflow:auto;padding:24px;display:flex;flex-direction:column;gap:14px;-webkit-user-select:text;user-select:text;animation:pop .25s ease-out}
+@keyframes pop{from{transform:translateY(8px);opacity:0}}
+@media (prefers-reduced-motion:reduce){#panel,.meter.bump b{animation:none}#banner{transition:none}}
+.eyebrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);letter-spacing:.05em}
+.tag.th{background:var(--stage);color:#fff;border-color:transparent}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.3;font-family:var(--f-head)}
+h1{font-size:30px;font-weight:900}
+h2{font-size:24px;font-weight:900}
+h3{font-size:16px;font-weight:900;color:var(--gold);letter-spacing:.04em}
+p{margin:0;line-height:1.8;font-size:15px}
+.muted{color:var(--muted)}
+.box{background:var(--glass2);border-radius:10px;padding:12px 14px;border:1px solid rgba(29,34,51,.1)}
+.box.task{border-color:rgba(43,111,176,.4);background:rgba(43,111,176,.06)}
+.big-act{font-size:21px;font-weight:900;line-height:1.55;font-family:var(--f-head)}
+.verdict{display:flex;align-items:center;gap:14px}
+.mark{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:900;color:#fff;flex:none}
+.deltas{display:flex;gap:6px;flex-wrap:wrap}
+.d{font-family:var(--f-num);font-weight:700;font-size:14px;padding:3px 10px;border-radius:999px;border:1px solid rgba(29,34,51,.12)}
+.d.up{color:var(--good);border-color:rgba(31,154,85,.45)}.d.down{color:var(--bad);border-color:rgba(212,138,31,.5)}
+.revgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.revgrid div{font-size:13px;border:1px solid rgba(29,34,51,.12);border-radius:8px;padding:6px 9px;display:flex;justify-content:space-between;gap:6px;align-items:center}
+.revgrid i{font-style:normal;font-weight:900}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:480px}
+th,td{padding:6px 7px;border-bottom:1px solid rgba(29,34,51,.1);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:700}
+td.n,th.n{text-align:right;font-family:var(--f-num);font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.ans td{background:rgba(43,111,176,.1)}
+tr.mine td{box-shadow:inset 0 -2px 0 var(--bad)}
+.cogrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.co{border:1px solid rgba(29,34,51,.14);border-radius:12px;padding:11px;cursor:pointer;background:#fff;display:flex;flex-direction:column;gap:5px;font-family:var(--f-body);text-align:left;color:var(--ink)}
+.co:hover{border-color:rgba(43,111,176,.5)}
+.co:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.co.sel{border-color:var(--gold);background:rgba(43,111,176,.08);box-shadow:0 0 0 2px rgba(43,111,176,.25)}
+.co .sw{height:4px;border-radius:2px}
+.co b{font-size:15px;font-family:var(--f-head)}
+.co small{font-size:12px;color:var(--muted);line-height:1.55}
+.grade{font-family:var(--f-num);font-size:40px;font-weight:700;width:72px;height:72px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 0 0 3px rgba(29,34,51,.1)}
+.rank{display:flex;flex-direction:column;gap:6px}
+.rank div{display:grid;grid-template-columns:30px 12px minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:7px 12px;border-radius:9px;border:1px solid rgba(29,34,51,.12)}
+.rank div.me{border-color:var(--gold);background:rgba(43,111,176,.07)}
+.rank .pos,.rank .sc{font-family:var(--f-num);font-size:18px;font-variant-numeric:tabular-nums}
+.rank .sub{font-family:var(--f-num);font-size:13px;color:var(--muted)}
+.rank .sw{width:12px;height:12px;border-radius:50%}
+.kicker{font-size:12px;font-weight:700;letter-spacing:.3em;color:var(--gold)}
+@media (max-width:560px){
+  .cogrid,.revgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  h1{font-size:25px}#panel{padding:18px}#keys{display:none}
+  .meters{grid-template-columns:repeat(2,auto)}
+  #banner b{font-size:40px}
+}
+
+#touch{position:fixed;inset:0;z-index:6;pointer-events:none}
+#joy{position:absolute;left:max(24px,calc(env(safe-area-inset-left,0px) + 16px));bottom:calc(28px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.55);border:1.5px solid var(--line);pointer-events:auto;touch-action:none}
+#knob{position:absolute;left:36px;top:36px;width:48px;height:48px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(29,34,51,.25)}
+.tbtn{position:absolute;pointer-events:auto;width:70px;height:70px;border-radius:50%;border:1.5px solid var(--line);font-weight:900;font-size:15px;font-family:var(--f-body);touch-action:none;color:var(--ink);background:var(--glass)}
+#tAct{right:max(24px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(110px + env(safe-area-inset-bottom,0px));background:var(--gold);color:#fff}
+#tJump{right:max(104px,calc(env(safe-area-inset-right,0px) + 96px));bottom:calc(32px + env(safe-area-inset-bottom,0px))}
+
+#film{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.97);padding-block:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.film-box{width:min(100%,1000px);display:flex;flex-direction:column;gap:12px}
+#filmC,#filmV{width:100%;max-width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 150px);object-fit:contain;border-radius:14px;background:#000;box-shadow:0 18px 50px rgba(29,34,51,.16);display:block}
+#filmV{background:#11161f}
+.film-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#filmLabel{font-weight:900;font-family:var(--f-head);flex:1 1 200px;min-width:0}
+.film-prog{flex:1 1 160px;height:6px;border-radius:3px;background:rgba(29,34,51,.1);overflow:hidden}
+.film-prog i{display:block;height:100%;width:0;background:var(--gold)}
+.txt{flex:1 1 160px;min-width:0;font:inherit;font-size:15px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
+.txt:focus{outline:2px solid var(--gold);outline-offset:1px}
+.chatlog{max-height:200px;min-height:70px;overflow:auto;display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--glass2)}
+.msg{max-width:80%;padding:6px 11px;border-radius:12px;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.msg.me{align-self:flex-end;background:var(--gold);color:#fff}
+.msg.them{align-self:flex-start;background:#fff;border:1px solid var(--line)}
+.co .taken{color:var(--bad);font-weight:700}
+.co:disabled{cursor:not-allowed}
+#err{position:fixed;inset:0;display:grid;place-items:center;font-weight:900;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
+</style>
+
+</head>
+<body>
+<canvas id="c" tabindex="0" aria-label="台北市 3D 闖關場景"></canvas>
+
+<div class="hud glass" id="stats" hidden>
+  <div class="me-chip"><span class="me-dot" id="meDot"></span><span id="meName"></span></div>
+  <div class="meters">
+    <div class="meter" id="mCap">資本<b>6</b></div>
+    <div class="meter" id="mSc">策略分<b>0 / 10</b></div>
+  </div>
+</div>
+<div class="hud glass" id="progress" hidden></div>
+<button class="hud btn small ghost glass" id="cardBtn" hidden>事件卡 (Q)</button>
+<div class="hud" id="crosshair" hidden></div>
+<div class="hud glass" id="prompt" hidden></div>
+<div class="hud glass" id="tip" hidden></div>
+<div class="hud" id="banner"><small id="bnTop"></small><b id="bnBig"></b><span></span></div>
+<div class="hud glass" id="keys" hidden><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動 · 滑鼠 轉視角 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳<br><kbd>E</kbd> 或左鍵 與 NPC 互動 · <kbd>Q</kbd> 事件卡 · <kbd>Esc</kbd> 放開滑鼠</div>
+
+<div id="touch" hidden>
+  <div id="joy"><div id="knob"></div></div>
+  <button class="tbtn" id="tAct">互動</button>
+  <button class="tbtn" id="tJump">跳</button>
+</div>
+
+<div id="film" hidden><div class="film-box"><canvas id="filmC" width="1280" height="720"></canvas><video id="filmV" playsinline hidden></video><div class="film-bar"><span id="filmLabel"></span><div class="film-prog"><i id="filmProg"></i></div><label class="btn small ghost">換成自己的影片<input type="file" id="filmFile" accept="video/*" hidden></label><button class="btn small" id="filmSkip">略過影片</button></div></div></div>
+<div id="overlay" hidden><div id="panel" role="dialog" aria-modal="true"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+if(!window.THREE){document.body.insertAdjacentHTML('beforeend','<div id="err">3D 引擎載入失敗，請重新整理頁面。</div>');return;}
+const SANS='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-serif';
+const SERIF='"Noto Serif TC","Songti TC","PMingLiU",serif';
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+/* ───────── 遊戲資料：八回合試玩草案 ───────── */
+const COMP=[
+ {id:'chip',  name:'AI 晶片',       short:'晶片',  color:'#3d6cf0', core:'晶片設計、運算技術', need:'硬體整合、實際應用'},
+ {id:'green', name:'綠色能源',      short:'綠能',  color:'#27a854', core:'綠電、能源管理',     need:'高耗能產業、節能應用'},
+ {id:'server',name:'AI 伺服器',     short:'伺服器',color:'#8551de', core:'硬體製造、系統整合', need:'晶片技術、雲端需求'},
+ {id:'cloud', name:'雲端／資料中心',short:'雲端',  color:'#1599b5', core:'雲端平台、資料處理', need:'運算硬體、能源、應用場景'},
+ {id:'med',   name:'智慧醫療',      short:'醫療',  color:'#c94f86', core:'醫療專業、應用需求', need:'AI 技術、資料平台、設備'},
+ {id:'mfg',   name:'智慧製造',      short:'製造',  color:'#c98a2a', core:'自動化、製程整合',   need:'AI 技術、能源管理、數據分析'}
+];
+const CI={};COMP.forEach((c,i)=>CI[c.id]=i);
+const SHUO=['效率說','資源說','競局說','風險說','生態說'];
+const TH={
+ '效率說':{color:'#12a3bd',desc:'用更少的投入換到更多產出：把流程、設計、排程做得更省、更快。'},
+ '資源說':{color:'#d99a12',desc:'掌握別人難以取得的資源、資料或知識，並把它用在刀口上。'},
+ '競局說':{color:'#86a826',desc:'看清對手與同業的動作，決定怎麼搶、怎麼守，或一起訂遊戲規則。'},
+ '風險說':{color:'#4f6fd1',desc:'面對不確定，先布好備援與應變，讓關鍵營運不中斷。'},
+ '生態說':{color:'#2ea866',desc:'把上下游、社區和夥伴拉進來，一起把整個生態系做大。'},
+ '互賴說':{color:'#a454c6',desc:'彼此依存：找到能補足自己的夥伴，一起投入、一起分享成果。'}
+};
+const HAIRS=['#2a2f45','#6b4a2e','#1c1c22','#c9ced8','#7a4a30','#3d2a1d'];
+const SKINS=['#f2cba5','#e8b98f','#f5d3b3','#dba57c','#f0c49c','#e3ad84'];
+const RCOL={'3.0':'#2b6fb0','4.0':'#2e8a5a',coop:'#a454c6',invest:'#c7922a'};
+// a：五說行動（效率、資源、競局、風險、生態）；best：主持人答案；why：理由
+const R1={
+ chip:{ctx:'封裝測試排隊',a:['共用已驗證的測試流程','研發下一代晶片架構','降價換更大的訂單','預留第二家尚未認證的封裝廠','發起跨廠介面標準工作組'],best:0,why:'共用已經驗證的測試流程，可減少重複設定與排隊。'},
+ green:{ctx:'新案場未併網，既有電廠出力不穩',a:['改善電廠巡檢排程','培養新的發電預測團隊','轉租既有接網容量','用兩座已併網電廠交叉備援','邀工業用戶一起投資新電網'],best:3,why:'兩座既有電廠能在併網限制下互相補位。'},
+ server:{ctx:'客戶只收已認證零件',a:['重排組裝班次','自行開發替換零件','和同業互換不同型號零件','預留客戶尚未認證的備品','和認證供應商共用庫存及交期資料'],best:4,why:'從合格供應網調度原規格零件，可照原流程驗收。'},
+ cloud:{ctx:'尖峰租戶同時搶容量',a:['提高離峰設備使用率','採購要八週才到的新設備','推出尖峰保留容量合約','增加各租戶備援額度','招募外部應用進駐平台'],best:2,why:'按可交付的尖峰容量接單，優先守住關鍵訂單。'},
+ med:{ctx:'模型未通過院內驗證',a:['加快現有模型推論速度','用院方已授權的資料修正模型','降價換醫院試用','先部署人工覆核備援','擴增診所轉介通路'],best:1,why:'院內資料能用來修正模型，使它通過該院的驗證。'},
+ mfg:{ctx:'多規格要一起交付，換線耗時',a:['把成熟產品集中在同一線','建立下一代製程資料庫','跟同業交換訂單','安排第二條線待命','與設備商共用已驗證的模組化工裝'],best:4,why:'設備商的已驗證工裝能縮短換線校正，仍可維持混線交付。'}
+};
+const R3={
+ chip:{ctx:'特殊工作負載的延遲超標',a:['縮短標準產品測試時間','用客戶工作負載調校韌體','降價換一年獨家約','維持舊版並準備快速回退','辦軟體開發者工作坊'],best:1,why:'用實際工作負載調校，才能驗證特殊負載的延遲改善。'},
+ green:{ctx:'客戶各廠負載時段不同',a:['精簡既有月報','自行重建通用預測模型','推出各廠適用的單一電價','備妥第二條供電來源','與各廠能源管理商整合負載資料'],best:4,why:'各廠能源管理商掌握不同負載，串起資料才可按廠驗收。'},
+ server:{ctx:'機櫃尺寸不同，交期相同',a:['用已驗證模組重新組合機型','重新設計專用主機板','以標準機降價換訂單','準備備用機櫃','開放第三方推出擴充零件'],best:0,why:'重組現有已驗證模組，可兼顧尺寸差異與交期。'},
+ cloud:{ctx:'轉換期間不可丟失交易',a:['加快一次搬完資料的速度','招募專家重寫資料庫','以折扣爭取客戶同意停機','先雙軌運行並演練回退','邀軟體商上架更多工具'],best:3,why:'雙軌與回退可在轉換過程保全交易。'},
+ med:{ctx:'各院工作流程及介面不同',a:['縮短單一醫院的處理時間','研究更精準的通用模型','談多院共同折扣','把新功能切成分批發布','聯合院方與病歷系統商試接流程'],best:4,why:'醫院提供流程，系統商提供介面，需要三方一起試接。'},
+ mfg:{ctx:'每個客戶都要小量多規格',a:['讓產線使用可快速切換的共用模組','投入下一代感測器開發','以更高起訂量換低價','準備更多庫存成品','邀零售商建立銷售聯盟'],best:0,why:'共用模組能縮短規格切換時間，適合小批量交付。'}
+};
+const R4={
+ chip:{a:['開放低功耗設計框架，讓客戶一起優化','和大學合辦低碳半導體人才培育','趁缺貨漲價，先供貨給出價最高的大廠','自購燃氣機組，限電期間照常出貨','發起綠色算力聯盟，邀上下游一起減碳'],best:0,why:'把節能設計推向多家客戶，讓下游設備也能降低用電。'},
+ green:{a:['開放能源管理軟體，讓用戶自己調度用電','擴建綠電場址，逐一爭取地方同意','綠電憑證高價賣給 AI 大廠，社區只好改用火力電','囤積儲能設備自己用','號召社區共建微電網，自己當樞紐'],best:4,why:'把地方用戶納入供電安排，讓社區有能力共同應付限電。'},
+ server:{a:['三班制滿載出貨，衝高產能','囤積關鍵零組件等漲價','和同業共訂能效標準，不達標就不出貨','推出模組化液冷機櫃，限電時可以分區運作','加入綠色算力聯盟當一般會員'],best:2,why:'由同業一起提高產品能效門檻，避免低能效設備靠價格搶單。'},
+ cloud:{a:['把運算排程移到離峰時段','和在地社區共管水電、公開用電數據，換取營運許可','砸錢搶下最後一塊電網容量','自建柴油發電機，保證客戶不斷線並加價','把閒置算力開放給學校和偏鄉醫院'],best:1,why:'把地方水電和社區知識納入營運安排，直接回應居民的疑慮。'},
+ med:{a:['把 AI 模型縮小，降低用電','簽長約鎖定大量算力，獨占醫院資料合作','用「醫療優先」遊說豁免限電，排擠其他用戶','和社區醫院共建停電應變網絡，一起承擔斷電風險','開發偏鄉遠距醫療，開拓還沒人服務的市場'],best:3,why:'醫院一起安排停電應變，能維持必要的照護服務。'},
+ mfg:{a:['導入智慧排程，避開尖峰用電','和工業區共建循環水與廢熱回收','號召供應鏈共訂減碳公約，共享訂單和產能','自備燃煤汽電共生機組，限電照樣滿載','把高耗能產線移到法規寬鬆的地區'],best:2,why:'用供應鏈的共同減碳承諾和產能調度，兼顧交付與用電壓力。'}
+};
+const R6={
+ chip:{a:['趁審查還沒查到自己，跳過碳盤查、產線全速衝量出貨','建立晶片碳足跡資料庫，先從自家產線開始盤查','放消息說對手的綠電來源有問題，趁亂搶單','委託第三方查核綠電來源，取得國際認證','帶上下游一起公開產品碳足跡，建立供應鏈共同揭露平台'],best:4,why:'把上下游的碳足跡資料串起來，讓客戶能查驗整條供應鏈。'},
+ green:{a:['導入綠電溯源系統，每一度電的來源都查得到','趁大家急著補綠電，把來源不明的憑證打包高價轉賣','降價搶客戶，對外拍胸脯「保證通過審查」','主動請國際機構稽核所有電廠，公開每座電廠的發電紀錄','辦說明會向客戶解釋綠電來源'],best:3,why:'第三方查核搭配各電廠的原始紀錄，能回應對綠電來源的質疑。'},
+ server:{a:['重新設計產品，內建能耗與碳排即時揭露，出貨就附數據','把審查成本轉嫁給下游零件商，要他們自己吸收','和晶片廠共推產品碳標籤，讓客戶一眼比較','把有疑慮的零件改從審查較鬆的國家進口，換個產地照樣出貨','發表聲明支持供應鏈透明化'],best:0,why:'產品在交付時就附可查的數據，客戶可直接核對設備能耗。'},
+ cloud:{a:['導入自動化用電與碳排監測，即時回報給客戶','把資安與碳排報告外包給顧問公司處理','和同業共訂資料安全與能耗揭露標準，一起接受查核','把敏感資料緊急搬到海外機房，避開審查','買便宜碳權抵銷，對外宣稱「100% 碳中和」，照常擴建機房'],best:2,why:'同業以共同標準接受查核，客戶可同時檢查資料安全和能耗。'},
+ med:{a:['精簡 AI 模型，降低用電成本','改用可溯源的綠電機房，並公開病患資料保護流程','趁對手被審查，低價搶走醫院合約、運算量爆增，資料保護先省掉','主動通報資安漏洞，協助合作醫院修補','砸錢拍公益形象廣告，實際流程沒改'],best:1,why:'採用可溯源機房並揭露資料保護流程，有憑據回應兩項疑慮。'},
+ mfg:{a:['為了趕在審查前交貨，暫停節能排程、產線滿載','導入原物料溯源與廢料回收，每批產品附碳排資訊','切割出事的合作夥伴，接收他們的訂單、產能全開','準備替代供應商名單，降低被牽連的風險','和供應商共建碳足跡與資安查核平台，整條供應鏈一起通過審查'],best:4,why:'與供應商共用查核平台，讓上游資料也能一併接受審查。'}
+};
+const GRADE2={'chip|server':'S','cloud|med':'S','cloud|server':'A','chip|cloud':'A','green|mfg':'A','cloud|mfg':'A','med|mfg':'A','chip|med':'B','chip|mfg':'B','green|server':'B','cloud|green':'B','mfg|server':'B','chip|green':'C','green|med':'C','med|server':'C'};
+const DESC2={'chip|server':'整機：晶片與伺服器整合，六週內交出能驗收的整機','cloud|med':'院端部署：資料平台結合醫療專業，直接在醫院上線','cloud|server':'硬體與雲端需求整合','chip|cloud':'優化 AI 運算架構','green|mfg':'改善工廠能源管理','cloud|mfg':'整合生產數據，發展智慧工廠','med|mfg':'開發智慧醫療設備','chip|med':'開發醫療 AI 晶片與診斷技術','chip|mfg':'晶片技術應用於工業自動化','green|server':'為伺服器提供綠電','cloud|green':'改善資料中心能源供應','mfg|server':'自動化生產，提高製造效率','chip|green':'開發能源控制晶片','green|med':'改善醫療設施能源使用','med|server':'提供醫療 AI 運算硬體'};
+const GRADE7={'green|mfg':'S','chip|server':'S','cloud|med':'S','cloud|green':'A','cloud|mfg':'A','green|server':'A','med|server':'A','med|mfg':'A','chip|green':'B','chip|med':'B','chip|mfg':'B','cloud|server':'B','mfg|server':'B','chip|cloud':'C','green|med':'C'};
+const DESC7={'green|mfg':'製程用電：用分時電表與同產量的排放基準比較減量','chip|server':'整機能效：晶片和伺服器一起把每瓦效能拉上來','cloud|med':'模型耗電與服務品質：核對每次合格推論的耗電量和服務水準','cloud|green':'綠色資料中心，降低能源與環境負擔','cloud|mfg':'透過數據優化能源與資源使用','green|server':'綠色運算、節能硬體','med|server':'提供醫療服務所需的運算能力','med|mfg':'發展更符合使用者需求的醫療設備','chip|green':'智慧電網與能源管理技術','chip|med':'提升醫療科技的可及性','chip|mfg':'智慧節能製程','cloud|server':'提高運算資源使用效率','mfg|server':'降低製造過程的資源浪費','chip|cloud':'透過運算優化降低能耗','green|med':'綠色醫療設施與能源韌性'};
+const EXTRA={S:[1,1,1,2,2,2,2,3,3,3,4],A:[1,1,1,1,2,2,2,2,3,3,3],B:[0,0,1,1,1,1,1,1,1,1,2],C:[0,0,0,0,0,0,0,0,0,0,0]};
+const GCOL={S:'#2b6fb0',A:'#12a3bd',B:'#86a826',C:'#98a0ad'};
+const pairKey=(a,b)=>[a,b].sort().join('|');
+const P5=[
+ {cost:5,short:'一季綠電＋園區儲能',text:'簽一季綠電供應合約，租用園區儲能把白天的綠電留到晚間尖峰，再優先供給關鍵設備。',pts:1,why:'守住本季服務，臨時合約到期後要重新安排。'},
+ {cost:9,short:'三年綠電長約＋共用儲能',text:'簽三年綠電長約，契約約定尖峰可交付電量，並和園區共用儲能。逐時記錄供電來源及實際用量。',pts:2,why:'靠現有儲能渡過本季，也有可查證的多年供電安排。'},
+ {cost:5,short:'綠電憑證＋碳盤查',text:'購買與本季用電量相當的綠電憑證，先提交碳盤查報告，尖峰仍依賴現有電網。',pts:0,why:'憑證有助於揭露來源，現場仍缺尖峰供電。'},
+ {cost:9,short:'屋頂太陽能',text:'建置屋頂太陽能，估計全年發電量可達客戶要求。設備不含儲能，晚間仍由電網供電。',pts:0,why:'全年發電量有改善，晚間限電時仍無法維持服務。'}
+];
+const P8=[
+ {cost:9,short:'再生水＋循環水系統',text:'先租模組化設備接用再生水，同時建置循環水系統。把處理後的水再用於冷卻或清洗，以分區水表驗證淡水取用。',pts:2,why:'能先維持營運，系統上線後也能持續降低取水。'},
+ {cost:5,short:'用水盤查與節水承諾',text:'盤查各場址的用水量，公開每月用水報告和逐年節水承諾，現場維持原有取水方式。',pts:0,why:'可掌握用水，但下月限水時仍超過限額。'},
+ {cost:9,short:'三年水車合約',text:'簽三年水車合約，改向園區外的業者購水。業者的取水點仍在同一缺水流域。',pts:0,why:'供水方式改變，但仍取用同流域淡水，超過續證限額。'},
+ {cost:5,short:'一季再生水＋臨時管線',text:'簽一季再生水供應合約，租臨時管線替代部分清洗或冷卻用水，將有限的淡水留給關鍵環節。',pts:1,why:'過渡期間符合限額且能營運，合約到期後仍要找水源。'}
+];
+const ROUNDS=[
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'算力需求暴增',ctxLabel:'你的交付瓶頸',data:R1,scene:0,
+  event:'國際客戶要求六週內交付首批產品或服務。客戶已鎖定驗收規格，逾期就把首批訂單轉給別家。每家公司先看到自己的交付瓶頸，再選擇要怎麼用手上的技術和知識應對。'},
+ {type:'coop',era:'3.0',eraName:'3.0 知識經濟',title:'六週整合方案',grades:GRADE2,desc:DESC2,scene:1,
+  event:'採購方開放設備整合、院端部署、能源管理與製造等標案，要求六週內展示原型。各隊要把可直接使用的技術、設備或產業知識接起來，並說明客戶要驗收的成果。'},
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'客戶要求客製',ctxLabel:'你的驗收要求',data:R3,scene:2,
+  event:'第一批標準產品上線後，客戶要求八週內試出客製版本，才決定是否續約。各家公司拿到的退件或回饋不同。玩家要在期限內拿出客戶能現場驗證的改進。'},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 電力危機',data:R4,scene:3,trailer:['AI 算力擴張讓用電暴增','夏季備轉容量告急～～～Hot Hot><','政府宣布碳費上路','大用電戶都要提出減碳計畫（蛤？？？可惡）','社區也開始抗議新建資料中心','到了 4.0，問題不再是「賺不賺錢」','而是「你還能不能被允許繼續營運」'],
+  event:'AI 算力擴張使夏季用電暴增，備轉容量告急。政府宣布碳費上路，大用電戶須提出減碳計畫，社區也開始抗議新建資料中心。企業要決定如何因應供電壓力，維持營運並取得利害關係人的支持。'},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'限電下的供電危機',plans:P5,scene:6,
+  event:'延續第 4 回合的電力危機。園區下月起在晚間尖峰限電，六家企業的關鍵營運據點或代工廠都受影響。客戶願給企業一季緩衝，但續約要求關鍵服務不中斷，並能按時段查證尖峰供電來源與減碳成效。園區已有可用的共用儲能，能在下月限電前投入調度。'},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 供應鏈信任危機',data:R6,scene:5,trailer:['近期，一份國際調查報告揭露','部分企業的永續承諾與實際營運存在落差','綠電來源不明、產品碳排資訊不透明','還有資料安全與產品責任問題（蛤？？？說好的永續呢）','消息曝光後，國際客戶宣布重新審查整條 AI 供應鏈','六家企業就算沒有直接違規','也可能因為合作夥伴被牽連','面臨訂單流失與社會信任下降～～～','這是最後一回合','被懷疑的時候，你要拿什麼證明自己？','該如何採取行動呢？'],
+  event:'國際調查揭露部分企業的永續承諾與實際營運有落差，問題包含綠電來源不明、碳排資訊不透明、資料安全及產品責任。國際客戶重新審查整條 AI 供應鏈。即使公司本身沒有違規，也可能受到合作夥伴牽連。企業要決定用什麼證據向客戶交代。'},
+ {type:'coop',era:'4.0',eraName:'4.0 人文永續',title:'供應鏈共同減碳',grades:GRADE7,desc:DESC7,scene:4,
+  event:'客戶要求共同提出減碳方案。各隊須說清楚在哪個環節減量、雙方怎麼分工，以及用哪份紀錄證明成效。'},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'旱季限水與營運許可',plans:P8,scene:7,
+  event:'連續乾旱後，園區下月開始限制淡水取用。六家公司各有一處關鍵營運據點或供應商受影響。地方政府准許一季過渡，之後續發營運許可時，要求關鍵服務持續，且每年淡水取用都低於限額。園區有可立即接用的再生水，也有可先租後建的模組化處理設備。'}
+];
+const N=ROUNDS.length;
+const rCol=st=>st.type==='coop'?RCOL.coop:st.type==='invest'?RCOL.invest:RCOL[st.era];
+const TYPENAME={risk:'事件＋五說',coop:'合作回合',invest:'永續投資'};
+
+/* ───────── 狀態 ───────── */
+let me=-1, started=false, paused=true, ended=false;
+const res={cap:6,sc:0};
+const sim={};   // 其他五家公司
+let stageIdx=0; const solved=Array(N).fill(false); const introShown=[]; const picks=[];
+
+/* ───────── Three.js：白模卡通渲染 ───────── */
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+const scene=new THREE.Scene();
+const FOG='#e8d5b5';
+scene.fog=new THREE.Fog(FOG,70,520);
+const camera=new THREE.PerspectiveCamera(70,1,0.1,1600);camera.rotation.order='YXZ';
+scene.add(new THREE.HemisphereLight(0xcfe0ff,0x8a7a62,0.75));
+const sunL=new THREE.DirectionalLight(0xffe2b8,1.15);sunL.position.set(-60,55,20);sunL.castShadow=true;sunL.shadow.mapSize.set(2048,2048);
+{const sc=sunL.shadow.camera;sc.left=-60;sc.right=60;sc.top=60;sc.bottom=-60;sc.near=1;sc.far=260;}sunL.shadow.bias=-0.0006;scene.add(sunL);scene.add(sunL.target);
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const ANISO=renderer.capabilities.getMaxAnisotropy();
+function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+window.addEventListener('resize',resize);resize();
+
+const gm=new THREE.DataTexture(new Uint8Array([105,180,255]),3,1,renderer.capabilities.isWebGL2?THREE.RedFormat:THREE.LuminanceFormat);
+gm.minFilter=gm.magFilter=THREE.NearestFilter;gm.generateMipmaps=false;gm.needsUpdate=true;
+const toon=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,roughness:0.88,metalness:0},o||{}));
+const OUT=new THREE.MeshBasicMaterial({color:'#a3adba',side:THREE.BackSide});
+function outline(mesh){return mesh;}
+const EDGE=new THREE.LineBasicMaterial({color:'#bcc4ce',transparent:true,opacity:0.75});
+function edges(){}
+function mkCanvas(w,h){const c=document.createElement('canvas');c.width=w;c.height=h;return [c,c.getContext('2d')];}
+function rr(x,X,Y,W,H,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H,R);x.arcTo(X+W,Y+H,X,Y+H,R);x.arcTo(X,Y+H,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath();}
+const NOSTART='，。、；：）」』！？';
+function wrap(x,text,maxW){const out=[];let cur='';for(const ch of text){const t=cur+ch;if(x.measureText(t).width>maxW&&cur&&!NOSTART.includes(ch)){out.push(cur);cur=ch;}else cur=t;}if(cur)out.push(cur);return out;}
+function tex(c){const t=new THREE.CanvasTexture(c);t.anisotropy=ANISO;return t;}
+function plane(w,h,t){return new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide}));}
+
+/* 貼圖 */
+function signTex(title,color,ctxText,main,dim){
+  const [c,x]=mkCanvas(640,520);
+  rr(x,0,0,640,520,26);x.fillStyle='#d5dae0';x.fill();
+  rr(x,10,10,620,500,20);x.fillStyle='#ffffff';x.fill();
+  rr(x,10,10,620,100,20);x.fillStyle=color;x.fill();x.fillRect(10,66,620,44);
+  x.fillStyle='#fff';x.font='900 62px '+SERIF;x.textBaseline='middle';x.fillText(title,32,62);
+  let y=160;
+  if(ctxText){x.font='700 30px '+SANS;x.fillStyle='#5d6579';for(const l of wrap(x,ctxText,576).slice(0,2)){x.fillText(l,32,y);y+=40;}y+=10;}
+  let fs=48;x.font='900 '+fs+'px '+SANS;let ls=wrap(x,main,580);
+  if(ls.length*62>512-y){fs=40;x.font='900 '+fs+'px '+SANS;ls=wrap(x,main,580);}
+  x.fillStyle=dim?'#98a0ad':'#1d2233';y+=6;
+  for(const l of ls.slice(0,5)){x.fillText(l,30,y);y+=fs*1.28;}
+  return tex(c);
+}
+function clothTex(top,big,color,w=768,h=420){
+  const [c,x]=mkCanvas(w,h);
+  x.fillStyle='#ffffff';x.fillRect(0,0,w,h);
+  x.strokeStyle=color;x.lineWidth=6;x.strokeRect(22,22,w-44,h-44);
+  x.textAlign='center';x.textBaseline='middle';
+  x.fillStyle='#5d6579';x.font='700 40px '+SANS;x.fillText(top,w/2,h*0.27);
+  x.fillStyle=color;x.font='900 136px '+SERIF;x.fillText(big,w/2,h*0.63);
+  return tex(c);
+}
+function steleTex(title,body,color,w=1024,h=500){
+  const [c,x]=mkCanvas(w,h);
+  x.fillStyle='#f9fafb';x.fillRect(0,0,w,h);
+  x.fillStyle=color;x.fillRect(0,0,w,14);x.fillRect(0,h-14,w,14);
+  x.textAlign='center';x.textBaseline='middle';
+  let fs=124;x.font='900 '+fs+'px '+SERIF;while(x.measureText(title).width>w-80&&fs>60){fs-=6;x.font='900 '+fs+'px '+SERIF;}
+  x.fillStyle=color;x.fillText(title,w/2,h*0.33);
+  x.font='700 44px '+SANS;x.fillStyle='#3b4458';let y=h*0.62;
+  for(const l of wrap(x,body,w-100).slice(0,3)){x.fillText(l,w/2,y);y+=58;}
+  return tex(c);
+}
+function doorTex(color,label){const [c,x]=mkCanvas(256,340);x.fillStyle='#ffffff';x.fillRect(0,0,256,340);x.strokeStyle=color;x.lineWidth=12;x.strokeRect(6,6,244,328);
+  x.strokeStyle='#d5dae0';x.lineWidth=4;x.strokeRect(36,36,184,110);x.strokeRect(36,170,184,134);
+  x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.font='900 38px '+SERIF;x.fillText(label,128,91);
+  x.fillStyle='#5d6579';x.font='700 22px '+SANS;x.fillText('完成本回合後開門',128,237);return tex(c);}
+function badgeTex(text,color){const [c,x]=mkCanvas(128,128);x.fillStyle=color;x.beginPath();x.arc(64,64,62,0,7);x.fill();x.strokeStyle='#fff';x.lineWidth=7;x.beginPath();x.arc(64,64,52,0,7);x.stroke();
+  x.fillStyle='#fff';x.font='900 42px '+SANS;x.textAlign='center';x.textBaseline='middle';x.fillText(text,64,66);return tex(c);}
+function facTex(win){const [c,x]=mkCanvas(64,64);x.fillStyle='#f4f5f7';x.fillRect(0,0,64,64);x.fillStyle=win;x.fillRect(6,10,52,30);x.fillStyle='rgba(255,255,255,.4)';x.fillRect(6,10,20,30);x.fillStyle='#dde2e8';x.fillRect(0,48,64,3);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+function aptTex(){const [c,x]=mkCanvas(64,64);x.fillStyle='#f6f7f8';x.fillRect(0,0,64,64);x.fillStyle='#dde1e6';x.fillRect(0,58,64,6);
+  x.fillStyle='#4f5f6c';x.fillRect(14,14,36,30);x.strokeStyle='#b7bdc4';x.lineWidth=2;for(let i=18;i<50;i+=6){x.beginPath();x.moveTo(i,12);x.lineTo(i,46);x.stroke();}x.strokeRect(12,12,40,34);
+  const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;return t;}
+const FAC={office:facTex('#5f7f99'),apt:aptTex()};
+const SIGNW=['咖啡','書店','藥局','便當','早餐','眼鏡','電腦','診所','茶飲','五金','麵店','冰品','補習班','旅社','鐘錶','滷味','牙醫','文具'];
+const SIGNC=[['#1f6fb2','#fff'],['#f2c230','#1d2233'],['#2e8a5a','#fff'],['#ffffff','#1f6fb2'],['#6a3fa0','#fff'],['#12a3bd','#fff'],['#1d2233','#f2c230']];
+function vSignTex(word,bg,fg){const [c,x]=mkCanvas(96,320);x.fillStyle=bg;x.fillRect(0,0,96,320);x.strokeStyle=fg;x.globalAlpha=.6;x.lineWidth=4;x.strokeRect(8,8,80,304);x.globalAlpha=1;
+  x.fillStyle=fg;x.font='900 '+(word.length>2?58:66)+'px '+SANS;x.textAlign='center';x.textBaseline='middle';const n=word.length,step=Math.min(86,280/n);[...word].forEach((ch,i)=>x.fillText(ch,48,160+(i-(n-1)/2)*step));return tex(c);}
+
+/* 說的守護者（原創旅人造型） */
+const BOOT=toon('#33445e'),TUNIC=toon('#f2f3f5'),BELT=toon('#2b2f36'),CAPE=toon('#fbfbfc',{side:THREE.DoubleSide}),EYE=new THREE.MeshBasicMaterial({color:'#1b2232'});
+function makeChar(color,label,k){
+  const g=new THREE.Group();
+  const skin=toon(SKINS[k%6]),scarfM=toon(color),hair=toon(HAIRS[k%6]);
+  const limb=(geo,mat,px,py,off)=>{const p=new THREE.Group();p.position.set(px,py,0);const m=new THREE.Mesh(geo,mat);m.position.y=off;p.add(m);g.add(p);return {p,m};};
+  const legL=limb(new THREE.CylinderGeometry(0.13,0.15,0.72,10),BOOT,-0.15,0.72,-0.36),legR=limb(new THREE.CylinderGeometry(0.13,0.15,0.72,10),BOOT,0.15,0.72,-0.36);
+  outline(legL.m,1.1);outline(legR.m,1.1);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.31,0.86,14),scarfM);body.position.y=1.13;g.add(body);
+  const tee=new THREE.Mesh(new THREE.BoxGeometry(0.16,0.62,0.05),TUNIC);tee.position.set(-0.05,1.2,0.29);g.add(tee);
+  const belt=new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.08,14),BELT);belt.position.y=0.84;g.add(belt);
+  const collar=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.3,0.12,14),scarfM);collar.position.y=1.6;g.add(collar);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(0.34,20,16),skin);head.position.y=1.95;g.add(outline(head,1.07));
+  const hr=new THREE.Mesh(new THREE.SphereGeometry(0.365,20,12,0,Math.PI*2,0,Math.PI*0.56),hair);hr.position.set(0,1.98,-0.03);hr.rotation.x=-0.32;g.add(outline(hr,1.05));
+  const tuft=new THREE.Mesh(new THREE.ConeGeometry(0.1,0.26,6),hair);tuft.position.set(0.08,2.33,0.05);tuft.rotation.z=-0.5;g.add(tuft);
+  [-0.12,0.12].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(0.045,8,8),EYE);e.position.set(x,1.97,0.31);e.scale.y=1.4;g.add(e);});
+  const badge=new THREE.Mesh(new THREE.CircleGeometry(0.16,24),new THREE.MeshBasicMaterial({map:badgeTex(label,color)}));badge.position.set(0.15,1.32,0.312);g.add(badge);
+  const arm=(s)=>{const p=new THREE.Group();p.position.set(s*0.4,1.45,0);const a=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.085,0.55,8),scarfM);a.position.y=-0.27;p.add(outline(a,1.12));
+    const h=new THREE.Mesh(new THREE.SphereGeometry(0.095,10,8),skin);h.position.y=-0.58;p.add(outline(h,1.1));g.add(p);return p;};
+  const armL=arm(-1),armR=arm(1);
+  g.scale.setScalar(0.9);
+  const root=new THREE.Group();root.add(g);
+  const sh=new THREE.Mesh(new THREE.CircleGeometry(0.6,20),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.12,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=0.04;root.add(sh);
+  return {root,body:g,armL,armR};
+}
+
+/* ───────── 世界：台北林蔭大道，盡頭是台北 101 ───────── */
+const R=13;const CZ=i=>-(34+i*48);const WZ=i=>CZ(i)-24;const FZ=CZ(N-1)-48;const HALF=19;
+const npcs=[];const hitList=[];const barriers=[];const leaves=[];
+let sky=null,trophy=null,mrt=null;
+
+function hgt(x,z){
+  const ax=Math.abs(x);let v=ax>115?Math.min(48,(ax-115)*0.42):0;
+  if(z>40)v=Math.max(v,Math.min(48,(z-40)*0.45));
+  if(z<FZ-190)v=Math.max(v,Math.min(55,(FZ-190-z)*0.4));
+  if(v>0)v+=(Math.sin(x*0.045)+Math.cos(z*0.037)+Math.sin((x+z)*0.02))*2.2*Math.min(1,v/6);
+  return Math.max(0,v);
+}
+function ground(){
+  const geo=new THREE.PlaneGeometry(900,1500,110,180);geo.rotateX(-Math.PI/2);geo.translate(0,0,-330);
+  const pos=geo.attributes.position;const col=new Float32Array(pos.count*3);const c=new THREE.Color();
+  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);const y=hgt(x,z);pos.setY(i,y);
+    if(y>32)c.set('#7d8a74');else if(y>4)c.set('#5f8a4e');else c.set('#8e9396');c.offsetHSL(0,0,(Math.random()-0.5)*0.04);col.set([c.r,c.g,c.b],i*3);}
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo,toon('#ffffff',{vertexColors:true})));
+}
+function skyDome(){
+  const mat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,
+    uniforms:{top:{value:new THREE.Color('#4f86c6')},mid:{value:new THREE.Color('#f2d6a8')}},
+    vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'uniform vec3 top;uniform vec3 mid;varying vec3 vP;void main(){float h=max(vP.y,0.0);gl_FragColor=vec4(mix(mid,top,smoothstep(0.0,0.55,h)),1.0);}'});
+  sky=new THREE.Mesh(new THREE.SphereGeometry(1200,32,16),mat);sky.renderOrder=-1;scene.add(sky);
+  for(let i=0;i<22;i++){const cl=new THREE.Group();const n=3+Math.floor(Math.random()*4);
+    for(let k=0;k<n;k++){const s=new THREE.Mesh(new THREE.SphereGeometry(rnd(6,11),12,8),toon('#ffffff',{emissive:'#f3e2c8',emissiveIntensity:0.55}));s.position.set(k*8-n*4,rnd(-2,3),rnd(-3,3));s.scale.y=0.6;s.userData.noShadow=true;cl.add(s);}
+    cl.position.set(rnd(-420,420),rnd(95,150),rnd(-1000,250));scene.add(cl);}
+  for(let i=0;i<26;i++){const side=i%2?1:-1;const h=rnd(90,190);const m=new THREE.Mesh(new THREE.ConeGeometry(rnd(70,120),h,7),toon('#7f9480',{flatShading:true}));
+    m.position.set(side*rnd(330,470),h/2-10,rnd(-1100,250));scene.add(m);}
+}
+function tree(x,z,s){const g=new THREE.Group();const t=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.3,2,6),toon('#6b5136'));t.position.y=1;g.add(t);
+  const l=new THREE.Mesh(new THREE.IcosahedronGeometry(1.7,1),toon(Math.random()<0.5?'#4e8f45':'#5fa04f',{flatShading:true}));l.position.y=3;l.scale.y=1.15;g.add(outline(l,1.05));
+  g.scale.setScalar(s||1);g.position.set(x,hgt(x,z),z);scene.add(g);}
+function building(x,z,w,d,h){
+  const f=FAC.office.clone();f.needsUpdate=true;f.repeat.set(Math.max(1,Math.round(w/4)),Math.max(1,Math.round(h/4)));
+  const f2=f.clone();f2.needsUpdate=true;f2.repeat.set(Math.max(1,Math.round(d/4)),f.repeat.y);
+  const side=toon('#ffffff',{map:f}),side2=toon('#ffffff',{map:f2}),roof=toon('#8d939b');
+  const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),[side2,side2,roof,roof,side,side]);b.position.set(x,h/2,z);edges(b);scene.add(b);
+  if(h>34){const sp=new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.4,8,6),toon('#a8adb3'));sp.position.set(x,h+4,z);scene.add(sp);}
+}
+const APTC=['#d9cdb8','#c9ccc8','#b9c7cf','#cfd8c8','#e2dccd','#a9b4bc','#d6c6a8'];
+function midrise(x,z,w,d,h,s){
+  const f=FAC.apt.clone();f.needsUpdate=true;f.repeat.set(Math.max(1,Math.round(d/4)),Math.max(1,Math.round((h-3.4)/3.4)));
+  const f2=f.clone();f2.needsUpdate=true;f2.repeat.set(Math.max(1,Math.round(w/4)),f.repeat.y);
+  const col=APTC[Math.floor(Math.random()*APTC.length)];
+  const sideM=toon(col,{map:f}),endM=toon(col,{map:f2}),roof=toon('#8d939b');
+  const up=new THREE.Mesh(new THREE.BoxGeometry(w,h-3.4,d),[sideM,sideM,roof,roof,endM,endM]);up.position.set(x,3.4+(h-3.4)/2,z);edges(up);scene.add(up);
+  const faceX=x-s*w/2;
+  const gf=new THREE.Mesh(new THREE.BoxGeometry(w-1.6,3.4,d-0.3),toon('#4a4f57',{emissive:'#5a4a2a',emissiveIntensity:0.5}));gf.position.set(x+s*0.8,1.7,z);scene.add(gf);
+  for(let k=-d/2+0.4;k<=d/2-0.4;k+=4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.5,3.4,0.5),toon(col));p.position.set(faceX+s*0.3,1.7,z+k);scene.add(p);}
+  const nS=1+(Math.random()<0.6?1:0);
+  for(let k=0;k<nS;k++){const sc=SIGNC[Math.floor(Math.random()*SIGNC.length)];const word=SIGNW[Math.floor(Math.random()*SIGNW.length)];
+    const sg=plane(1.3,4.3,vSignTex(word,sc[0],sc[1]));sg.position.set(faceX-s*0.85,Math.min(h-2.8,rnd(6,9)),z+rnd(-d/2+1.5,d/2-1.5));scene.add(sg);}
+  for(let k=0;k<4;k++){const ac=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.55,0.8),toon('#e2e4e7'));ac.position.set(faceX-s*0.25,rnd(5,h-1.5),z+rnd(-d/2+1,d/2-1));scene.add(ac);}
+  if(Math.random()<0.6){const tk=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1.8,12),toon('#b9c2c9',{roughness:0.45}));tk.position.set(x+rnd(-w/4,w/4),h+1.4,z+rnd(-d/4,d/4));scene.add(tk);}
+  if(h>20&&Math.random()<0.4)billboard(x,h,z,s);
+}
+function taipei101(x,z){
+  const g=new THREE.Group();g.position.set(x,0,z);
+  const glass=toon('#5f8f8c',{roughness:0.4}),glass2=toon('#6f9e98',{roughness:0.4}),dark=toon('#3e5f5c');
+  const pod=new THREE.Mesh(new THREE.BoxGeometry(70,16,46),toon('#c9ccc8'));pod.position.set(0,8,-12);edges(pod);g.add(pod);
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(11,14,40,4),glass);trunk.rotation.y=Math.PI/4;trunk.position.y=20;edges(trunk);g.add(trunk);
+  let y=40;
+  for(let k=0;k<8;k++){const seg=new THREE.Mesh(new THREE.CylinderGeometry(12.5,9.5,15,4),k%2?glass:glass2);seg.rotation.y=Math.PI/4;seg.position.y=y+7.5;edges(seg);g.add(seg);
+    const band=new THREE.Mesh(new THREE.CylinderGeometry(9.8,9.8,0.8,4),dark);band.rotation.y=Math.PI/4;band.position.y=y+0.4;g.add(band);y+=15;}
+  const top=new THREE.Mesh(new THREE.CylinderGeometry(5,7.5,12,4),glass);top.rotation.y=Math.PI/4;top.position.y=y+6;edges(top);g.add(top);y+=12;
+  const top2=new THREE.Mesh(new THREE.CylinderGeometry(3,4,6,4),dark);top2.rotation.y=Math.PI/4;top2.position.y=y+3;g.add(top2);y+=6;
+  const sp=new THREE.Mesh(new THREE.CylinderGeometry(0.4,1.2,26,8),toon('#c9ccc8'));sp.position.y=y+13;g.add(sp);
+  scene.add(g);
+}
+function metro(){
+  const mx=-37,z1=40,z2=FZ-200,len=z1-z2;
+  for(let z=z1;z>z2;z-=16){const p=new THREE.Mesh(new THREE.BoxGeometry(1.6,9,1.6),toon('#b8bdc3'));p.position.set(mx,4.5,z);scene.add(p);}
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(7,1.2,len),toon('#c9cdd2'));deck.position.set(mx,9.6,(z1+z2)/2);edges(deck);scene.add(deck);
+  const [c,x]=mkCanvas(256,64);x.fillStyle='#f4f6f8';x.fillRect(0,0,256,64);x.fillStyle='#2a6fbf';x.fillRect(0,42,256,8);x.fillStyle='#33414f';for(let i=10;i<256;i+=40)x.fillRect(i,10,28,24);
+  const carM=toon('#ffffff',{map:tex(c)}),endM=toon('#e9ecef');
+  mrt=new THREE.Group();for(let k=0;k<3;k++){const car=new THREE.Mesh(new THREE.BoxGeometry(3.2,3.2,12),[carM,carM,endM,endM,endM,endM]);car.position.z=k*12.6;edges(car);mrt.add(car);}
+  mrt.position.set(mx,11.8,z1);scene.add(mrt);
+}
+function paved(r,z){const p=new THREE.Mesh(new THREE.CylinderGeometry(r,r,0.12,64),toon('#c8c3b8'));p.position.set(0,0.06,z);scene.add(p);
+  const curb=new THREE.Mesh(new THREE.TorusGeometry(r,0.18,6,64),toon('#8f9399'));curb.rotation.x=Math.PI/2;curb.position.set(0,0.1,z);scene.add(curb);}
+function addLeaf(x,z){const m=new THREE.Mesh(new THREE.OctahedronGeometry(0.32,0),toon('#41d27a',{emissive:'#1f9a52',emissiveIntensity:0.6}));
+  m.scale.set(1,1.5,0.35);m.position.set(x,1.05,z);scene.add(m);leaves.push({m,x,z,got:false});}
+function hedge(x1,x2,z){const w=Math.abs(x2-x1);const h=new THREE.Mesh(new THREE.BoxGeometry(w,1.3,1.4),toon('#4c8a46'));h.position.set((x1+x2)/2,0.65,z);edges(h);scene.add(h);
+  for(let x=Math.min(x1,x2)+1;x<Math.max(x1,x2);x+=2.2){const b=new THREE.Mesh(new THREE.SphereGeometry(0.75,8,6),toon('#5c9c52',{flatShading:true}));b.position.set(x,1.3,z);scene.add(b);}}
+const PILLAR=toon('#9aa3ad');
+
+const ADS=[['珍珠奶茶','#f2c230','#1d2233'],['夜市小吃','#1f6fb2','#fff'],['科技展','#12a3bd','#fff'],['電競嘉年華','#6a3fa0','#fff'],['茶葉蛋','#2e8a5a','#fff'],['手機新品','#1d2233','#f2c230'],['捷運一日票','#ffffff','#1f6fb2']];
+function billboard(x,h,z,s){const [c,g]=mkCanvas(512,256);const ad=ADS[Math.floor(Math.random()*ADS.length)];g.fillStyle=ad[1];g.fillRect(0,0,512,256);g.strokeStyle='rgba(120,130,140,.6)';g.lineWidth=8;g.strokeRect(10,10,492,236);
+  g.fillStyle=ad[2];g.textAlign='center';g.textBaseline='middle';g.font='900 '+(ad[0].length>4?76:96)+'px '+SANS;g.fillText(ad[0],256,128);
+  const p=plane(8,4,tex(c));p.position.set(x-s*2,h+3.4,z);p.rotation.y=-s*Math.PI/2;scene.add(p);
+  [-3,3].forEach(o=>{const post=new THREE.Mesh(new THREE.BoxGeometry(0.2,1.6,0.2),toon('#5d6470'));post.position.set(x-s*2.1,h+0.8,z+o);scene.add(post);});}
+const CARC=['#f2c230','#f2c230','#f2c230','#f4f4f2','#b9bec4','#2b2f36','#2c4a7a','#7d858f'];
+const traffic=[];
+function car(color){const g=new THREE.Group();const body=new THREE.Mesh(new THREE.BoxGeometry(1.9,0.75,4.3),toon(color,{roughness:0.45}));body.position.y=0.65;g.add(body);
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.65,0.6,2.2),toon('#2f3a45',{roughness:0.3}));cab.position.set(0,1.3,-0.2);g.add(cab);
+  const wg=new THREE.CylinderGeometry(0.34,0.34,0.3,12),wm=toon('#1f2227');[[-0.95,1.4],[0.95,1.4],[-0.95,-1.4],[0.95,-1.4]].forEach(([wx,wz])=>{const w=new THREE.Mesh(wg,wm);w.rotation.z=Math.PI/2;w.position.set(wx,0.34,wz);g.add(w);});
+  const hl=new THREE.MeshBasicMaterial({color:'#fff6d8'});[-0.6,0.6].forEach(hx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(0.35,0.15,0.05),hl);l.position.set(hx,0.75,2.16);g.add(l);});
+  if(color==='#f2c230'){const sg=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.25,0.3),toon('#ffffff',{emissive:'#ffffff',emissiveIntensity:0.3}));sg.position.set(0,1.72,-0.2);g.add(sg);}
+  return g;}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function scooter(){const g=new THREE.Group();const b=new THREE.Mesh(new THREE.BoxGeometry(0.45,0.5,1.6),toon(pick(['#f4f4f2','#2c4a7a','#7d858f','#2e8a5a']),{roughness:0.5}));b.position.y=0.55;g.add(b);
+  const rider=new THREE.Mesh(new THREE.CylinderGeometry(0.22,0.26,0.75,10),toon(pick(['#3b4f6e','#6a3fa0','#c9ccc8','#2b2f36'])));rider.position.set(0,1.15,-0.15);g.add(rider);
+  const helm=new THREE.Mesh(new THREE.SphereGeometry(0.2,12,10),toon(pick(['#f2c230','#ffffff','#1f6fb2','#2b2f36']),{roughness:0.4}));helm.position.set(0,1.68,-0.12);g.add(helm);
+  const wg=new THREE.CylinderGeometry(0.25,0.25,0.12,10),wm=toon('#1f2227');[0.65,-0.65].forEach(wz=>{const w=new THREE.Mesh(wg,wm);w.rotation.z=Math.PI/2;w.position.set(0,0.25,wz);g.add(w);});return g;}
+function cityLife(){
+  [-1,1].forEach(s=>{
+    const lawn=new THREE.Mesh(new THREE.BoxGeometry(12,0.04,12-(FZ-14)),toon('#6fa356'));lawn.position.set(s*10.5,0.02,(12+FZ-14)/2);scene.add(lawn);
+    for(let z=8;z>FZ-12;z-=20){const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.1,6,8),toon('#5d6470'));pole.position.set(s*22.6,3,z);scene.add(pole);
+      const arm=new THREE.Mesh(new THREE.BoxGeometry(1.6,0.1,0.1),toon('#5d6470'));arm.position.set(s*23.3,5.95,z);scene.add(arm);
+      const lamp=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.15,0.3),toon('#fff3d0',{emissive:'#ffe9b0',emissiveIntensity:0.8}));lamp.position.set(s*24,5.85,z);scene.add(lamp);}
+    const dir=-s;
+    for(let k=0;k<16;k++){const c=car(pick(CARC));c.position.set(s*(k%2?24.4:27.4),0,rnd(FZ-190,40));c.rotation.y=dir>0?0:Math.PI;scene.add(c);traffic.push({m:c,dir,sp:rnd(9,15)});}
+    for(let k=0;k<14;k++){const c=scooter();c.position.set(s*28.9+rnd(-0.3,0.3),0,rnd(FZ-190,40));c.rotation.y=dir>0?0:Math.PI;scene.add(c);traffic.push({m:c,dir,sp:rnd(10,16)});}
+  });
+}
+function enableShadows(){scene.traverse(o=>{if(o.isMesh&&!o.userData.noShadow){o.castShadow=true;o.receiveShadow=true;}});if(sky){sky.castShadow=false;sky.receiveShadow=false;}}
+function buildWorld(){
+  skyDome();ground();
+  const len=12-(FZ-14);
+  const walk=new THREE.Mesh(new THREE.BoxGeometry(5,0.08,len),toon('#cfc8ba'));walk.position.set(0,0.04,(12+FZ-14)/2);scene.add(walk);
+  [-1,1].forEach(s=>{
+    const road=new THREE.Mesh(new THREE.BoxGeometry(7,0.06,len+260),toon('#3c4047'));road.position.set(s*26,0.03,(12+FZ-14)/2-90);scene.add(road);
+    for(let z=20;z>FZ-200;z-=8){const dash=new THREE.Mesh(new THREE.BoxGeometry(0.25,0.07,3),toon('#e8e4d8'));dash.position.set(s*26,0.05,z);scene.add(dash);}
+    [0.5,1.05].forEach(y=>{const rail=new THREE.Mesh(new THREE.BoxGeometry(0.12,0.1,len),toon('#6d7682'));rail.position.set(s*21.6,y,(12+FZ-14)/2);scene.add(rail);});
+    for(let z=12;z>FZ-14;z-=4){const p=new THREE.Mesh(new THREE.BoxGeometry(0.16,1.15,0.16),toon('#6d7682'));p.position.set(s*21.6,0.58,z);scene.add(p);}
+    for(let z=10;z>FZ-12;z-=7.5)tree(s*20.2,z+rnd(-1,1),rnd(0.85,1.1));
+    let z=36;
+    while(z>FZ-160){const w=rnd(12,20),d=rnd(14,22),h=rnd(14,34);
+      const x=s<0?-(42+w/2):(32+w/2);midrise(x,z-d/2,w,d,h,s);z-=d+rnd(1,4);}
+    for(let z2=20;z2>FZ-150;z2-=rnd(20,32)){const tall=z2<FZ+90?rnd(70,130):rnd(35,80);building(s*rnd(78,118),z2,rnd(16,26),rnd(16,26),tall);}
+  });
+  metro();cityLife();
+  taipei101(0,FZ-175);
+  building(-48,FZ-120,24,24,110);building(50,FZ-135,22,22,92);building(-80,FZ-160,26,26,75);building(84,FZ-150,24,24,64);
+  // 起點廣場
+  paved(9,0);
+  const st=new THREE.Mesh(new THREE.BoxGeometry(8.6,4.4,0.6),toon('#d9dde2'));st.position.set(-5.3,2.8,-3.4);st.rotation.y=0.55;edges(st);scene.add(st);
+  const stf=plane(8.2,4,steleTex('八回合之路','每回合一張事件卡，走到守護者面前做選擇。終點在台北 101 下。','#2b6fb0'));
+  stf.position.set(-5.3+Math.sin(0.55)*0.31,2.8,-3.4+Math.cos(0.55)*0.31);stf.rotation.y=0.55;scene.add(stf);
+  tree(6,3,1);tree(6.5,-4,0.9);
+  ROUNDS.forEach((rd,i)=>{
+    const cz=CZ(i),col=rCol(rd);
+    paved(R,cz);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(5.6,6.3,64),new THREE.MeshBasicMaterial({color:col,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.set(0,0.14,cz+2.5);scene.add(ring);
+    [-3.4,3.4].forEach(x=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.7,6.6,0.7),PILLAR);p.position.set(x,3.3,cz+R-0.4);edges(p);scene.add(p);
+      const cap=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.4,0.9),toon(col));cap.position.set(x,6.8,cz+R-0.4);scene.add(cap);});
+    const beam=new THREE.Mesh(new THREE.BoxGeometry(7.8,0.5,0.6),PILLAR);beam.position.set(0,6.4,cz+R-0.4);edges(beam);scene.add(beam);
+    const cloth=plane(5,2.73,clothTex('第 '+(i+1)+' 回合 · '+rd.eraName,rd.type==='coop'?'合作':rd.type==='invest'?'投資':'五說',col));cloth.position.set(0,4.75,cz+R-0.3);scene.add(cloth);
+    const sl=new THREE.Mesh(new THREE.BoxGeometry(10.4,5.2,0.7),toon('#d9dde2'));sl.position.set(0,3.6,cz-12);edges(sl);scene.add(sl);
+    const base=new THREE.Mesh(new THREE.BoxGeometry(11.4,1,1.6),toon('#9aa3ad'));base.position.set(0,0.5,cz-12);edges(base);scene.add(base);
+    const face=plane(10,4.9,steleTex(rd.title,rd.type==='coop'?'合作回合：只有互賴說，挑一家公司配對。':rd.type==='invest'?'永續投資：四張方案卡，付費買一張或不投資。':'事件＋五說：五位說的守護者舉著你的行動，選一個說。',col));face.position.set(0,3.6,cz-11.63);scene.add(face);
+    const wz=WZ(i);hedge(-HALF-1.5,-3.6,wz);hedge(3.6,HALF+1.5,wz);
+    [-3.4,3.4].forEach(x=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.6,4.6,0.6),PILLAR);p.position.set(x,2.3,wz);edges(p);scene.add(p);});
+    const lt=new THREE.Mesh(new THREE.BoxGeometry(7.4,0.4,0.6),toon(col));lt.position.set(0,4.7,wz);scene.add(lt);
+    const dT=doorTex(col,i<N-1?'第 '+(i+2)+' 回合':'終點');const dW=toon('#f4f6f8'),dF=new THREE.MeshBasicMaterial({map:dT});const dM=[dW,dW,dW,dW,dF,dF];
+    const mkLeaf=(sd)=>{const pv=new THREE.Group();pv.position.set(sd*3.1,0,wz);const lf=new THREE.Mesh(new THREE.BoxGeometry(3.1,4.2,0.18),dM);lf.position.set(-sd*1.55,2.1,0);edges(lf);pv.add(lf);scene.add(pv);return pv;};
+    barriers.push({L:mkLeaf(-1),R:mkLeaf(1),open:0,opening:false});
+    tree(-11.5,cz-8,0.8);tree(11.5,cz-8,0.8);tree(-12,cz+7,0.75);tree(12,cz+7,0.75);
+  });
+  paved(11,FZ);
+  const ped=new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.9,1,24),toon('#3e434a'));ped.position.set(0,0.5,FZ-2);edges(ped);scene.add(ped);
+  const cup=new THREE.Mesh(new THREE.CylinderGeometry(0.9,0.4,1.4,20),toon('#f2c75c',{emissive:'#7a5a10',emissiveIntensity:0.3}));cup.position.set(0,1.9,FZ-2);scene.add(outline(cup,1.06));
+  trophy=new THREE.Mesh(new THREE.OctahedronGeometry(0.5,0),toon('#f2c75c',{emissive:'#a87b14',emissiveIntensity:0.5}));trophy.position.set(0,3,FZ-2);scene.add(trophy);
+  const fin=plane(6,3.28,clothTex('八回合結束 · 站上領獎台','終點','#2b6fb0'));fin.position.set(0,5.6,FZ-6);scene.add(fin);
+  [-3.4,3.4].forEach(x=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.6,7.6,0.6),PILLAR);p.position.set(x,3.8,FZ-6.1);scene.add(p);});
+}
+
+function specsFor(i){
+  const rd=ROUNDS[i],my=COMP[me];
+  if(rd.type==='risk'){const d=rd.data[my.id];return SHUO.map((sh,k)=>({kind:'shuo',k,label:sh.slice(0,2),color:TH[sh].color,head:sh,ctx:rd.ctxLabel?rd.ctxLabel+'：'+d.ctx:'你的公司：'+my.name,main:d.a[k],name:sh+'的守護者'}));}
+  if(rd.type==='coop')return [{kind:'coop',k:0,label:'互賴',color:TH['互賴說'].color,head:'互賴說',ctx:'你的公司：'+my.name,main:'挑一家公司配對，各自投入 1～6 資本',name:'互賴說的守護者'}];
+  return rd.plans.map((p,j)=>({kind:'plan',k:j,label:'ABCD'[j],color:RCOL.invest,head:'方案 '+'ABCD'[j]+' · '+p.cost+' 資本',ctx:p.short,main:p.text,name:'方案 '+'ABCD'[j]+' 顧問'}));
+}
+function populate(){
+  ROUNDS.forEach((rd,i)=>{
+    const cz=CZ(i);const specs=specsFor(i);const n=specs.length;
+    specs.forEach((sp,j)=>{
+      const a=n===1?0:(-55+110*(j/(n-1)))*Math.PI/180;
+      const x=Math.sin(a)*8.6, z=cz-Math.cos(a)*8.6+1.5;
+      const face=Math.atan2(0-x,(cz+6)-z);
+      const ch=makeChar(sp.color,sp.label,j+i);ch.root.position.set(x,0,z);ch.root.rotation.y=face;scene.add(ch.root);
+      const sg=new THREE.Group();sg.position.set(x-Math.sin(face)*0.9,0,z-Math.cos(face)*0.9);sg.rotation.y=face;
+      const board=plane(3.4,2.7625,signTex(sp.head,sp.color,sp.ctx,sp.main));board.position.y=3.65;board.position.z=0.06;sg.add(board);
+      const back=new THREE.Mesh(new THREE.BoxGeometry(3.56,2.9,0.1),PILLAR);back.position.y=3.65;sg.add(back);
+      [-1.68,1.68].forEach(px=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.12,5.1,0.12),PILLAR);p.position.set(px,2.55,-0.02);sg.add(p);});
+      scene.add(sg);
+      const hb=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.3,1.1),new THREE.MeshBasicMaterial());hb.material.visible=false;hb.position.set(x,1.15,z);scene.add(hb);
+      const o={...ch,...sp,stage:i,x,z,face,sg,phase:Math.random()*6,cheer:0,wave:0,sad:0};
+      hb.userData.npc=o;board.userData.npc=o;hitList.push(hb,board);npcs.push(o);
+    });
+  });
+}
+
+/* ───────── 移動與碰撞 ───────── */
+const P={x:0,y:0,z:6,vy:0,yaw:0,pitch:-0.02};const EYEH=1.65;
+function inCircle(x,z,cz,r){return x*x+(z-cz)*(z-cz)<=r*r;}
+function walkable(x,z){
+  if(z>12||z<FZ-10||Math.abs(x)>HALF)return false;
+  for(let i=0;i<N;i++){const wz=WZ(i);
+    if(!solved[i]&&z<wz+0.9)return false;
+    if(Math.abs(z-wz)<1.3&&Math.abs(x)>3.0)return false;
+    const cz=CZ(i);if(Math.abs(x)<5.8&&z<cz-11&&z>cz-13.2)return false;}
+  return true;
+}
+function arenaAt(x,z){for(let i=0;i<N;i++)if(inCircle(x,z,CZ(i),R))return i;return -1;}
+
+/* ───────── 輸入 ───────── */
+const K={};let locked=false;const isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;const joy={x:0,y:0};
+const overlayEl=document.getElementById('overlay'),panel=document.getElementById('panel');
+const $=id=>document.getElementById(id);
+let film=null,auto=null;
+window.addEventListener('keydown',e=>{
+  if(film){if(['Escape','Enter','Space'].includes(e.code)){e.preventDefault();endFilm();}return;}
+  if(auto)return;
+  if(!overlayEl.hidden)return;K[e.code]=true;
+  if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
+  if(e.code==='KeyE'&&started)interact();
+  if(e.code==='KeyQ'&&started&&stageIdx<N)showEventCard(stageIdx);
+});
+window.addEventListener('keyup',e=>{K[e.code]=false;});
+window.addEventListener('blur',()=>{for(const k in K)K[k]=false;});
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;updateTip();});
+function lockMouse(){if(isTouch||!started||paused)return;try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+function unlockMouse(){try{if(document.pointerLockElement)document.exitPointerLock();}catch(e){}}
+function clampPitch(){P.pitch=Math.max(-1.3,Math.min(1.3,P.pitch));}
+document.addEventListener('mousemove',e=>{if(locked&&!paused){P.yaw-=e.movementX*0.0024;P.pitch-=e.movementY*0.0024;clampPitch();}});
+let drag=null;
+canvas.addEventListener('mousedown',e=>{if(!started||paused)return;if(locked){interact();return;}drag={x:e.clientX,y:e.clientY,moved:0};});
+window.addEventListener('mousemove',e=>{if(!drag||locked||paused)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;P.yaw-=dx*0.005;P.pitch-=dy*0.005;clampPitch();});
+window.addEventListener('mouseup',()=>{if(!drag)return;const click=drag.moved<6;drag=null;if(click){if(target)interact();else lockMouse();}});
+const joyEl=$('joy'),knob=$('knob');let joyId=null,lookId=null,lookLast=null;
+joyEl.addEventListener('touchstart',e=>{const t=e.changedTouches[0];joyId=t.identifier;moveJoy(t);e.preventDefault();},{passive:false});
+function moveJoy(t){const r=joyEl.getBoundingClientRect();let dx=t.clientX-(r.left+r.width/2),dy=t.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy),m=46;if(d>m){dx*=m/d;dy*=m/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;joy.x=dx/m;joy.y=-dy/m;}
+canvas.addEventListener('touchstart',e=>{if(paused)return;for(const t of e.changedTouches){if(lookId===null){lookId=t.identifier;lookLast={x:t.clientX,y:t.clientY,moved:0};}}e.preventDefault();},{passive:false});
+window.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===joyId)moveJoy(t);else if(t.identifier===lookId&&lookLast){const dx=t.clientX-lookLast.x,dy=t.clientY-lookLast.y;lookLast.moved+=Math.abs(dx)+Math.abs(dy);lookLast.x=t.clientX;lookLast.y=t.clientY;P.yaw-=dx*0.006;P.pitch-=dy*0.006;clampPitch();}}},{passive:false});
+window.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===joyId){joyId=null;joy.x=joy.y=0;knob.style.transform='';}if(t.identifier===lookId){if(lookLast&&lookLast.moved<8&&target)interact();lookId=null;lookLast=null;}}});
+$('tAct').addEventListener('touchstart',e=>{e.preventDefault();interact();},{passive:false});
+$('tJump').addEventListener('touchstart',e=>{e.preventDefault();K.Space=true;setTimeout(()=>K.Space=false,120);},{passive:false});
+$('cardBtn').addEventListener('click',()=>{if(auto||film||!overlayEl.hidden||stageIdx>=N)return;showEventCard(stageIdx);});
+
+/* ───────── 音效 ───────── */
+let actx=null;
+function beep(freqs,dur=0.12,type='triangle',vol=0.07){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();let t=actx.currentTime;
+  freqs.forEach(f=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.0001,t+dur*1.6);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+dur*1.6);t+=dur*0.85;});}catch(e){}}
+
+/* ───────── 介面 ───────── */
+function openPanel(html,stageColor){
+  paused=true;unlockMouse();for(const k in K)K[k]=false;
+  panel.style.setProperty('--stage',stageColor||'#2b6fb0');
+  panel.innerHTML=html;overlayEl.hidden=false;panel.scrollTop=0;
+  const f=panel.querySelector('[data-focus]')||panel.querySelector('button');if(f)setTimeout(()=>f.focus({preventScroll:true}),30);
+  $('prompt').hidden=true;
+}
+function closePanel(){overlayEl.hidden=true;paused=false;canvas.focus({preventScroll:true});lockMouse();updateTip();}
+panel.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;if(handlers[a])handlers[a](b);});
+const handlers={};
+function updateTip(){const t=$('tip');if(!started||paused||ended){t.hidden=true;return;}
+  if(!isTouch&&!locked){t.textContent='點一下畫面鎖定滑鼠（也可以按住滑鼠拖曳轉視角）';t.hidden=false;}else t.hidden=true;}
+let bannerTimer=null;
+function showBanner(top,big){$('bnTop').textContent=top;$('bnBig').textContent=big;const b=$('banner');b.classList.add('show');clearTimeout(bannerTimer);bannerTimer=setTimeout(()=>b.classList.remove('show'),2600);}
+function bump(id){const el=$(id);el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+function hud(){
+  $('mCap').querySelector('b').textContent=res.cap;$('mSc').querySelector('b').textContent=res.sc+' / 10';if(started)pub({sc:res.sc,cap:res.cap,st:stageIdx,pk:myPk});
+  $('progress').innerHTML=ROUNDS.map((r,i)=>{const col=rCol(r);const cls=solved[i]?'done':(i===stageIdx?'cur':'');
+    return `<span class="pill ${cls}" style="${solved[i]?'background:'+col:''}">${i+1}</span>`;}).join('');
+}
+const fmt=v=>(v>0?'+':'')+String(v).replace('-','−');
+function addRes(d){if(d.cap){res.cap+=d.cap;bump('mCap');}if(d.sc){res.sc+=d.sc;bump('mSc');}hud();}
+function chips(d){const a=[];if(d.sc)a.push(`<span class="d up">策略分 +${d.sc}</span>`);if(d.cap)a.push(`<span class="d ${d.cap>0?'up':'down'}">資本 ${fmt(d.cap)}</span>`);return a.length?`<div class="deltas">${a.join('')}</div>`:'<p class="muted">這回合沒有得分。</p>';}
+const nextBtn=i=>`<div class="row"><button class="btn stage" data-act="advance" data-focus>${i<N-1?'開門前往第 '+(i+2)+' 回合':'開門前往終點'}</button></div>`;
+
+/* 開始畫面：先選公司 */
+let chosen=-1;
+function showStart(){
+  openPanel(`
+   <div class="kicker">策略思維與永續發展 · 第五組 · 八回合試玩版</div>
+   <h1>永續價值進化：新創競技場</h1>
+   <p>你們的公司要在台北街頭闖過八回合。先選你的小組代表哪一家公司，每家都從 <b>6 資本、0 策略分</b>開局。每回合開始先播一段快訊影片，再發一張事件卡：</p>
+   <div class="box"><p><b>事件＋五說（第 1、3、4、6 回合）</b>：五位說的守護者舉著你的公司在這回合可以採取的行動，選一個說，答中主持人答案得 1 分。<br><b>合作（第 2、7 回合）</b>：只有互賴說，挑一家公司配對、投入資本，S、A 級得 1 分。<br><b>永續投資（第 5、8 回合）</b>：四位方案顧問各拿一張方案卡，付費買一張可得 0～2 分，也可以不投資。</p></div>
+   <h3>你的組別與房間</h3>
+   <div class="row"><input id="nickIn" class="txt" maxlength="12" placeholder="組名，例如：第五組"><input id="roomIn" class="txt" maxlength="20" placeholder="房間代碼" value="${esc(roomCode)}"><button class="btn ghost" data-act="joinRoom">換房間</button></div>
+   <p id="netInfo" class="muted" style="font-size:14px">連線中…</p>
+   <h3>選你的公司</h3>
+   <div class="cogrid" id="coGrid">${COMP.map((c,i)=>`<button class="co" data-act="pick" data-i="${i}"><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>核心：${c.core}<br>需要：${c.need}</small><small class="taken"></small></button>`).join('')}</div>
+   <p class="muted" style="font-size:14px">${isTouch?'左下搖桿移動，右半邊畫面滑動轉視角，「互動」鍵和 NPC 對話。':'WASD 移動、滑鼠轉視角、空白鍵跳、Shift 跑步、E 或左鍵和 NPC 互動、Q 重看事件卡。'}第 8 回合結束後，策略分最高者獲勝（滿分 10 分）。</p>
+   <div class="row"><button class="btn" data-act="start" id="startBtn" disabled style="opacity:.45">先選一家公司</button></div>`);
+  const ni=$('netInfo');if(ni)ni.textContent=netLabel();refreshTaken();
+}
+handlers.pick=b=>{chosen=+b.dataset.i;panel.querySelectorAll('.co').forEach(x=>x.classList.toggle('sel',x===b));const s=$('startBtn');s.disabled=false;s.style.opacity=1;s.textContent='以「'+COMP[chosen].name+'」出發';};
+handlers.start=()=>{
+  if(chosen<0)return;if(humansByCo()[COMP[chosen].id]){refreshTaken();return;}
+  myNick=(($('nickIn')||{}).value||'').trim().slice(0,12)||COMP[chosen].short+'組';me=chosen;const c=COMP[me];res.cap=6;res.sc=0;started=true;myPk=Array(N).fill(null);
+  pub({nick:myNick,co:c.id,st:0,sc:0,cap:6,pk:myPk,x:0,z:6,yaw:0});
+  COMP.forEach((o,i)=>{if(i!==me)sim[o.id]={cap:6,sc:0};});
+  $('meDot').style.background=c.color;$('meName').textContent=c.name+' · '+myNick;
+  ['stats','progress','crosshair','cardBtn'].forEach(id=>$(id).hidden=false);
+  if(isTouch)$('touch').hidden=false;else $('keys').hidden=false;
+  populate();enableShadows();P.x=0;P.z=6;P.yaw=0;P.pitch=-0.02;hud();beep([523,659,784,1047],0.1);closePanel();
+  showBanner('台北市',c.name+' 出發');
+};
+
+/* 事件卡 */
+function showEventCard(i){
+  const rd=ROUNDS[i];if(!rd)return;const col=rCol(rd);const my=COMP[me];
+  const ctx=rd.type==='risk'&&rd.ctxLabel?`<div class="box"><p><b>${rd.ctxLabel}：</b>${rd.data[my.id].ctx}</p></div>`:'';
+  const task=rd.type==='coop'?`這回合只有<b>互賴說</b>。去找互賴說的守護者，從另外五家公司挑一家配對，各自投入 1～6 資本。主持人公布等級後，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。如果你選的是真人組別，對方會收到邀請，你們可以先在對話框聊聊，再由對方選擇同意或拒絕。`
+    :rd.type==='invest'?`四位方案顧問各拿著一張方案卡，成本 5 或 9 資本。走到想買的方案面前付費，也可以保留資本不投資。亮牌後公布答案，每張方案值 0、1 或 2 分。你目前有 <b>${res.cap}</b> 資本。`
+    :`五位說的守護者舉著<b>${my.name}</b>在這回合可以採取的行動。暗選一個說：走到它面前互動並選定，<b>每回合只能選一個說</b>。答中主持人答案得 1 策略分。`;
+  const go=rd.type==='coop'?'去找互賴說':rd.type==='invest'?'去看方案':'去找說的守護者';
+  openPanel(`
+   <div class="eyebrow"><span class="tag th">第 ${i+1} 回合 · ${TYPENAME[rd.type]}</span><span class="tag">${rd.eraName}</span><span class="tag">${my.name}</span></div>
+   <h2>${rd.title}</h2>
+   <p>${rd.event}</p>
+   ${ctx}
+   <div class="box task"><p>${task}</p></div>
+   <div class="row"><button class="btn stage" data-act="close" data-focus>${go}</button><button class="btn ghost" data-act="replay" data-i="${i}">重播快訊影片</button></div>`,col);
+}
+handlers.close=()=>closePanel();
+handlers.replay=b=>{const i=+b.dataset.i;overlayEl.hidden=true;playFilm(i,()=>showEventCard(i));};
+handlers.advance=()=>{overlayEl.hidden=true;startAuto(stageIdx-1);};
+function startIntro(i){introShown[i]=true;showBanner('第 '+(i+1)+' 回合',ROUNDS[i].title);playFilm(i,()=>showEventCard(i));}
+
+/* NPC 互動 */
+let target=null;const ray=new THREE.Raycaster();const center=new THREE.Vector2(0,0);
+function interact(){if(!started||paused||!target)return;openNpcCard(target);}
+function openNpcCard(n){
+  const rd=ROUNDS[n.stage],col=n.color;const active=n.stage===stageIdx&&!solved[n.stage];
+  n.wave=1.5;beep([587],0.07,'sine',0.05);
+  const tagline=`<span class="tag">第 ${n.stage+1} 回合 · ${rd.title}</span>`;
+  if(n.kind==='shuo'){const d=rd.data[COMP[me].id];
+    openPanel(`<div class="eyebrow"><span class="tag th">${n.head}</span>${tagline}</div><h2 style="color:${col}">${n.name}</h2><p class="muted">${TH[n.head].desc}</p>
+     <div class="box"><p class="muted" style="font-size:13px">${COMP[me].name}用${n.head}會這樣做</p><p class="big-act">${d.a[n.k]}</p></div>
+     ${n.chosen?'<p><b>這是你這回合選定的說。</b></p>':''}
+     ${active?`<p>確定這回合要用<b>${n.head}</b>嗎？選定後這回合就不能再換。</p><div class="row"><button class="btn stage" data-act="choose" data-k="${n.k}" data-focus>選定${n.head}</button><button class="btn ghost" data-act="close">再看看</button></div>`
+       :`<p class="muted">這回合主持人的答案是「${SHUO[d.best]}」。</p><div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);return;}
+  if(n.kind==='coop'){
+    openPanel(`<div class="eyebrow"><span class="tag th">互賴說</span>${tagline}</div><h2 style="color:${col}">${n.name}</h2><p class="muted">${TH['互賴說'].desc}</p>
+     <div class="box"><p>從另外五家公司挑一家配對，雙方各自投入 1～6 資本（以手上資本為限）。主持人公布等級後，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。<b>選定夥伴之後就不能更換。</b></p></div>
+     ${n.chosen?'<p><b>這回合你已經完成配對。</b></p>':''}
+     <div class="row">${active?`<button class="btn stage" data-act="coopStart" data-focus>開始挑夥伴</button>`:''}<button class="btn ghost" data-act="close">${active?'再看看':'關閉'}</button></div>`,col);return;}
+  const p=rd.plans[n.k];const can=res.cap>=p.cost;
+  openPanel(`<div class="eyebrow"><span class="tag th">方案 ${n.label}</span>${tagline}</div>
+   <h2>${p.short}</h2><div class="box"><p class="big-act" style="font-size:18px">${p.text}</p></div>
+   <p>成本 <b>${p.cost} 資本</b>，你目前有 ${res.cap} 資本。${n.chosen?'<b>這是你這回合買下的方案。</b>':''}</p>
+   ${active?`<div class="row">${can?`<button class="btn stage" data-act="plan" data-k="${n.k}" data-focus>付 ${p.cost} 資本買這個方案</button>`:'<button class="btn ghost" disabled>資本不足</button>'}<button class="btn ghost" data-act="skipInvest">這回合不投資</button><button class="btn ghost" data-act="close">再看看</button></div>`
+     :(n.stage<stageIdx?`<p class="muted">主持人答案：${p.pts} 分。${p.why}</p>`:'')+`<div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);
+}
+function solveStage(i){solved[i]=true;stageIdx=i+1;hud();}
+const others=()=>COMP.filter((c,j)=>j!==me);
+
+/* 事件＋五說 */
+function simRisk(i){const rd=ROUNDS[i];return npcCos().map(c=>{const d=rd.data[c.id];const ok=Math.random()<0.45;
+  const k=ok?d.best:[0,1,2,3,4].filter(x=>x!==d.best)[Math.floor(Math.random()*4)];if(ok)sim[c.id].sc+=1;return {c,k,ok};});}
+handlers.choose=b=>{
+  const i=stageIdx,rd=ROUNDS[i],k=+b.dataset.k,my=COMP[me],d=rd.data[my.id],ok=k===d.best;
+  const delta={sc:ok?1:0};addRes(delta);picks[i]={k,ok};myPk[i]=k;solveStage(i);
+  const rev=simRisk(i);
+  const cn=npcs.find(n=>n.stage===i&&n.k===k);if(cn){markChosen(cn);ok?cn.cheer=3:cn.sad=2;}
+  if(!ok){const bn=npcs.find(n=>n.stage===i&&n.k===d.best);if(bn)bn.cheer=3;}
+  ok?beep([659,784,1047,1319],0.11):beep([330,247],0.18);
+  openPanel(`
+   <div class="verdict"><span class="mark" style="background:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</span><div><h2>${ok?'答中主持人答案！':'不是主持人的答案'}</h2><p class="muted">第 ${i+1} 回合 · 你選了 ${SHUO[k]}</p></div></div>
+   ${chips(delta)}
+   <div class="box"><p>主持人答案：${my.name}｜<b>${SHUO[d.best]}</b>。${d.why}</p></div>
+   <h3>你的五個選項</h3>
+   <div class="tbl-wrap"><table style="min-width:420px"><thead><tr><th>說</th><th>行動</th></tr></thead><tbody>
+    ${d.a.map((a,j)=>`<tr class="${j===d.best?'ans':''} ${j===k?'mine':''}"><td>${SHUO[j]}${j===d.best?' ★':''}</td><td>${a}</td></tr>`).join('')}
+   </tbody></table></div>
+   <h3>其他公司同時亮牌</h3>
+   <div class="revgrid">${rev.map(o=>`<div><span>${o.c.short}</span><span>${SHUO[o.k]} <i style="color:${o.ok?'var(--good)':'var(--bad)'}">${o.ok?'✓':'✗'}</i></span></div>`).join('')}${humanRev(i)}</div>
+   ${nextBtn(i)}`,rCol(rd));
+};
+
+/* 永續投資 */
+function simInvest(i){const rd=ROUNDS[i];return npcCos().map(c=>{const s=sim[c.id];let k=-1;
+  if(Math.random()>0.2){const opts=rd.plans.map((q,j)=>j).filter(j=>rd.plans[j].cost<=s.cap);if(opts.length){const top=opts.filter(j=>rd.plans[j].pts===2);k=(top.length&&Math.random()<0.4)?top[0]:opts[Math.floor(Math.random()*opts.length)];}}
+  if(k>=0){s.cap-=rd.plans[k].cost;s.sc+=rd.plans[k].pts;}return {c,k,pts:k>=0?rd.plans[k].pts:0};});}
+handlers.plan=b=>finishInvest(+b.dataset.k);
+handlers.skipInvest=()=>finishInvest(-1);
+function finishInvest(k){
+  const i=stageIdx,rd=ROUNDS[i];const p=k>=0?rd.plans[k]:null;
+  const delta=p?{cap:-p.cost,sc:p.pts}:{};addRes(delta);picks[i]={k,pts:p?p.pts:0};myPk[i]=k;solveStage(i);
+  const rev=simInvest(i);
+  if(p){const cn=npcs.find(n=>n.stage===i&&n.k===k);if(cn){markChosen(cn);p.pts>0?cn.cheer=3:cn.sad=2;}}
+  const bestJ=rd.plans.reduce((b2,q,j)=>q.pts>rd.plans[b2].pts?j:b2,0);const bn=npcs.find(n=>n.stage===i&&n.k===bestJ);if(bn&&bestJ!==k)bn.cheer=3;
+  const good=p&&p.pts>0;good?beep([659,784,1047,1319],0.11):beep([330,247],0.18);
+  openPanel(`
+   <div class="verdict"><span class="mark" style="background:${good?'var(--good)':'var(--bad)'}">${p?(p.pts===2?'✓':p.pts===1?'△':'✗'):'—'}</span><div><h2>${p?'方案 '+'ABCD'[k]+'：'+p.pts+' 分':'這回合不投資'}</h2><p class="muted">第 ${i+1} 回合 · ${rd.title}</p></div></div>
+   ${chips(delta)}
+   <h3>亮牌：四張方案的主持人答案</h3>
+   <div class="tbl-wrap"><table><thead><tr><th>方案</th><th class="n">成本</th><th>內容</th><th class="n">分數</th><th>理由</th></tr></thead><tbody>
+    ${rd.plans.map((q,j)=>`<tr class="${j===bestJ?'ans':''} ${j===k?'mine':''}"><td>${'ABCD'[j]}</td><td class="n">${q.cost}</td><td>${q.short}</td><td class="n">${q.pts}</td><td>${q.why}</td></tr>`).join('')}
+   </tbody></table></div>
+   <h3>其他公司同時亮牌</h3>
+   <div class="revgrid">${rev.map(o=>`<div><span>${o.c.short}</span><span>${o.k>=0?'方案 '+'ABCD'[o.k]:'不投資'} <i>${o.pts} 分</i></span></div>`).join('')}${humanRev(i)}</div>
+   ${nextBtn(i)}`,RCOL.invest);
+}
+
+/* 合作（互賴說） */
+let coop={};
+handlers.coopStart=()=>{
+  const my=COMP[me];const H=humansByCo();
+  openPanel(`
+   <div class="eyebrow"><span class="tag th">互賴說</span><span class="tag">步驟 1 / 2</span></div>
+   <h2>挑一家公司配對</h2>
+   <p class="muted">${my.name}的核心能力：${my.core}；最需要：${my.need}。選定之後就不能更換。</p>
+   <div class="cogrid">${COMP.map((c,i)=>i===me?'':`<button class="co" data-act="partner" data-ci="${i}"><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>核心：${c.core}<br>需要：${c.need}<br>${H[c.id]?'<b>真人：'+esc(H[c.id].nick)+'・第 '+(H[c.id].st+1)+' 回合</b>':'電腦代打・資本 '+sim[c.id].cap}</small></button>`).join('')}</div>`,TH['互賴說'].color);
+};
+handlers.partner=b=>{
+  const ci=+b.dataset.ci;coop={ci};const c=COMP[ci],col=TH['互賴說'].color;const max=Math.min(6,res.cap);
+  const hh=humansByCo()[c.id];if(hh){startInvite(c,hh);return;}
+  if(max<1){openPanel(`<h2>資本不足</h2><p>你目前沒有資本可以投入，這回合無法和${c.name}配對，維持原資本與分數。</p><div class="row"><button class="btn stage" data-act="coopNone" data-focus>結束這回合</button></div>`,col);return;}
+  openPanel(`
+   <div class="eyebrow"><span class="tag th">互賴說</span><span class="tag">步驟 2 / 2</span></div>
+   <h2>和${c.name}配對，你要投入多少資本？</h2>
+   <p>${c.name}同意配對，夥伴已鎖定。雙方各自投入 1～6 資本，鎖定後主持人才公布等級。你目前有 ${res.cap} 資本。</p>
+   <div class="row">${Array.from({length:max},(_,k)=>k+1).map(v=>`<button class="btn ${v===Math.min(3,max)?'stage':'ghost'}" data-act="invest" data-v="${v}" ${v===Math.min(3,max)?'data-focus':''}>投入 ${v}</button>`).join('')}</div>`,col);
+};
+function simCoop(i,partnerId){const rd=ROUNDS[i];const rest=npcCos().map(c=>c.id).filter(id=>id!==partnerId).sort(()=>Math.random()-0.5);const out=[];
+  for(let j=0;j+1<rest.length;j+=2){const a=rest[j],b=rest[j+1];const g=rd.grades[pairKey(a,b)];
+    const ia=Math.min(sim[a].cap,Math.ceil(rnd(0.01,6))),ib=Math.min(sim[b].cap,Math.ceil(rnd(0.01,6)));const tot=ia+ib;const ex=tot>=2?EXTRA[g][Math.min(12,tot)-2]:0;const pt=(g==='S'||g==='A')?1:0;
+    [a,b].forEach(id=>{sim[id].cap+=ex;sim[id].sc+=pt;});out.push({a,b,g});}
+  if(rest.length%2)out.push({a:rest[rest.length-1],b:null,g:'—'});
+  return out;}
+handlers.coopNone=()=>{const i=stageIdx;picks[i]={partner:null};const rev=simCoop(i,null);solveStage(i);
+  openPanel(`<h2>這回合沒有配對</h2><p class="muted">維持原資本與分數。</p>${coopRev(rev)}${nextBtn(i)}`,TH['互賴說'].color);};
+function coopRev(rev){return `<h3>其他公司的配對</h3><div class="revgrid">${rev.map(o=>`<div><span>${COMP[CI[o.a]].short}${o.b?' × '+COMP[CI[o.b]].short:'（未配對）'}</span><i>${o.g}</i></div>`).join('')}${humanRev(stageIdx-1)}</div>`;}
+handlers.invest=b=>{
+  const i=stageIdx,rd=ROUNDS[i];const inv=+b.dataset.v;const c=COMP[coop.ci];const ps=sim[c.id];
+  const pinv=Math.min(ps.cap,Math.ceil(rnd(0.01,6)));const total=inv+pinv;
+  const key=pairKey(COMP[me].id,c.id);const g=rd.grades[key];const extra=total>=2?EXTRA[g][Math.min(12,total)-2]:0;const pt=(g==='S'||g==='A')?1:0;
+  addRes({cap:extra,sc:pt});ps.cap+=extra;ps.sc+=pt;
+  picks[i]={partner:c.id,g,inv,pinv,extra,pt};myPk[i]=c.id;
+  const rev=simCoop(i,c.id);solveStage(i);
+  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn){markChosen(hn);pt?hn.cheer=3:hn.sad=2;}
+  pt?beep([659,784,1047,1319],0.11):beep([392,330],0.15);
+  const best=COMP.filter(x=>x.id!==COMP[me].id&&rd.grades[pairKey(COMP[me].id,x.id)]==='S').map(x=>x.name).join('、');
+  openPanel(`
+   <div class="verdict"><span class="grade" style="background:${GCOL[g]}">${g}</span><div><h2>${COMP[me].short} × ${c.short}：${g} 級</h2><p class="muted">${rd.desc[key]}</p></div></div>
+   ${chips({sc:pt,cap:extra})}
+   <div class="box"><p>你投入 ${inv}，${c.short}投入 ${pinv}，投入總額 ${total}。雙方各自拿回本金，每家再拿 <b>${extra}</b> 資本的配對綜效。${pt?'S、A 級配對得 1 策略分。':'B、C 級配對不得分。'}</p></div>
+   ${g!=='S'?`<p class="muted">這回合對${COMP[me].name}來說，${best?'S 級夥伴是'+best+'。':'沒有 S 級組合，A 級就是最好的選擇。'}</p>`:''}
+   ${coopRev(rev)}
+   ${nextBtn(i)}`,TH['互賴說'].color);
+};
+
+/* 結局 */
+function showEnding(){
+  ended=true;
+  const rows=COMP.map((c,i)=>i===me?{c,cap:res.cap,sc:res.sc,me:true}:(lastSeen[c.id]?{c,cap:lastSeen[c.id].cap,sc:lastSeen[c.id].sc,human:lastSeen[c.id].nick}:{c,cap:sim[c.id].cap,sc:sim[c.id].sc}));
+  rows.sort((a,b)=>b.sc-a.sc||(a.me?-1:b.me?1:0));rows.forEach(r=>r.pos=1+rows.filter(o=>o.sc>r.sc).length);
+  const mine=rows.find(r=>r.me);const tied=rows.filter(r=>r.sc===mine.sc).length>1;
+  beep(mine.pos===1?[523,659,784,1047,1319]:[523,659,523],0.13);
+  const recap=ROUNDS.map((r,i)=>{const p=picks[i];if(!p)return '';let what,got;
+    if(r.type==='risk'){const d=r.data[COMP[me].id];what=SHUO[p.k];got=p.ok?'+1':'0（答案：'+SHUO[d.best]+'）';}
+    else if(r.type==='coop'){what=p.partner?'和'+COMP[CI[p.partner]].short+'配對（'+p.g+' 級）':'未配對';got=p.partner?'+'+p.pt:'0';}
+    else{what=p.k>=0?'方案 '+'ABCD'[p.k]:'不投資';got='+'+p.pts;}
+    return `<tr><td>${i+1}</td><td>${r.title}</td><td>${what}</td><td class="n">${got}</td></tr>`;}).join('');
+  openPanel(`
+   <div class="kicker">八回合結束</div>
+   <h1>${mine.pos===1?(tied?'並列第一！':'冠軍！策略分最高'):'你是第 '+mine.pos+' 名'+(tied?'（並列）':'')}</h1>
+   <div class="rank">${rows.map(r=>`<div class="${r.me?'me':''}"><span class="pos">${r.pos}</span><span class="sw" style="background:${r.c.color}"></span><span>${r.c.name}${r.me?'（你）':r.human!=null?'（'+esc(r.human)+'）':'（電腦）'}</span><span class="sub">資本 ${r.cap}</span><span class="sc">${r.sc} 分</span></div>`).join('')}</div>
+   <h3>你的八回合紀錄</h3>
+   <div class="tbl-wrap"><table style="min-width:420px"><thead><tr><th>回</th><th>事件</th><th>你的選擇</th><th class="n">策略分</th></tr></thead><tbody>${recap}</tbody></table></div>
+   <p class="muted" style="font-size:13px">滿分 10 分，同分並列。電腦代打的公司是模擬的；真人組別顯示的是他們目前的分數。</p>
+   <div class="row"><button class="btn" data-act="again" data-focus>再玩一次</button><button class="btn ghost" data-act="close">留在街上逛逛</button></div>`);
+}
+handlers.again=()=>{location.reload();};
+
+/* ───────── 選定標記、開門與自動前進 ───────── */
+function markChosen(n){n.chosen=true;const r=new THREE.Mesh(new THREE.RingGeometry(0.75,1.0,40),new THREE.MeshBasicMaterial({color:'#2b6fb0',side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(n.x,0.17,n.z);scene.add(r);}
+function startAuto(i){
+  paused=true;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;$('tip').hidden=true;
+  const cz=CZ(i),sd=P.x<0?-1:1,wz=WZ(i);
+  const after=i<N-1?[[0,wz-3],[0,CZ(i+1)+R-2]]:[[0,wz-3],[0,FZ+5]];
+  auto={i,pts:[[sd*10.5,cz+1],[sd*10.5,cz-13.5],[0,wz+3.2]],after,phase:'walk',t:0};
+  showBanner('第 '+(i+1)+' 回合結束',i<N-1?'開門':'前往終點');
+}
+function stepAuto(dt){
+  const a=auto;
+  if(a.phase==='walk'||a.phase==='walk2'){
+    const tg=a.pts[0];const dx=tg[0]-P.x,dz=tg[1]-P.z,d=Math.hypot(dx,dz);const sp=8*dt;
+    if(d>0.01){const want=Math.atan2(-dx,-dz);let df=want-P.yaw;df=Math.atan2(Math.sin(df),Math.cos(df));P.yaw+=df*Math.min(1,dt*5);}
+    P.pitch+=(0-P.pitch)*Math.min(1,dt*4);
+    if(d<=sp){P.x=tg[0];P.z=tg[1];a.pts.shift();
+      if(!a.pts.length){if(a.phase==='walk'){a.phase='open';a.t=0;barriers[a.i].opening=true;beep([392,494,587,784],0.16,'sine',0.06);}
+        else{auto=null;paused=false;lockMouse();updateTip();}}}
+    else{P.x+=dx/d*sp;P.z+=dz/d*sp;}
+  }else if(a.phase==='open'){a.t+=dt;let df=0-P.yaw;df=Math.atan2(Math.sin(df),Math.cos(df));P.yaw+=df*Math.min(1,dt*5);
+    if(a.t>1.6){a.phase='walk2';a.pts=a.after;}}
+}
+
+/* ───────── 風險快訊影片 ───────── */
+const userVideos={};
+const ease=v=>v<=0?0:v>=1?1:1-Math.pow(1-v,3);
+function splitSent(t){return (t.match(/[^。？！]+[。？！]?/g)||[t]).map(s=>s.trim()).filter(Boolean);}
+function gear(x,cx,cy,r,teeth,rot,fill){x.save();x.translate(cx,cy);x.rotate(rot);x.beginPath();for(let k=0;k<teeth*2;k++){const a=k*Math.PI/teeth;const rad=k%2?r:r+18;x.lineTo(Math.cos(a-0.13)*rad,Math.sin(a-0.13)*rad);x.lineTo(Math.cos(a+0.13)*rad,Math.sin(a+0.13)*rad);}x.closePath();x.fillStyle=fill;x.fill();x.fillStyle='#ffffff';x.beginPath();x.arc(0,0,r*0.35,0,7);x.fill();x.restore();}
+function stamp(x,txt,cx,cy,col,k){if(k<=0)return;x.save();x.translate(cx,cy);x.rotate(-0.12);const s=1+(1-Math.min(1,k))*0.8;x.scale(s,s);x.globalAlpha=Math.min(1,k);x.font='900 54px '+SERIF;const w=x.measureText(txt).width+52;x.strokeStyle=col;x.lineWidth=7;x.strokeRect(-w/2,-42,w,84);x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,0,2);x.restore();}
+const SCENES=[
+ // 0 算力需求暴增
+ (x,t,col)=>{const bx=110,by=520;x.strokeStyle='#c5ccd6';x.lineWidth=3;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+470,by);x.stroke();
+  [60,85,110,150,210,300].forEach((v,k)=>{const h=v*ease((t-0.3-k*0.3)/0.6);x.fillStyle=k===5?col:'#c3cfdb';x.fillRect(bx+22+k*74,by-h,50,h);});
+  x.textAlign='left';x.fillStyle='#5d6579';x.font='700 26px '+SANS;x.fillText('AI 算力需求',bx,by+38);
+  const gate=1080,cy=400;x.fillStyle='#e3e8ee';x.fillRect(660,cy+44,440,14);
+  for(let k=0;k<8;k++){const px=Math.min(620+t*170-k*70,gate-48-k*52);if(px<640)continue;x.fillStyle='#fff';x.strokeStyle='#4a5568';x.lineWidth=3;x.fillRect(px,cy,44,44);x.strokeRect(px,cy,44,44);x.fillStyle='#4a5568';x.fillRect(px+14,cy+14,16,16);}
+  x.fillStyle=col;x.fillRect(gate,cy-50,14,108);x.textAlign='center';x.fillStyle='#1d2233';x.font='900 30px '+SANS;x.fillText('交付瓶頸',gate+7,cy-74);
+  const wk=Math.max(1,6-Math.floor(t/1.6));x.font='700 26px '+SANS;x.fillStyle='#5d6579';x.fillText('距離交付',880,200);x.font='900 84px '+SERIF;x.fillStyle=col;x.fillText(wk+' 週',880,270);},
+ // 1 原型整合標案
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#5d6579';x.font='700 28px '+SANS;x.fillText('設備整合 · 院端部署 · 能源管理 · 製造',640,215);
+  const e=ease((t-0.5)/1.6);const lx=200+260*e,rx=1080-260*e;
+  [[lx,'技術','#c3cfdb'],[rx,'應用',col]].forEach(([cx,label,fill])=>{x.fillStyle=fill;rr(x,cx-120,300,240,150,18);x.fill();x.fillStyle='#fff';x.font='900 50px '+SERIF;x.fillText(label,cx,377);});
+  if(e>=1){x.strokeStyle=col;x.lineWidth=6;const pulse=70+10*Math.sin(t*6);for(let k=0;k<8;k++){const a=k*Math.PI/4+t;x.beginPath();x.moveTo(640+Math.cos(a)*36,375+Math.sin(a)*36);x.lineTo(640+Math.cos(a)*pulse,375+Math.sin(a)*pulse);x.stroke();}}
+  const wk=Math.max(1,6-Math.floor(t/1.5));x.font='900 40px '+SERIF;x.fillStyle=col;x.fillText('原型展示倒數 '+wk+' 週',640,535);},
+ // 2 客戶要求客製
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#5d6579';x.font='700 28px '+SANS;x.fillText('標準品 → 每家客戶都要不一樣的版本',640,210);
+  for(let k=0;k<6;k++){const cx=170+k*188,cy=360;const e=ease((t-0.6-k*0.45)/0.7);const w=90+Math.sin(k*1.7+1)*40*e,h=90+Math.cos(k*1.3)*40*e;
+   x.fillStyle='#fff';x.strokeStyle=e>0.99?col:'#9aa6b4';x.lineWidth=5;x.fillRect(cx-w/2,cy-h/2,w,h);x.strokeRect(cx-w/2,cy-h/2,w,h);
+   if(e>0.99){x.strokeStyle=col;x.lineWidth=9;x.beginPath();x.moveTo(cx-22,cy+96);x.lineTo(cx-4,cy+114);x.lineTo(cx+28,cy+78);x.stroke();}}
+  const wk=Math.max(1,8-Math.floor(t/1.2));x.font='900 40px '+SERIF;x.fillStyle=col;x.fillText('續約倒數 '+wk+' 週',640,540);},
+ // 3 AI 電力危機
+ (x,t,col)=>{const cx=330,cy=480,r=180;x.lineWidth=34;x.strokeStyle='#e3e8ee';x.beginPath();x.arc(cx,cy,r,Math.PI,0);x.stroke();
+  const f=0.7-0.62*ease(t/5.5);x.strokeStyle=col;x.beginPath();x.arc(cx,cy,r,Math.PI,Math.PI+Math.PI*f);x.stroke();
+  const a=Math.PI+Math.PI*f;x.strokeStyle='#1d2233';x.lineWidth=8;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(a)*(r-30),cy+Math.sin(a)*(r-30));x.stroke();x.fillStyle='#1d2233';x.beginPath();x.arc(cx,cy,14,0,7);x.fill();
+  x.textAlign='center';x.textBaseline='middle';x.font='900 54px '+SERIF;x.fillStyle='#1d2233';x.fillText((f*15).toFixed(1)+'%',cx,cy-70);x.font='700 26px '+SANS;x.fillStyle='#5d6579';x.fillText('備轉容量率',cx,cy+44);
+  [[640,150,260],[780,120,320],[890,160,220],[1040,110,290],[1140,110,230]].forEach(([bx,bw,bh],k)=>{x.fillStyle='#e6ebf0';x.fillRect(bx,550-bh,bw-14,bh);
+   for(let r2=0;r2<Math.floor((bh-20)/40);r2++)for(let c2=0;c2<3;c2++){const id=k*37+r2*7+c2*3;const off=((id*9301+49297)%233280)/233280<ease((t-1)/5);x.fillStyle=off?'#bcc5cf':'#f2d36b';x.fillRect(bx+10+c2*((bw-30)/3),550-bh+14+r2*40,(bw-50)/3,22);}});
+  if(Math.sin(t*9)>0.5&&t<5){x.fillStyle=col;x.beginPath();x.moveTo(960,200);x.lineTo(920,290);x.lineTo(955,290);x.lineTo(925,380);x.lineTo(1005,265);x.lineTo(965,265);x.lineTo(995,200);x.closePath();x.fill();}
+  stamp(x,'碳費上路',700,220,col,(t-3)/0.5);},
+ // 4 供應鏈共同減碳
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';gear(x,470,380,90,10,t*0.9,'#c3cfdb');gear(x,662,380,90,10,-t*0.9+0.31,col);
+  const s=1-0.35*ease((t-1.5)/4);const cx=1010,cy=350;x.fillStyle='#e6ebf0';[[0,0,90],[-80,20,60],[80,20,62],[-40,-40,58],[40,-45,60]].forEach(([dx,dy,r])=>{x.beginPath();x.arc(cx+dx*s,cy+dy*s,r*s,0,Math.PI*2);x.fill();});
+  x.fillStyle='#4a5568';x.font='900 '+Math.round(54*s)+'px '+SANS;x.fillText('CO2',cx,cy+6);
+  x.font='900 40px '+SERIF;x.fillStyle=col;x.fillText('排放 '+Math.round(100-30*ease((t-1.5)/4)),cx,cy+150);
+  x.fillStyle='#5d6579';x.font='700 26px '+SANS;x.fillText('兩家公司 · 一份可查證的減碳方案',566,540);},
+ // 5 AI 供應鏈信任危機
+ (x,t,col)=>{const cy=390;const broken=t>3;
+  for(let k=0;k<7;k++){const lx=190+k*150;x.lineWidth=14;x.strokeStyle=broken&&k===3?'#c3cbd5':'#4a5568';x.beginPath();
+   if(broken&&k===3)x.ellipse(lx,cy+22,70,30,0.25,0.4,Math.PI*2-0.4);else x.ellipse(lx,cy,70,k%2?16:34,0,0,Math.PI*2);x.stroke();}
+  const mx=150+((t*200)%980),my=cy-10;x.lineWidth=10;x.strokeStyle=col;x.beginPath();x.arc(mx,my,62,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(mx+44,my+44);x.lineTo(mx+100,my+100);x.stroke();
+  stamp(x,'供應鏈重新審查',640,230,col,(t-1.8)/0.5);},
+ // 6 限電下的供電危機
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const night=t>4;
+  if(night){x.fillStyle='#22304a';x.fillRect(60,150,1160,420);x.fillStyle='#f4efd8';x.beginPath();x.arc(1060,230,40,0,Math.PI*2);x.fill();x.fillStyle='#22304a';x.beginPath();x.arc(1078,218,36,0,Math.PI*2);x.fill();}
+  else{const a=Math.PI*(1-Math.min(1,t/4));x.fillStyle='#f2c230';x.beginPath();x.arc(640+Math.cos(a)*480,520-Math.sin(a)*300,38,0,Math.PI*2);x.fill();}
+  const lv=night?0.92-0.5*ease((t-4)/4):0.2+0.72*ease(t/4);
+  x.fillStyle=night?'#2e3b55':'#fff';x.strokeStyle=col;x.lineWidth=6;x.fillRect(560,260,160,240);x.strokeRect(560,260,160,240);x.fillStyle=col;x.fillRect(605,240,70,20);x.fillRect(572,488-216*lv,136,216*lv);
+  x.fillStyle=night?'#fff':'#1d2233';x.font='900 30px '+SANS;x.fillText(Math.round(lv*100)+'%',640,225);
+  x.font='700 28px '+SANS;x.fillStyle=night?'#dfe6ef':'#5d6579';x.fillText(night?'晚間尖峰：儲能優先供給關鍵設備':'白天：綠電充進園區儲能',640,535);
+  stamp(x,'晚間限電',300,240,night?'#f2c230':col,(t-1.5)/0.5);},
+ // 7 旱季限水
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const lv=0.85-0.6*ease(t/6);
+  x.strokeStyle='#4a5568';x.lineWidth=6;x.strokeRect(180,200,380,330);x.fillStyle='#4f86c6';x.fillRect(183,530-327*lv,374,327*lv);
+  const ly=530-327*0.45;x.setLineDash([16,12]);x.strokeStyle=col;x.lineWidth=5;x.beginPath();x.moveTo(160,ly);x.lineTo(580,ly);x.stroke();x.setLineDash([]);
+  x.fillStyle=col;x.font='900 28px '+SANS;x.textAlign='left';x.fillText('限額',590,ly);x.textAlign='center';
+  x.fillStyle='#5d6579';x.font='700 26px '+SANS;x.fillText('淡水取用量',370,560);
+  x.fillStyle='#9aa3ad';x.fillRect(800,230,200,26);x.fillRect(975,230,26,70);
+  for(let k=0;k<4;k++){const y=310+((t*160+k*60)%200);x.fillStyle='#4f86c6';x.beginPath();x.moveTo(988,y-14);x.quadraticCurveTo(1002,y+4,988,y+8);x.quadraticCurveTo(974,y+4,988,y-14);x.fill();}
+  stamp(x,'限水',880,450,col,(t-2)/0.5);}
+];
+function chunkLines(text){const out=[];(text.match(/[^。？！]+[。？！]?/g)||[text]).forEach(seg=>{seg=seg.trim();if(!seg)return;
+  if(seg.length<=26){out.push(seg);return;}let cur='';seg.split(/(?<=，)/).forEach(p=>{if((cur+p).length>26&&cur){out.push(cur);cur=p;}else cur+=p;});if(cur)out.push(cur);});return out;}
+function boom(big){try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;const o=actx.createOscillator(),g=actx.createGain();o.type='sine';
+  o.frequency.setValueAtTime(big?90:70,t);o.frequency.exponentialRampToValueAtTime(32,t+1.2);g.gain.setValueAtTime(big?0.35:0.22,t);g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+1.5);}catch(e){}}
+function drawFilm(now){
+  const c=$('filmC'),x=c.getContext('2d');const t=(now-film.t0)/1000;const rd=ROUNDS[film.i];const col=rCol(rd);
+  x.globalAlpha=1;x.shadowBlur=0;x.fillStyle='#0b0f17';x.fillRect(0,0,1280,720);
+  x.save();x.globalAlpha=0.22;SCENES[rd.scene](x,t,col);x.restore();
+  const vg=x.createRadialGradient(640,360,200,640,360,760);vg.addColorStop(0,'rgba(11,15,23,0)');vg.addColorStop(1,'rgba(11,15,23,.85)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
+  for(let k=0;k<120;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
+  const L=film.lines,per=film.per,t0=1.6,tEnd=t0+L.length*per;
+  x.textAlign='center';x.textBaseline='middle';
+  if(t<t0){const a=Math.min(1,t/0.5)*Math.min(1,(t0-t)/0.4);x.globalAlpha=Math.max(0,a);
+    x.fillStyle='#c9d1db';x.font='700 30px '+SANS;x.fillText(rd.type==='coop'?'合作回合':rd.type==='invest'?'永續投資回合':'風險卡',640,320);
+    x.font='900 68px '+SERIF;x.fillStyle='#fff';x.fillText('第 '+(film.i+1)+' 回合',640,395);x.globalAlpha=1;}
+  else if(t<tEnd){const idx=Math.floor((t-t0)/per);const lt=(t-t0)-idx*per;if(film.last!==idx){film.last=idx;boom(false);}
+    const a=Math.min(1,lt/0.35)*Math.min(1,(per-lt)/0.3);const sc=1.06-0.06*ease(lt/per);
+    x.save();x.globalAlpha=Math.max(0,a);x.translate(640,360);x.scale(sc,sc);x.fillStyle='#ffffff';x.font='900 54px '+SERIF;x.shadowColor='rgba(0,0,0,.7)';x.shadowBlur=14;
+    const ls=wrap(x,L[idx],1040).slice(0,3);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*74));x.restore();}
+  else{const lt=t-tEnd;if(film.last!=='end'){film.last='end';boom(true);}const a=Math.min(1,lt/0.6);x.globalAlpha=a;
+    x.fillStyle='#c9d1db';x.font='700 28px '+SANS;x.fillText('第 '+(film.i+1)+' 回合 · '+rd.eraName,640,250);
+    x.save();x.shadowColor=col;x.shadowBlur=36;x.fillStyle='#fff';let fs=104;x.font='900 '+fs+'px '+SERIF;while(x.measureText(rd.title).width>1120&&fs>56){fs-=6;x.font='900 '+fs+'px '+SERIF;}x.fillText(rd.title,640,350);x.restore();
+    const e=ease(lt/0.8);x.fillStyle=col;x.fillRect(640-160*e,428,320*e,4);
+    x.fillStyle='#fff';x.font='700 34px '+SANS;x.fillText(rd.type==='coop'?'找到你的夥伴':rd.type==='invest'?'押上你的資本':'選擇你的說',640,482);x.globalAlpha=1;}
+  x.fillStyle='#000';x.fillRect(0,0,1280,78);x.fillRect(0,642,1280,78);
+  x.textAlign='left';x.fillStyle='#7d8693';x.font='700 20px '+SANS;x.fillText((rd.type==='coop'?'合作':rd.type==='invest'?'投資':'風險')+'快訊 · 第 '+(film.i+1)+' 回合',32,40);
+  x.textAlign='right';x.fillText('Esc 略過',1248,682);
+  $('filmProg').style.width=Math.min(100,t/film.dur*100)+'%';
+  if(t>=film.dur)endFilm();
+}
+function playFilm(i,then){
+  paused=true;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;$('tip').hidden=true;
+  const rd=ROUNDS[i];const lines=rd.trailer||chunkLines(rd.event);const per=lines.length>8?2.3:2.8;
+  film={i,then,t0:performance.now(),dur:1.6+lines.length*per+3.4,lines,per,last:null,video:false};
+  $('filmLabel').textContent='第 '+(i+1)+' 回合 · '+rd.title;$('filmProg').style.width='0%';
+  const v=$('filmV');
+  if(userVideos[i]){film.video=true;v.src=userVideos[i];v.hidden=false;$('filmC').hidden=true;try{v.currentTime=0;}catch(e){}v.play().catch(()=>{});}
+  else{v.hidden=true;$('filmC').hidden=false;}
+  $('film').hidden=false;boom(true);
+  setTimeout(()=>$('filmSkip').focus({preventScroll:true}),30);
+}
+function endFilm(){if(!film)return;const f=film;film=null;try{$('filmV').pause();}catch(e){}$('film').hidden=true;if(f.then)f.then();}
+$('filmSkip').addEventListener('click',endFilm);
+$('filmV').addEventListener('ended',endFilm);
+$('filmFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f||!film)return;const url=URL.createObjectURL(f);userVideos[film.i]=url;film.video=true;
+  const v=$('filmV');v.src=url;v.hidden=false;$('filmC').hidden=true;v.play().catch(()=>{});e.target.value='';});
+
+/* ───────── 多人連線：同一空間、合作邀請與對話（room capability） ───────── */
+let room=null,net=null,roomCode='class',myPeer=null,netState='connecting',myNick='',myPk=[],myChat=[],sess=null,pubT=0,lastPos=[0,0,0];
+const remote=new Map();const lastSeen={};const handledInv=new Set();
+const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function pub(patch){if(net)net.presence(patch).catch(()=>{});}
+function humansByCo(){const m={};for(const [peer,r] of remote){const pr=(r.p&&r.p.presence)||{};if(typeof pr.co==='string'&&CI[pr.co]!=null)m[pr.co]={peer,nick:String(pr.nick||'').slice(0,12)||COMP[CI[pr.co]].short+'組',st:pr.st|0,sc:pr.sc|0,cap:pr.cap==null?6:pr.cap|0,pk:Array.isArray(pr.pk)?pr.pk:[]};}return m;}
+const npcCos=()=>COMP.filter((c,j)=>j!==me&&!humansByCo()[c.id]);
+function netLabel(){if(netState==='off')return '目前無法連線，這次會以單人模式進行，其他公司由電腦代打。';if(netState!=='on')return '連線中…';
+  const n=remote.size;return `已連線到房間「${roomCode}」，目前另有 ${n} 組在線上。同一個房間代碼的組別會出現在同一個空間。`;}
+function setNet(st){netState=st;const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();}
+async function initRoom(){
+  try{room=(window.claude&&window.claude.use)?await window.claude.use('room'):null;}catch(e){room=null;}
+  if(!room){setNet('off');return;}
+  await joinCode(roomCode);
+}
+async function joinCode(code){
+  if(!room)return;
+  code=String(code||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,20)||'class';
+  if(net&&net!==room){try{await net.leave();}catch(e){}}
+  remote.forEach(r=>{if(r.av)scene.remove(r.av.root);});remote.clear();
+  try{net=await room.join('sixshuo-'+code);}catch(e){net=room;}
+  roomCode=code;
+  net.onPeers(onPeersChange,()=>setNet('off'));
+  pub({nick:myNick||null,co:me>=0?COMP[me].id:null});
+  setNet('on');
+}
+handlers.joinRoom=()=>{const v=($('roomIn')||{}).value;setNet('connecting');joinCode(v);};
+function refreshTaken(){const box=$('coGrid');if(!box)return;const H=humansByCo();
+  box.querySelectorAll('.co').forEach(b=>{const co=COMP[+b.dataset.i].id;const h=H[co];b.disabled=!!h;b.style.opacity=h?0.45:1;const t=b.querySelector('.taken');if(t)t.textContent=h?'已被「'+h.nick+'」選走':'';});
+  if(chosen>=0&&H[COMP[chosen].id]){chosen=-1;box.querySelectorAll('.co').forEach(x=>x.classList.remove('sel'));const sb=$('startBtn');if(sb){sb.disabled=true;sb.style.opacity=.45;sb.textContent='先選一家公司';}}}
+function nameSprite(text,color){const [c,x]=mkCanvas(320,72);rr(x,4,4,312,64,18);x.fillStyle='rgba(255,255,255,.93)';x.fill();x.strokeStyle=color;x.lineWidth=5;x.stroke();
+  x.fillStyle='#1d2233';x.font='900 32px '+SANS;x.textAlign='center';x.textBaseline='middle';x.fillText(text,160,38);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex(c),depthWrite:false}));sp.scale.set(2.6,0.58,1);sp.position.y=2.75;return sp;}
+function makeAvatar(co,nick){const c=COMP[CI[co]];const ch=makeChar(c.color,c.short.slice(0,2),CI[co]);ch.root.add(nameSprite((nick||c.short)+' · '+c.short,c.color));
+  ch.root.traverse(o=>{if(o.isMesh)o.castShadow=true;});scene.add(ch.root);return Object.assign(ch,{fresh:true,co,nick});}
+function onPeersChange(ch){
+  const mine=ch.peers.find(p=>p.sameTab);if(mine)myPeer=mine.peer;
+  const seen=new Set();
+  for(const p of ch.peers){if(p.sameTab||p.kind!=='viewer')continue;seen.add(p.peer);
+    let r=remote.get(p.peer);if(!r){r={p,av:null};remote.set(p.peer,r);}r.p=p;
+    const pr=p.presence||{};const nick=String(pr.nick||'').slice(0,12);
+    if(typeof pr.co==='string'&&CI[pr.co]!=null){
+      lastSeen[pr.co]={nick:nick||COMP[CI[pr.co]].short+'組',sc:pr.sc|0,cap:pr.cap==null?6:pr.cap|0};
+      if(!r.av||r.av.co!==pr.co||r.av.nick!==nick){if(r.av)scene.remove(r.av.root);r.av=makeAvatar(pr.co,nick);}
+      if(typeof pr.x==='number'&&typeof pr.z==='number'){r.tx=pr.x;r.tz=pr.z;r.tyaw=+pr.yaw||0;if(r.av.fresh){r.av.root.position.set(pr.x,0,pr.z);r.av.fresh=false;}}
+    }else if(r.av){scene.remove(r.av.root);r.av=null;}
+    handleMsgs(p);}
+  for(const [peer,r] of remote){if(!seen.has(peer)){if(r.av)scene.remove(r.av.root);remote.delete(peer);
+    if(sess&&sess.other===peer&&sess.status!=='done')sessEnd('對方已經離開遊戲。',sess.role==='host');}}
+  const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();
+}
+function handleMsgs(p){const pr=p.presence||{};
+  const inv=pr.inv;
+  if(inv&&typeof inv==='object'&&inv.to===myPeer&&typeof inv.id==='string'&&!handledInv.has(inv.id)){handledInv.add(inv.id);onInvite(p,inv);}
+  if(!sess||sess.other!==p.peer)return;
+  if(sess.role==='host'&&sess.status==='wait'&&pr.rep&&pr.rep.id===sess.id){
+    if(pr.rep.ans==='yes'){sess.status='bet';beep([659,784],0.1,'sine',0.06);renderSess();}
+    else sessEnd(pr.rep.why==='round'?'對方現在不在這個合作回合，等他走到同一回合再邀請。':pr.rep.why==='busy'?'對方正在忙（看影片或在另一段對話中），稍後再試。':'對方拒絕了這次邀請。',true);
+    return;}
+  if(sess.role==='guest'&&sess.status==='ask'&&(!pr.inv||pr.inv.id!==sess.id)){sessEnd('對方取消了邀請。',false);return;}
+  if(Array.isArray(pr.chat)){for(const m of pr.chat){if(m&&m.s===sess.id&&typeof m.i==='string'&&!sess.seen.has(m.i)){sess.seen.add(m.i);sess.msgs.push({who:'them',t:String(m.t||'').slice(0,80)});appendChat();}}}
+  if(pr.bet&&pr.bet.id===sess.id&&sess.theirBet==null){const v=pr.bet.v|0;if(v>=1&&v<=6){sess.theirBet=v;renderSess();tryFinish();}}
+}
+function onInvite(p,inv){const pr=p.presence||{};const r=inv.r|0;
+  if(!started||sess||film||auto||!ROUNDS[r]||ROUNDS[r].type!=='coop'||r!==stageIdx||solved[r]){
+    pub({rep:{id:inv.id,ans:'no',why:(sess||film||auto)?'busy':'round'}});setTimeout(()=>pub({rep:null}),8000);return;}
+  if(typeof pr.co!=='string'||CI[pr.co]==null)return;
+  sess={id:inv.id,role:'guest',other:p.peer,otherCo:pr.co,otherNick:String(pr.nick||'').slice(0,12)||COMP[CI[pr.co]].short+'組',round:r,status:'ask',msgs:[],seen:new Set(),myBet:null,theirBet:null};
+  beep([784,988,784],0.1,'sine',0.07);renderSess();
+}
+function startInvite(c,h){
+  const i=stageIdx;
+  if(!myPeer){openPanel(`<h2>還沒連上房間</h2><p>稍等幾秒再試，或改找電腦代打的公司。</p><div class="row"><button class="btn stage" data-act="coopStart" data-focus>回到名單</button></div>`,TH['互賴說'].color);return;}
+  if(h.st!==i){openPanel(`<h2>${esc(h.nick)}還沒到這一回合</h2><p>${c.name}（${esc(h.nick)}）目前在第 ${h.st+1} 回合。要等他們也走到第 ${i+1} 回合的互賴說廣場，才能邀請合作。</p><div class="row"><button class="btn stage" data-act="coopStart" data-focus>回到名單</button><button class="btn ghost" data-act="close">先在廣場等</button></div>`,TH['互賴說'].color);return;}
+  sess={id:'c'+Math.random().toString(36).slice(2,10),role:'host',other:h.peer,otherCo:c.id,otherNick:h.nick,round:i,status:'wait',msgs:[],seen:new Set(),myBet:null,theirBet:null};
+  pub({inv:{id:sess.id,to:h.peer,r:i},rep:null,bet:null});renderSess();
+}
+function renderSess(){
+  if(!sess)return;const s2=sess,oc=COMP[CI[s2.otherCo]],rd=ROUNDS[s2.round],col=TH['互賴說'].color,who=esc(s2.otherNick)+'（'+oc.name+'）';
+  let head='',body='',btns='';
+  if(s2.status==='wait'){head=`已邀請 ${who}`;body='<p class="muted">等待對方回覆。可以先在下面聊聊你們要怎麼分工。</p>';btns='<button class="btn ghost" data-act="sessCancel">取消邀請</button>';}
+  else if(s2.status==='ask'){head=`${who}邀請你合作`;body=`<p>第 ${s2.round+1} 回合 · ${rd.title}。${oc.name}的核心能力：${oc.core}；最需要：${oc.need}。</p><p class="muted">先聊聊再決定。同意後雙方各自投入資本，主持人再公布配對等級。</p>`;btns='<button class="btn stage" data-act="sessYes">同意合作</button><button class="btn ghost" data-act="sessNo">拒絕</button>';}
+  else{head=`和 ${who} 合作成立`;
+    if(s2.myBet==null){const max=Math.min(6,res.cap);body=`<p>選擇你要投入的資本（你目前有 ${res.cap}）。對方也會各自投入，兩邊都選好後公布等級。</p>`;
+      btns=max<1?'<button class="btn stage" data-act="sessBet" data-v="1" disabled>資本不足</button>':Array.from({length:max},(_,k)=>k+1).map(v=>`<button class="btn ${v===Math.min(3,max)?'stage':'ghost'}" data-act="sessBet" data-v="${v}">投入 ${v}</button>`).join('');}
+    else body=`<p>你投入了 ${s2.myBet}。${s2.theirBet==null?'等待對方選擇投入金額…':'對方也選好了。'}</p>`;}
+  openPanel(`
+   <div class="eyebrow"><span class="tag th">互賴說 · 合作對話</span><span class="tag">第 ${s2.round+1} 回合</span></div>
+   <h2>${head}</h2>${body}
+   <div class="chatlog" id="chatLog" aria-live="polite"></div>
+   <div class="row"><input id="chatIn" class="txt" maxlength="80" placeholder="輸入訊息，按 Enter 送出" autocomplete="off"><button class="btn ghost" data-act="sessSend">送出</button></div>
+   <div class="row">${['我們的能力很互補！','你打算投入多少？','我投入 3，可以嗎？','好，就這樣合作'].map(q=>`<button class="btn ghost small" data-act="sessQuick" data-q="${q}">${q}</button>`).join('')}</div>
+   <div class="row">${btns}</div>`,col);
+  appendChat();
+  const ci=$('chatIn');if(ci){ci.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.isComposing){e.preventDefault();sendChat(ci.value);}});if(s2.status!=='ask')setTimeout(()=>ci.focus({preventScroll:true}),40);}
+}
+function appendChat(){const log=$('chatLog');if(!log||!sess)return;log.textContent='';
+  if(!sess.msgs.length){const e=document.createElement('p');e.className='muted';e.style.fontSize='13px';e.textContent='還沒有訊息。';log.appendChild(e);}
+  for(const m of sess.msgs){const d=document.createElement('div');d.className='msg '+m.who;d.textContent=m.t;log.appendChild(d);}log.scrollTop=log.scrollHeight;}
+function sendChat(t){t=String(t||'').trim().slice(0,80);if(!t||!sess)return;const m={s:sess.id,i:Math.random().toString(36).slice(2,9),t};
+  myChat=myChat.concat([m]).slice(-6);pub({chat:myChat});sess.msgs.push({who:'me',t});const ci=$('chatIn');if(ci)ci.value='';appendChat();}
+handlers.sessSend=()=>sendChat(($('chatIn')||{}).value);
+handlers.sessQuick=b=>sendChat(b.dataset.q);
+handlers.sessYes=()=>{if(!sess)return;pub({rep:{id:sess.id,ans:'yes'}});sess.status='bet';renderSess();};
+handlers.sessNo=()=>{if(!sess)return;pub({rep:{id:sess.id,ans:'no'}});setTimeout(()=>pub({rep:null}),8000);sessEnd('你拒絕了這次邀請。',false);};
+handlers.sessCancel=()=>{if(!sess)return;pub({inv:null});sessEnd('你取消了邀請。',true);};
+handlers.sessBet=b=>{if(!sess||sess.myBet!=null)return;sess.myBet=+b.dataset.v;pub({bet:{id:sess.id,v:sess.myBet}});renderSess();tryFinish();};
+function sessEnd(msg,toList){sess=null;setTimeout(()=>pub({inv:null,bet:null}),4000);
+  openPanel(`<h2>${msg}</h2><div class="row">${toList&&stageIdx<N&&ROUNDS[stageIdx].type==='coop'&&!solved[stageIdx]?'<button class="btn stage" data-act="coopStart" data-focus>改找別家公司</button>':''}<button class="btn ghost" data-act="close">回到廣場</button></div>`,TH['互賴說'].color);}
+function tryFinish(){if(!sess||sess.myBet==null||sess.theirBet==null||sess.status==='done')return;sess.status='done';
+  const s2=sess;sess=null;const i=s2.round,rd=ROUNDS[i];const c=COMP[CI[s2.otherCo]];
+  const key=pairKey(COMP[me].id,c.id);const g=rd.grades[key];const total=s2.myBet+s2.theirBet;const extra=EXTRA[g][Math.min(12,total)-2];const pt=(g==='S'||g==='A')?1:0;
+  addRes({cap:extra,sc:pt});picks[i]={partner:c.id,g,inv:s2.myBet,pinv:s2.theirBet,extra,pt,human:s2.otherNick};myPk[i]=c.id;
+  const rev=simCoop(i,c.id);solveStage(i);
+  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn){markChosen(hn);pt?hn.cheer=3:hn.sad=2;}
+  pt?beep([659,784,1047,1319],0.11):beep([392,330],0.15);
+  setTimeout(()=>pub({inv:null,rep:null,bet:null}),8000);
+  openPanel(`
+   <div class="verdict"><span class="grade" style="background:${GCOL[g]}">${g}</span><div><h2>${COMP[me].short} × ${c.short}：${g} 級</h2><p class="muted">${rd.desc[key]}</p></div></div>
+   ${chips({sc:pt,cap:extra})}
+   <div class="box"><p>你投入 ${s2.myBet}，${esc(s2.otherNick)}投入 ${s2.theirBet}，投入總額 ${total}。雙方各自拿回本金，每家再拿 <b>${extra}</b> 資本的配對綜效。${pt?'S、A 級配對得 1 策略分。':'B、C 級配對不得分。'}</p></div>
+   ${coopRev(rev)}
+   ${nextBtn(i)}`,TH['互賴說'].color);
+}
+function humanRev(i){const H=humansByCo();const rd=ROUNDS[i];
+  return Object.keys(H).filter(co=>co!==COMP[me].id).map(co=>{const h=H[co];const v=h.pk[i];let t='還沒選',mark='';
+    if(v!=null){if(rd.type==='risk'&&typeof v==='number'){t=SHUO[v]||'—';const ok=v===rd.data[co].best;mark=` <i style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</i>`;}
+      else if(rd.type==='invest'&&typeof v==='number')t=v<0?'不投資':'方案 '+'ABCD'[v];
+      else if(typeof v==='string'&&CI[v]!=null)t='和'+COMP[CI[v]].short;}
+    return `<div><span>${COMP[CI[co]].short} <small class="muted">${esc(h.nick)}</small></span><span>${t}${mark}</span></div>`;}).join('');}
+
+/* ───────── 主迴圈 ───────── */
+let last=performance.now(),T=0;
+function tryMove(dx,dz){if(walkable(P.x+dx,P.z+dz)){P.x+=dx;P.z+=dz;}else if(walkable(P.x+dx,P.z)){P.x+=dx;}else if(walkable(P.x,P.z+dz)){P.z+=dz;}}
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;T+=dt;
+  if(auto)stepAuto(dt);
+  if(started&&!paused){
+    let f=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0)+joy.y;
+    let s=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0)+joy.x;
+    const m=Math.hypot(f,s);if(m>1){f/=m;s/=m;}
+    const sp=(K.ShiftLeft||K.ShiftRight)?10:6.5;
+    const sy=Math.sin(P.yaw),cy=Math.cos(P.yaw);
+    tryMove((-f*sy+s*cy)*sp*dt,(-f*cy-s*sy)*sp*dt);
+    if(K.Space&&P.y<=0.001){P.vy=6.6;}
+    P.vy-=18*dt;P.y=Math.max(0,P.y+P.vy*dt);if(P.y===0)P.vy=0;
+    for(const n of npcs){const dx=P.x-n.x,dz=P.z-n.z,d=Math.hypot(dx,dz);if(d<0.9&&d>0.001){const nx=n.x+dx/d*0.9,nz=n.z+dz/d*0.9;if(walkable(nx,nz)){P.x=nx;P.z=nz;}}}
+    const a=arenaAt(P.x,P.z);
+    if(a>=0&&a===stageIdx&&!introShown[a]&&P.z<CZ(a)+R-1.5)startIntro(a);
+    if(solved[N-1]&&!ended&&inCircle(P.x,P.z,FZ-2,3.4))showEnding();
+  }else if(!started){P.yaw+=dt*0.1;P.pitch=-0.04;}
+  camera.position.set(P.x,P.y+EYEH,P.z);camera.rotation.x=P.pitch;camera.rotation.y=P.yaw;
+  if(sky)sky.position.copy(camera.position);
+  target=null;
+  if(started&&!paused){
+    ray.setFromCamera(center,camera);ray.far=7.5;
+    const hit=ray.intersectObjects(hitList,false).find(h=>h.object.userData.npc.root.visible);
+    if(hit)target=hit.object.userData.npc;
+    const pr=$('prompt');$('crosshair').classList.toggle('on',!!target);
+    if(target){const act=target.stage===stageIdx&&!solved[target.stage];
+      pr.innerHTML=`<kbd>${isTouch?'互動':'E'}</kbd>${act?'和 ':'看看 '}${target.name}${act?' 對話':''}`;pr.hidden=false;}
+    else pr.hidden=true;
+  }
+  for(const n of npcs){
+    const vis=Math.abs(P.z-n.z)<95;n.root.visible=vis;n.sg.visible=vis;if(!vis)continue;
+    const t=T+n.phase;const near=Math.hypot(P.x-n.x,P.z-n.z)<6;
+    const want=near?Math.atan2(P.x-n.x,P.z-n.z):n.face;
+    let diff=want-n.root.rotation.y;diff=Math.atan2(Math.sin(diff),Math.cos(diff));n.root.rotation.y+=diff*Math.min(1,dt*4);
+    n.armL.rotation.set(Math.sin(t*1.5)*0.07,0,-0.08);n.armR.rotation.set(-Math.sin(t*1.5)*0.07,0,0.08);
+    n.body.position.y=Math.sin(t*1.5)*0.02;n.body.rotation.x=0;
+    if(n===target&&n.wave<=0)n.wave=0.6;
+    if(n.wave>0){n.wave-=dt;n.armR.rotation.z=2.5+Math.sin(T*11)*0.35;}
+    if(n.cheer>0){n.cheer-=dt;n.body.position.y=Math.abs(Math.sin(T*8))*0.8;n.armL.rotation.z=-2.6;n.armR.rotation.z=2.6;}
+    if(n.sad>0){n.sad-=dt;n.body.rotation.x=0.2;n.armL.rotation.x=0.25;n.armR.rotation.x=0.25;}
+  }
+  for(const l of leaves){if(!l.got){l.m.rotation.y+=dt*2.2;l.m.position.y=1.05+Math.sin(T*2.5+l.z)*0.15;}}
+  for(const b of barriers){if(b.opening&&b.open<1){b.open=Math.min(1,b.open+dt*0.75);const e=1-Math.pow(1-b.open,3);b.L.rotation.y=e*1.75;b.R.rotation.y=-e*1.75;}}
+  sunL.position.set(P.x-60,55,P.z+20);sunL.target.position.set(P.x,0,P.z-20);
+  for(const v of traffic){v.m.position.z+=v.dir*v.sp*dt;if(v.m.position.z<FZ-195)v.m.position.z=40;else if(v.m.position.z>40)v.m.position.z=FZ-195;}
+  for(const r of remote.values()){if(!r.av||r.tx==null)continue;const a=r.av;const kk=Math.min(1,dt*8);const px=a.root.position.x,pz=a.root.position.z;
+    a.root.position.x+=(r.tx-px)*kk;a.root.position.z+=(r.tz-pz)*kk;let dd=(r.tyaw+Math.PI)-a.root.rotation.y;dd=Math.atan2(Math.sin(dd),Math.cos(dd));a.root.rotation.y+=dd*kk;
+    const sw=Math.hypot(r.tx-px,r.tz-pz)>0.03?Math.sin(T*9)*0.6:0;a.armL.rotation.x=sw;a.armR.rotation.x=-sw;}
+  if(started&&net){pubT+=dt;if(pubT>0.12){pubT=0;const nx=+P.x.toFixed(2),nz=+P.z.toFixed(2),ny=+P.yaw.toFixed(2);if(nx!==lastPos[0]||nz!==lastPos[1]||ny!==lastPos[2]){lastPos=[nx,nz,ny];pub({x:nx,z:nz,yaw:ny});}}}
+  if(mrt){mrt.position.z-=dt*14;if(mrt.position.z<FZ-190)mrt.position.z=38;}
+  if(trophy){trophy.position.y=3+Math.sin(T*2)*0.15;trophy.rotation.y+=dt;}
+  if(film){if(film.video){const v=$('filmV');if(v.duration)$('filmProg').style.width=(v.currentTime/v.duration*100)+'%';}else drawFilm(now);}
+  renderer.render(scene,camera);
+  requestAnimationFrame(loop);
+}
+
+const fontReady=document.fonts?Promise.race([Promise.all([document.fonts.load('900 40px "Noto Sans TC"'),document.fonts.load('700 40px "Noto Sans TC"'),document.fonts.load('900 40px "Noto Serif TC"')]),new Promise(r=>setTimeout(r,2800))]):Promise.resolve();
+fontReady.catch(()=>{}).then(()=>{buildWorld();enableShadows();hud();showStart();requestAnimationFrame(loop);initRoom();});
+})();
+</script>
+
+</body>
+</html>
