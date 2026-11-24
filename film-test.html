@@ -695,7 +695,7 @@ function setLabel(n,text,bg,fg){n.ch.root.remove(n.lb);n.lb.material.map.dispose
 function buildNpcs(){
   addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:0,z:-4.6,fx:0,fz:6,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
   addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:-6.6,z:-5.2,fx:0,fz:4,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
-  for(let k=0;k<5;k++){const a=-1.04+k*0.52;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*7.6,z:Math.cos(a)*7.6-2.6,fx:0,fz:-2.6});}
+  for(let k=0;k<5;k++){const a=-1.12+k*0.56;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*9.2,z:Math.cos(a)*9.2-2.6,fx:0,fz:-2.6});}
   for(let k=0;k<2;k++)addNpc({id:'a'+k,kind:'plan',k:k+3,pk:k,name:'方案顧問',color:'#ee8a6c',x:0,z:0,opt:{hat:'#ffffff'}});
   NPCS.push({id:'board',kind:'board',name:'規則布告欄',color:'#20b2a4',pos:{x:5.6,z:-4.6},bang:null});
   COMP.forEach((c,i)=>{const d=doorPos(i);NPCS.push({id:'h'+c.id,kind:'house',co:c.id,name:c.name,color:c.color,pos:d,bang:null});});
@@ -704,6 +704,34 @@ function buildNpcs(){
 }
 function placeAdvisors(){const i=CI[S.co];const d=doorPos(i),a=houseAng(i);const inX=-Math.sin(a),inZ=-Math.cos(a),sx=Math.cos(a),sz=-Math.sin(a);
   [-1,1].forEach((s,k)=>{const n=NPCS.find(n=>n.id==='a'+k);const x=d.x+inX*1.5+sx*s*2.4,z=d.z+inZ*1.5+sz*s*2.4;n.pos={x,z};n.ch.root.position.set(x,0,z);n.ch.root.rotation.y=Math.atan2(inX,inZ);});}
+
+/* ───────── 說的告示牌（守護者身後） ───────── */
+function guardBoardTex(head,col,ctx,main,dim){
+  const NF='"Noto Sans TC","PingFang TC",sans-serif',SF='"Noto Serif TC","Songti TC",serif';
+  const c=document.createElement('canvas');c.width=640;c.height=520;const x=c.getContext('2d');
+  rr(x,0,0,640,520,26);x.fillStyle='#d5dae0';x.fill();
+  rr(x,10,10,620,500,20);x.fillStyle='#fffdf7';x.fill();
+  rr(x,10,10,620,100,20);x.fillStyle=col;x.fill();x.fillRect(10,66,620,44);
+  x.fillStyle='#fff';x.font='900 58px '+SF;x.textBaseline='middle';x.textAlign='left';x.fillText(head,32,62);
+  let y=160;x.font='700 30px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=40;}y+=10;
+  let fs=48;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
+  if(ls.length*62>512-y){fs=40;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
+  if(ls.length*fs*1.28>512-y){fs=33;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
+  x.fillStyle=dim?'#a8a296':'#1d2233';y+=6;for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.28;}
+  const t=new THREE.CanvasTexture(c);t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
+function buildGuardBoards(){NPCS.filter(n=>n.kind==='shuo').forEach(n=>{
+  const a=Math.atan2(n.pos.x,n.pos.z+2.6),R2=Math.hypot(n.pos.x,n.pos.z+2.6)+1.2,bx=Math.sin(a)*R2,bz=Math.cos(a)*R2-2.6;
+  const g=new THREE.Group();g.position.set(bx,H(bx,bz),bz);g.rotation.y=Math.atan2(-bx,-2.6-bz);
+  const mat=new THREE.MeshBasicMaterial({map:guardBoardTex('守護者','#b9b2a1','','',true)});
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.7625),mat);face.position.set(0,4.6,0.07);g.add(face);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(3.56,2.9,0.1),M('#c9ccc8'));back.position.y=4.6;g.add(back);
+  [-1.68,1.68].forEach(px=>{const q=new THREE.Mesh(new THREE.BoxGeometry(0.12,6.05,0.12),M('#9aa3ad'));q.position.set(px,3.02,-0.02);g.add(q);});
+  g.visible=false;scene.add(g);const col={x:999,z:999,r:1.2};colliders.push(col);n.gb={g,mat,col,key:'',bx,bz};});}
+function refreshGuardBoards(rd){NPCS.filter(n=>n.kind==='shuo'&&n.gb).forEach(n=>{const v=n.ch.root.visible&&!!rd&&rd.type==='risk'&&!!S.co;
+  n.gb.g.visible=v;n.gb.col.x=v?n.gb.bx:999;n.gb.col.z=v?n.gb.bz:999;if(!v)return;
+  const d=rd.data[S.co],o=d.opts[n.k],gone=S.removed.includes(n.k),key=S.round+'|'+S.co+'|'+n.k+'|'+gone;
+  if(n.gb.key!==key){n.gb.key=key;n.gb.mat.map.dispose();n.gb.mat.map=guardBoardTex(gone?o.s+'（已刪除）':o.s,gone?'#b9b2a1':TH[o.s].color,d.ctx?'你的處境：'+d.ctx:'你的公司：'+COMP[CI[S.co]].name,o.a,gone);n.gb.mat.needsUpdate=true;}
+  if(n.lb)n.lb.visible=false;});}
 
 /* 玩家與其他真人 */
 const P={x:0,z:13,y:0,vy:0,ry:Math.PI,tx:null,tz:null,goNpc:null,run:false};
@@ -824,6 +852,7 @@ function refreshWorld(){
   if(rd&&rd.type==='risk'&&S.co){const d=rd.data[S.co];NPCS.filter(n=>n.kind==='shuo').forEach(n=>{const s=d.opts[n.k].s;const col=TH[s].color;const gone=S.removed.includes(n.k);
     setLabel(n,gone?s+'（已刪除）':s,gone?'#d8d0bb':col,'#fff');n.ch.g.children[2].material=M(gone?'#d8d0bb':col);n.ch.g.children[3].material=M(gone?'#d8d0bb':col);n.ch.root.rotation.x=0;n.ch.g.scale.setScalar(gone?0.82:1);});}
   if(rd&&rd.type==='invest'&&S.co){placeAdvisors();NPCS.filter(n=>n.kind==='plan').forEach(n=>{const p=rd.plans[S.co][n.pk];setLabel(n,`方案${'AB'[n.pk]}・${p.cost} 資本`,'#ee8a6c','#fff');});}
+  refreshGuardBoards(rd);
   NPCS.forEach(n=>{if(n.col){const v=n.ch.root.visible;n.col.x=v?n.pos.x:999;n.col.z=v?n.pos.z:999;}});
   if(plumb)plumb.material.color.set(S.phase==='act'?'#5fe36a':S.phase==='wait'||S.phase==='inviting'?'#f8d454':'#7ad0f0');
   if(FX.boardMat&&FX.boardR!==S.round){FX.boardR=S.round;FX.boardMat.map.dispose();FX.boardMat.map=boardTex();FX.boardMat.needsUpdate=true;}
@@ -1403,7 +1432,7 @@ function loop(){
 setInterval(()=>{if(NPCS.length){checkWait();checkIncoming();tickTimer();}},500);
 if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H};
 (async()=>{try{await Promise.race([Promise.all([document.fonts.load('44px Huninn'),document.fonts.load('600 20px Fredoka')]),sleep(3500)]);}catch(e){}
-  buildWorld();buildNpcs();refreshWorld();loop();})();
+  buildWorld();buildNpcs();buildGuardBoards();refreshWorld();loop();})();
 (async()=>{renderLobby();await netInit();
   if(db){const last=lsGet('six-room');const q=(location.hash.match(/^#([A-Za-z0-9]{4})$/)||[])[1];const code=(q||last||'').toUpperCase();if(/^[A-Z0-9]{4}$/.test(code))joinRoom(code);}
   renderLobby();})();
