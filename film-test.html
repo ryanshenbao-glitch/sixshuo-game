@@ -1030,7 +1030,9 @@ function drawFilm(t){
   const c=$('filmC'),x=c.getContext('2d');const rd=ROUNDS[film.i];const col=rCol(rd);
   const SF='"Noto Serif TC","Songti TC",serif',NF='"Noto Sans TC","PingFang TC",sans-serif';
   x.globalAlpha=1;x.shadowBlur=0;x.fillStyle='#0b0f17';x.fillRect(0,0,1280,720);
-  x.save();x.globalAlpha=0.22;SCENES[rd.scene](x,t,col);x.restore();
+  if(!drawFilm.off){drawFilm.off=document.createElement('canvas');drawFilm.off.width=1280;drawFilm.off.height=720;}
+  {const oc=drawFilm.off,ox=oc.getContext('2d');ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.clearRect(0,0,1280,720);ox.save();SCENES[rd.scene](ox,t,col);ox.restore();
+   const L0=film.lines.length,tE=1.6+L0*film.per;x.save();x.globalAlpha=t>=tE?0.12:0.2;x.drawImage(oc,0,0);x.restore();}
   const vg=x.createRadialGradient(640,360,200,640,360,760);vg.addColorStop(0,'rgba(11,15,23,0)');vg.addColorStop(1,'rgba(11,15,23,.85)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
   for(let k=0;k<120;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
   const L=film.lines,per=film.per,t0=1.6,tEnd=t0+L.length*per;
