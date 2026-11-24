@@ -1,0 +1,1411 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>永續價值進化：新創競技場</title>
+<meta name="description" content="策略思維與永續發展第五組桌遊：六家 AI 新創在園區小島上闖過八回合，用九說做策略判斷、合作與永續投資。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Huninn&family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@900&display=swap">
+<style>
+/* 版面：全螢幕斜俯瞰小島（動森視角），角落是圓胖的 HUD 泡泡，對話框貼底、選項浮在右上，資訊卡與園區手機置中。刻意只做一種明亮白天的世界觀。 */
+:root{
+  --paper:#fffcf1; --cream:#f8f1dc; --ink:#6e583d; --ink2:#a08a6b; --line:#eadfc2;
+  --teal:#20b2a4; --teal-d:#178a7f; --sun:#f8d454; --leafc:#79c652; --coral:#ee8a6c; --sky:#a9e2f5;
+  --f:"Huninn","Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --fn:"Fredoka","Huninn","Noto Sans TC",sans-serif;
+  --pop:0 4px 0 rgba(110,88,61,.16),0 10px 24px rgba(60,48,30,.14);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--sky);color:var(--ink);font-family:var(--f);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;outline:none}
+button{font-family:var(--f);color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.num{font-family:var(--fn);font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+.ui{position:fixed;inset:0;pointer-events:none;z-index:5}
+.ui > *{pointer-events:auto}
+@media (min-width:1900px){.ui,.ovl{zoom:1.1}}
+@media (min-width:2300px){.ui,.ovl{zoom:1.25}}
+@media (min-width:3000px){.ui,.ovl{zoom:1.6}}
+
+/* HUD 泡泡 */
+.bub{background:var(--paper);border-radius:999px;box-shadow:var(--pop);display:flex;align-items:center;gap:8px;padding:6px 14px 6px 7px;font-weight:700;white-space:nowrap}
+#hudL{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:8px;align-items:flex-start;pointer-events:none}
+#hudL .bub b{font-family:var(--fn);font-size:21px;line-height:1}
+#hudL .bub small{font-size:12px;color:var(--ink2)}
+.ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;font-family:var(--fn);font-weight:700;font-size:15px}
+.ic.coin{background:radial-gradient(circle at 35% 30%,#fff0a8,#f0bd2e 60%,#d99a12);box-shadow:inset 0 0 0 2px #d6971a;color:#9a6a08}
+.ic.star{background:var(--leafc);box-shadow:inset 0 0 0 2px #5ea43b}
+.ic.co{box-shadow:inset 0 0 0 3px rgba(255,255,255,.55)}
+#meBub span{font-size:15px}
+#hudR{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+#netBub{font-size:13px;padding:6px 12px;pointer-events:none}
+#netBub i{width:9px;height:9px;border-radius:50%;background:#c7b998;display:inline-block}
+#netBub.on i{background:var(--leafc);box-shadow:0 0 0 3px rgba(121,198,82,.25)}
+#phoneBtn{border:0;cursor:pointer;width:64px;height:64px;border-radius:22px;background:var(--teal);box-shadow:var(--pop);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;gap:0;padding:6px 0 4px}
+#phoneBtn svg{width:28px;height:28px}
+#phoneBtn:hover{transform:translateY(-1px)}
+#dots{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);padding:8px 14px;gap:7px;pointer-events:none}
+#dots i{width:12px;height:12px;border-radius:50%;background:var(--line);display:block;transition:transform .3s}
+#dots i.done{background:var(--c)}
+#dots i.cur{background:var(--c);transform:scale(1.45);box-shadow:0 0 0 3px #fff,0 0 0 5px var(--c)}
+#dots span{font-size:13px;margin-left:4px}
+#waitBub{position:absolute;top:calc(62px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);font-size:14px;padding:7px 8px 7px 16px}
+#waitBub button{border:0;border-radius:999px;background:var(--cream);padding:5px 12px;font-weight:700;cursor:pointer}
+#toast{position:absolute;top:calc(110px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);max-width:calc(100% - 32px);white-space:normal;text-align:center;padding:9px 18px;font-size:15px;pointer-events:none;animation:drop .35s ease-out}
+@keyframes drop{from{transform:translate(-50%,-10px);opacity:0}}
+#prompt{position:absolute;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:16px;padding:7px 18px 7px 7px;cursor:pointer}
+.abtn{width:32px;height:32px;border-radius:50%;background:var(--leafc);color:#fff;font-family:var(--fn);font-weight:700;display:grid;place-items:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}
+#banner{position:absolute;left:50%;top:26%;transform:translateX(-50%);text-align:center;pointer-events:none;opacity:0;transition:opacity .6s}
+#banner.show{opacity:1}
+#banner small{display:inline-block;background:var(--bc,var(--teal));color:#fff;border-radius:999px;padding:5px 18px;font-size:16px;letter-spacing:.2em}
+#banner b{display:block;font-size:clamp(34px,6vw,58px);color:#fff;letter-spacing:.06em;margin-top:8px;text-shadow:0 3px 0 rgba(110,88,61,.35),0 0 24px rgba(110,88,61,.3)}
+#keys{position:absolute;left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:12px;padding:6px 12px;color:var(--ink2);pointer-events:none}
+#keys kbd{font-family:var(--fn);background:var(--cream);border-radius:6px;padding:0 6px;color:var(--ink)}
+
+/* 對話框（動森） */
+#dlg{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(780px,calc(100% - 28px));background:var(--paper);border-radius:52px/40px;padding:32px 44px 30px;box-shadow:var(--pop);cursor:pointer;animation:pop .22s ease-out}
+@keyframes pop{from{transform:translate(-50%,10px) scale(.97);opacity:0}}
+#dlgName{position:absolute;left:30px;top:-19px;transform:rotate(-4deg);background:var(--nc,var(--sun));color:#fff;font-weight:700;padding:6px 20px;border-radius:999px;font-size:17px;box-shadow:0 3px 0 rgba(0,0,0,.1);max-width:calc(100% - 60px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dlgText{font-size:19px;line-height:1.75;min-height:3.5em;max-height:42vh;overflow:auto;white-space:pre-line;max-width:44em}
+#dlgCaret{position:absolute;right:38px;bottom:14px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:13px solid var(--sun);animation:bob .7s ease-in-out infinite}
+#dlgSkip{position:absolute;right:28px;top:-16px;border:0;border-radius:999px;background:var(--cream);font-size:13px;font-weight:700;padding:5px 12px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.08)}
+@keyframes bob{50%{transform:translateY(4px)}}
+#choices{position:absolute;right:max(18px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:8px;align-items:stretch;max-width:min(420px,calc(100% - 36px));animation:fade .2s}
+#choices.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));max-width:min(470px,calc(100% - 36px))}
+@keyframes fade{from{opacity:0}}
+.ch{border:0;text-align:left;background:var(--paper);border-radius:22px;padding:11px 20px 11px 34px;font-size:17px;font-weight:700;box-shadow:var(--pop);cursor:pointer;position:relative;line-height:1.4}
+.ch::before{content:"";position:absolute;left:13px;top:50%;margin-top:-6px;border-left:9px solid var(--ink2);border-top:6px solid transparent;border-bottom:6px solid transparent;opacity:.25}
+.ch:hover,.ch:focus-visible{background:#fff6c6;outline:none}
+.ch:hover::before,.ch:focus-visible::before{opacity:1;border-left-color:var(--coral)}
+.ch:disabled{opacity:.45;cursor:not-allowed}
+#choices.grid .ch{padding:11px 10px 11px 26px;font-size:16px}
+#choices.grid .ch::before{left:9px}
+
+/* 卡片與手機 */
+.ovl{position:fixed;inset:0;z-index:20;background:rgba(92,74,48,.32);display:flex;align-items:center;justify-content:center;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.card{position:relative;background:var(--paper);border-radius:30px;width:100%;max-width:700px;max-height:100%;overflow:auto;box-shadow:var(--pop);border:5px solid #fff;-webkit-user-select:text;user-select:text;animation:pop2 .25s ease-out}
+@keyframes pop2{from{transform:translateY(10px) scale(.98);opacity:0}}
+.card-h{background:var(--cc,var(--teal));color:#fff;padding:16px 26px 14px;border-radius:24px 24px 0 0;display:flex;flex-direction:column;gap:4px;background-image:radial-gradient(rgba(255,255,255,.16) 2px,transparent 2.5px);background-size:16px 16px}
+.card-h small{font-size:13px;letter-spacing:.12em;opacity:.95}
+.card-h h2{margin:0;font-size:26px;font-weight:400;line-height:1.3;text-wrap:balance}
+.card-b{padding:20px 26px 24px;display:flex;flex-direction:column;gap:14px}
+.card p{margin:0;font-size:16px;line-height:1.85;max-width:40em}
+.note{background:var(--cream);border-radius:18px;padding:13px 16px;font-size:15px}
+.note b{color:var(--teal-d)}
+.task{background:#e8f7f3;border:2px dashed #9fd8cf}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:0;border-radius:999px;padding:11px 22px;font-size:16px;font-weight:700;cursor:pointer;background:var(--teal);color:#fff;box-shadow:0 4px 0 var(--teal-d)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--teal-d)}
+.btn.ghost{background:var(--cream);color:var(--ink);box-shadow:0 4px 0 var(--line)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+h3{margin:4px 0 0;font-size:17px;font-weight:400;color:var(--teal-d)}
+.res{display:flex;gap:12px;align-items:center}
+.res .big{width:62px;height:62px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--fn);font-size:30px;font-weight:700;flex:none;box-shadow:inset 0 -4px 0 rgba(0,0,0,.15)}
+.res h2{margin:0;font-size:22px;font-weight:400}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--fn);font-weight:600;font-size:14px;border-radius:999px;padding:3px 12px;background:var(--cream)}
+.chip.up{background:#e3f4d6;color:#3f8a1f}.chip.dn{background:#fde5da;color:#b9512f}
+.rows{display:flex;flex-direction:column;gap:6px}
+.row{display:grid;grid-template-columns:14px minmax(0,1fr) auto;gap:10px;align-items:center;background:#fff;border-radius:14px;padding:8px 12px;font-size:14.5px;border:2px solid transparent}
+.row.me{border-color:var(--sun)}
+.row .dot{width:14px;height:14px;border-radius:50%}
+.row small{color:var(--ink2);display:block;font-size:13px;line-height:1.45}
+.row .pts{font-family:var(--fn);font-weight:700;font-size:16px;white-space:nowrap}
+.cogrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cob{border:3px solid transparent;background:#fff;border-radius:20px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;box-shadow:0 3px 0 var(--line)}
+.cob b{font-size:16px;font-weight:400}
+.cob small{font-size:12.5px;color:var(--ink2);line-height:1.5}
+.cob .sw{height:8px;border-radius:4px}
+.cob.sel{border-color:var(--teal);background:#effaf8}
+.cob:disabled{opacity:.5;cursor:not-allowed}
+.txt{flex:1 1 150px;min-width:0;font:inherit;font-size:16px;padding:11px 16px;border:2px solid var(--line);border-radius:999px;background:#fff;color:var(--ink)}
+.txt:focus{outline:none;border-color:var(--teal)}
+.code{font-family:var(--fn);letter-spacing:.25em;text-transform:uppercase}
+.inrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stars{font-size:26px;letter-spacing:.1em;color:var(--sun);text-shadow:0 2px 0 rgba(110,88,61,.2)}
+.stars s{text-decoration:none;color:var(--line)}
+.tblw{overflow-x:auto;border-radius:14px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:460px;font-size:14px}
+th,td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--cream);vertical-align:top}
+th{color:var(--ink2);font-weight:400;font-size:13px}
+.title-logo{font-size:clamp(30px,6vw,44px);line-height:1.2;margin:0;font-weight:400;text-wrap:balance}
+
+#phone .ph{position:relative;width:min(380px,100%);height:min(680px,100%);background:var(--cream);border-radius:46px;border:9px solid #fff;box-shadow:var(--pop);display:flex;flex-direction:column;overflow:hidden;animation:pop2 .25s ease-out}
+.ph-top{background:var(--teal);color:#fff;padding:16px 22px 12px;display:flex;justify-content:space-between;align-items:center}
+.ph-top b{font-size:18px;font-weight:400}
+.ph-top button{border:0;background:rgba(255,255,255,.22);color:#fff;border-radius:999px;padding:5px 12px;font-weight:700;cursor:pointer}
+.ph-body{flex:1;overflow:auto;padding:18px;-webkit-user-select:text;user-select:text}
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px}
+.app{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:700}
+.app i{width:62px;height:62px;border-radius:22px;display:grid;place-items:center;box-shadow:0 4px 0 rgba(0,0,0,.12)}
+.app svg{width:30px;height:30px}
+.ph-body p{font-size:15px;line-height:1.8;margin:0 0 10px}
+.ph-body .note{margin-bottom:10px}
+
+/* 手機觸控 */
+#joy{position:absolute;left:max(22px,calc(env(safe-area-inset-left,0px) + 14px));bottom:calc(24px + env(safe-area-inset-bottom,0px));width:124px;height:124px;border-radius:50%;background:rgba(255,252,241,.55);box-shadow:inset 0 0 0 3px rgba(255,255,255,.8);touch-action:none}
+#knob{position:absolute;left:38px;top:38px;width:48px;height:48px;border-radius:50%;background:var(--paper);box-shadow:var(--pop)}
+#aBtn{position:absolute;right:max(22px,calc(env(safe-area-inset-right,0px) + 14px));bottom:calc(36px + env(safe-area-inset-bottom,0px));width:76px;height:76px;border-radius:50%;border:0;background:var(--leafc);color:#fff;font-family:var(--fn);font-size:30px;font-weight:700;box-shadow:0 5px 0 #5ea43b;touch-action:none}
+
+@media (max-width:640px){
+  #dlg{padding:28px 24px 24px;border-radius:36px/30px}
+  #dlgText{font-size:17px}
+  #choices.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cogrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .card-b{padding:16px 18px 20px}
+  .card-h{padding:14px 18px 12px}
+  #dots span{display:none}
+  #dots{left:max(12px,env(safe-area-inset-left,0px));transform:none;top:calc(150px + env(safe-area-inset-top,0px));padding:7px 10px;gap:5px}
+  #dots i{width:9px;height:9px}
+  #meName{max-width:118px;overflow:hidden;text-overflow:ellipsis}
+  #netBub{max-width:150px}
+  #netTxt{overflow:hidden;text-overflow:ellipsis}
+  #hudL .bub{padding:4px 12px 4px 5px}
+  #hudL .ic{width:26px;height:26px;font-size:13px}
+  #hudL{gap:6px}
+  #hudL .bub b{font-size:18px}
+  #phoneBtn{width:56px;height:56px;border-radius:19px}
+  #toast{top:calc(196px + env(safe-area-inset-top,0px))}
+  #waitBub{top:calc(248px + env(safe-area-inset-top,0px));font-size:13px}
+  #prompt{bottom:calc(170px + env(safe-area-inset-bottom,0px));font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+body.talk #joy,body.talk #aBtn{display:none!important}
+#film{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#05070b;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.film-box{width:min(100%,1100px);display:flex;flex-direction:column;gap:12px}
+#filmC{width:100%;max-width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 120px);object-fit:contain;border-radius:14px;background:#000;display:block;border:0;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+.film-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e8ecf2}
+#filmLabel{flex:1 1 200px;min-width:0;font-size:16px}
+.film-prog{flex:1 1 160px;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}
+.film-prog i{display:block;height:100%;width:0;background:var(--teal)}
+.film-bar .btn{font-size:14px;padding:8px 16px}
+.film-bar label.btn{cursor:pointer}
+#timerBub{font-size:14px;padding:6px 14px 6px 7px}
+#timerBub b{font-size:22px;font-family:var(--fn)}
+#timerBub small{color:var(--ink2);font-size:12px}
+.ic.clock{background:var(--teal);font-size:15px}
+#timerBub.low{background:#fde5da;animation:pulse 1s ease-in-out infinite}
+#timerBub.low b{color:#b9512f}
+@keyframes pulse{50%{transform:scale(1.06)}}
+#lookHint{position:absolute;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);font-size:14px;padding:7px 16px;pointer-events:none}
+.tb{position:absolute;width:56px;height:56px;border-radius:50%;border:0;background:var(--paper);color:var(--ink);font-family:var(--f);font-weight:700;font-size:15px;box-shadow:var(--pop);touch-action:none}
+#jBtn{right:max(108px,calc(env(safe-area-inset-right,0px) + 100px));bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+#vBtn{right:max(30px,calc(env(safe-area-inset-right,0px) + 22px));bottom:calc(126px + env(safe-area-inset-bottom,0px))}
+body.talk #jBtn,body.talk #vBtn{display:none!important}
+#fade{position:fixed;inset:0;z-index:28;background:#fffcf1;pointer-events:none;animation:fadeio .7s ease-in-out forwards}
+@keyframes fadeio{0%{opacity:0}40%{opacity:1}100%{opacity:0}}
+#err{position:fixed;inset:0;display:grid;place-items:center;font-size:18px;padding:16px;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="c" tabindex="0" aria-label="AI 園區小島"></canvas>
+
+<div class="ui" id="ui">
+  <div id="hudL" hidden>
+    <div class="bub" id="meBub"><span class="ic co" id="meIc"></span><span id="meName"></span></div>
+    <div class="bub"><span class="ic coin">$</span><b id="capV">6</b><small>資本</small></div>
+    <div class="bub"><span class="ic star">★</span><b id="scV">0</b><small>/ 10 策略分</small></div>
+  </div>
+  <div class="bub" id="dots" hidden></div>
+  <div id="hudR" hidden>
+    <div class="bub" id="netBub"><i></i><span id="netTxt">單人模式</span></div>
+    <div class="bub" id="timerBub" hidden><span class="ic clock">⏱</span><small>本回合剩</small><b id="timerTxt" class="num">1:30</b></div>
+    <button id="phoneBtn" aria-label="打開園區手機（Tab）"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="3.5"/><path d="M10.5 18.5h3"/></svg>手機</button>
+  </div>
+  <div class="bub" id="waitBub" hidden><span id="waitTxt"></span><button id="skipWait">不等了</button></div>
+  <div class="bub" id="toast" hidden></div>
+  <div class="bub" id="prompt" hidden><span class="abtn">A</span><span id="promptTxt"></span></div>
+  <div id="banner"><small id="bnTop"></small><b id="bnBig"></b></div>
+  <div class="bub" id="keys" hidden><kbd>WASD</kbd> 走 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳 · 滑鼠 轉視角 · <kbd>E</kbd> 對話 · <kbd>V</kbd> 視角 · <kbd>Tab</kbd> 手機 · <kbd>Esc</kbd> 放開滑鼠</div>
+  <div id="choices" hidden></div>
+  <div id="dlg" hidden role="dialog" aria-live="polite"><div id="dlgName"></div><button id="dlgSkip" hidden>略過</button><div id="dlgText"></div><div id="dlgCaret" hidden></div></div>
+  <div id="joy" hidden><div id="knob"></div></div>
+  <button id="aBtn" hidden aria-label="對話">A</button>
+  <button id="jBtn" class="tb" hidden aria-label="跳">跳</button>
+  <button id="vBtn" class="tb" hidden aria-label="切換視角">視角</button>
+  <div class="bub" id="lookHint" hidden>點一下畫面，用滑鼠轉視角</div>
+</div>
+<div id="film" hidden><div class="film-box"><canvas id="filmC" width="1280" height="720"></canvas><div class="film-bar"><span id="filmLabel"></span><div class="film-prog"><i id="filmProg"></i></div><button class="btn ghost" id="filmPause">暫停</button><button class="btn ghost" id="filmSpeed">2 倍速</button><button class="btn" id="filmSkip">略過影片</button></div></div></div>
+<div id="fade" hidden></div>
+<div class="ovl" id="cardWrap" hidden><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
+<div class="ovl" id="phone" hidden><div class="ph"><div class="ph-top"><b id="phTitle">園區手機</b><button id="phClose">關閉</button></div><div class="ph-body" id="phBody"></div></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+if(!window.THREE){document.body.insertAdjacentHTML('beforeend','<div id="err">3D 引擎載入失敗，請重新整理頁面。</div>');return;}
+const SANS='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-serif';
+const SERIF='"Noto Serif TC","Songti TC","PMingLiU",serif';
+const rnd=(a,b)=>a+Math.random()*(b-a);
+
+/* ───────── 遊戲資料：故事版（規則說明書 11/22） ───────── */
+const COMP=[
+ {id:'chip',  name:'AI 晶片',       short:'晶片',  color:'#3d6cf0', core:'晶片設計、運算技術', need:'硬體整合、實際應用'},
+ {id:'green', name:'綠色能源',      short:'綠能',  color:'#27a854', core:'綠電、能源管理',     need:'高耗能產業、節能應用'},
+ {id:'server',name:'AI 伺服器',     short:'伺服器',color:'#8551de', core:'硬體製造、系統整合', need:'晶片技術、雲端需求'},
+ {id:'cloud', name:'雲端／資料中心',short:'雲端',  color:'#1599b5', core:'雲端平台、資料處理', need:'運算硬體、能源、應用場景'},
+ {id:'med',   name:'智慧醫療',      short:'醫療',  color:'#c94f86', core:'醫療專業、應用需求', need:'AI 技術、資料平台、設備'},
+ {id:'mfg',   name:'智慧製造',      short:'製造',  color:'#c98a2a', core:'自動化、製程整合',   need:'AI 技術、能源管理、數據分析'}
+];
+const CI={};COMP.forEach((c,i)=>CI[c.id]=i);
+const SHUO=['效率說','資源說','競局說','風險說','生態說'];
+const SHUO9=['效率說','資源說','競局說','風險說','生態說','互賴說','結構說','統治說','價值說'];
+const TH={
+ '效率說':{color:'#12a3bd',desc:'把做過的東西模組化、重複使用，用更少投入做更多事（自造共享）。'},
+ '資源說':{color:'#d99a12',desc:'累積別人難以取得的資料、知識與人才（場域知識、集體智慧）。'},
+ '競局說':{color:'#86a826',desc:'和對手競合：一起訂標準、做大市場，再各憑本事競爭（共榮發展）。'},
+ '風險說':{color:'#4f6fd1',desc:'先小規模試、留備援，讓系統在衝擊後變得更強（反脆弱）。'},
+ '生態說':{color:'#2ea866',desc:'把上下游和社區串成能長期運作的網絡（生命共同體）。'},
+ '互賴說':{color:'#a454c6',desc:'找能力互補的夥伴，長期一起投入、一起分享成果（價值共同體）。'},
+ '結構說':{color:'#8a6d3b',desc:'佔住關鍵位置：專利、標準介面、准入條件，讓別人需要你（正當性）。'},
+ '統治說':{color:'#3f7f8f',desc:'訂規則、建平台，讓多方共同決策、誘因對得上（多中心治理）。'},
+ '價值說':{color:'#c25b93',desc:'從使用者需求出發，和使用者一起共創價值（人本需求）。'}
+};
+const HAIRS=['#2a2f45','#6b4a2e','#1c1c22','#c9ced8','#7a4a30','#3d2a1d'];
+const SKINS=['#f2cba5','#e8b98f','#f5d3b3','#dba57c','#f0c49c','#e3ad84'];
+const RCOL={'3.0':'#2b6fb0','4.0':'#2e8a5a',coop:'#a454c6',invest:'#c7922a'};
+const mk=(ctx,rows,best,why)=>({ctx,opts:rows.map(r=>({s:r[0],a:r[1],n:r[2]||''})),best,why:why||rows[best][2]});
+const mk5=(a,notes,best,why)=>mk(null,a.map((x,j)=>[SHUO[j],x,notes?notes[j]:'']),best,why);
+
+/* 第 1 回合：AI 開源革命（彤） */
+const R1={
+ chip:mk('自行研發 AI 晶片，但公司規模小，很難與大廠競爭。',[
+  ['效率說','改善晶片設計流程，降低研發成本','成本降低了，但客戶仍習慣使用大廠的晶片。'],
+  ['資源說','招募更多工程師，提升晶片效能','晶片變得更快，但支援的軟體太少，客戶仍不願更換。'],
+  ['結構說','提供開發工具，吸引軟體開發者','越來越多軟體支援自家晶片，吸引更多客戶使用，形成競爭優勢。'],
+  ['競局說','與其他晶片公司合作研發','研發成本降低，但雙方對技術分享與利益分配產生分歧。'],
+  ['風險說','先推出少量晶片，測試市場反應','減少產品失敗的損失，但仍缺少軟體支援。']],2,'晶片再厲害，如果沒有軟體支援，也很難吸引客戶。讓更多開發者願意使用自家晶片，才能建立長期優勢。'),
+ green:mk('提供 AI 用電預測服務，但競爭對手也開始使用相同技術。',[
+  ['效率說','使用免費 AI 工具，降低預測成本','成本降低，但其他公司也能使用，沒有明顯優勢。'],
+  ['資源說','結合自家用電數據與能源專家經驗','更了解不同客戶的用電情況，預測更準確，競爭者難以模仿。'],
+  ['互賴說','與設備商合作，取得更多用電資料','資料增加，但還沒有辦法充分利用，預測效果有限。'],
+  ['生態說','與其他能源公司合作，擴大服務','能提供更多服務，但原本的預測功能仍缺乏特色。'],
+  ['風險說','先測試新 AI 模型，再決定是否使用','避免投入錯誤技術，但沒有解決服務太相似的問題。']],1,'當大家都能使用 AI，擁有別人沒有的資料和專業經驗，就能做出更好的服務。'),
+ server:mk('負責組裝 AI 伺服器，但新 AI 技術不斷改變硬體需求。',[
+  ['效率說','簡化伺服器設計，降低生產成本','生產更有效率，但仍跟不上新技術需求。'],
+  ['資源說','招募工程師，自行研發新零件','研發能力提升，但成本太高，開發速度也較慢。'],
+  ['競局說','與競爭公司合作制定產品規格','產品規格更一致，但沒有解決零件搭配的問題。'],
+  ['互賴說','與晶片、散熱公司共同開發產品','各家公司提供擅長的技術，更快推出符合市場需求的伺服器。'],
+  ['風險說','先測試少量新產品，再決定量產','降低大量生產的風險，但開發速度仍然受限。']],3,'一台 AI 伺服器需要很多不同技術。與擅長不同領域的公司合作，比所有零件都自己研發更有效。'),
+ cloud:mk('提供 AI 算力租賃，但有些設備閒置，有些客戶卻租不到算力。',[
+  ['效率說','使用 AI 自動分配自家算力','自家設備使用率提高，但其他供應商與客戶仍難以配對。'],
+  ['資源說','分析客戶需求，預測算力使用量','更了解客戶需要多少算力，但仍缺少有效的租賃方式。'],
+  ['結構說','開發專屬系統，留住現有客戶','現有客戶比較不容易離開，但閒置算力問題仍存在。'],
+  ['統治說','建立算力租賃平台，制定交易規則','讓需要算力的客戶找到供應商，減少設備閒置，吸引更多人加入。'],
+  ['風險說','分批增加設備，避免投資過多','降低設備投資風險，但沒有解決目前的供需問題。']],3,'公司不一定需要買更多設備，而是可以建立平台、制定租賃與交易規則，讓有算力的人與需要算力的人更容易配對。'),
+ med:mk('開發 AI 診斷軟體，但還不確定哪種醫療用途最受醫院需要。',[
+  ['效率說','使用開源 AI，降低研發成本','開發成本降低，但仍不知道醫院是否願意使用。'],
+  ['資源說','增加醫療數據，提高診斷準確率','AI 判斷更準確，但不代表產品一定符合醫院需求。'],
+  ['價值說','與醫師合作，改善診斷操作流程','使用方式更方便，但還需要確認實際使用效果。'],
+  ['統治說','建立醫療 AI 平台，制定使用規則','管理方式更完善，但尚未確認產品是否適合推廣。'],
+  ['風險說','先與一家醫院試用，再逐步推廣','在符合醫療安全規範下，先確認實際效果，再決定是否投入更多資源。']],4,'還不確定市場需求時，不需要一開始就投入大量資金。先小規模測試，根據結果再決定下一步，能避免浪費資源。'),
+ mfg:mk('提供工廠 AI 管理系統，但每接一間新工廠，都要重新開發。',[
+  ['效率說','將 AI 系統拆成模組，重複使用','同一套功能能用在不同工廠，減少重複開發，加快接案速度。'],
+  ['資源說','增聘工程師，提高客製化能力','能服務更多不同需求，但人力成本持續增加。'],
+  ['競局說','與競爭者合作，制定共同規格','不同系統更容易連接，但仍需重新開發各工廠功能。'],
+  ['互賴說','與設備商合作，推出整合服務','服務項目增加，但每間工廠仍需要大量客製。'],
+  ['風險說','先接少量訂單，確認效果再擴張','降低接案風險，但無法改善開發速度慢的問題。']],0,'以前每接一個客戶都要重新製作，現在把常用功能做成模組，就能重複使用，服務更多客戶。')
+};
+/* 第 3 回合：關鍵人才流動（喬） */
+const R3={
+ chip:mk(null,[
+  ['效率說','將標準驗證腳本模組化，讓不同晶片專案重複調用測試','模組重用能加快標準測試，但無法承接複雜異常的情境判斷。'],
+  ['資源說','建立跨團隊除錯覆盤與經驗轉譯機制，將調校邏輯沉澱為組織知識庫','把少數專家的隱性判斷組織化，轉為可持續更新的智慧資本。'],
+  ['競局說','與同業晶片設計商簽訂人才交流與前競爭期標準合作協議','前競爭期合作有助對齊標準，卻無法留住自家核心除錯知識。'],
+  ['風險說','採雙軌技術路徑並行探索，並依階段里程碑決定資源配置','實質選擇權保留了路線彈性，但沒有知識轉譯，仍會卡在缺人調校。'],
+  ['結構說','將核心韌體介面申請專利，並開放標準開發介面給外部應用','智財專佔能防外部抄襲，但內部新團隊仍不知道如何調校晶片。']],1),
+ green:mk(null,[
+  ['效率說','建立雲端標準化調度模組，讓不同案場可重複套用預測參數','模組擴散能提升標準作業速度，但難以應對各地微氣候與設備差異。'],
+  ['資源說','成立內部跨區站長工作坊，將調度判斷轉化為內部作業規範','內部整合能沉澱舊經驗，但單靠自家人力不足以應付跨品牌未知異常。'],
+  ['互賴說','與設備商及學研機構共建診斷網絡，在跨組織協作中吸收調度知識','建構跨組織創新網絡，與外部夥伴互補學習並內化調度知識。'],
+  ['風險說','將新案場調度拆分為小規模試點，依準確率決定是否擴張','分段試探能控制試錯損失，卻未解決經驗無法跨案場傳承的問題。'],
+  ['統治說','建置跨案場知識平台，設計上傳評價與授權分潤規則','平台誘因能鼓勵上傳，但缺乏外部知識互補仍容易老化。']],2),
+ server:mk(null,[
+  ['效率說','將散熱測試數據與裝機參數模組化，重複套用於各客製機型','模組多用能加快既有規格交付，但遇上新世代架構仍得從頭設計。'],
+  ['資源說','培養跨熱流與機構的整合型人才，強化團隊動態重組能力','培養跨領域動態能力週期過長，緩不濟急，且仍面臨被挖角風險。'],
+  ['結構說','將核心散熱架構申請專利並鎖定標準介面，讓零件商依附自家規格','透過智財專佔與關鍵介面卡位，把競爭力鎖在架構節點，而不是少數人的手感。'],
+  ['競局說','與散熱零組件廠共組研發聯盟，共同制定新世代機櫃規格標準','共訂標準能做大市場，但未先鎖定專利邊界，反而容易知識外溢。'],
+  ['風險說','以小批量多規格原型並行測試，依市場驗證結果決定量產規模','多點試探能降低規格風險，但組裝仍靠少數技師，會在原型階段卡關。']],2),
+ cloud:mk(null,[
+  ['效率說','導入自動化監控與標準排錯腳本，讓一般工程師重複調用常見解法','重複調用能解常見問題，但專家因誘因衝突，不願把核心邏輯寫進腳本。'],
+  ['資源說','透過專家輪調與跨組情境覆盤，將資深人員的判斷力轉化為團隊能力','專家覆盤有助經驗傳承，但「教會徒弟餓死師傅」的誘因矛盾未解。'],
+  ['競局說','與同業共建基礎維運標準，同時封閉保護自家核心跨雲調度演算法','劃清競合邊界能防知識外溢給對手，但未解決內部知識囤積問題。'],
+  ['風險說','針對高難度跨雲架構採分階段沙盒試點，保留多種技術切換選項','分階段試點能控管搬遷風險，但無法消除專家離職的排錯斷層。'],
+  ['統治說','建置內外部專家共享的維運知識平台，設計貢獻評價與分潤規則','透過平台治理與評價分潤誘因，協調多方專家主動釋出內隱知識。']],4),
+ med:mk(null,[
+  ['效率說','將過去導入醫院的標準流程模組化，加快新團隊部署系統的速度','流程模組化能加快軟體安裝，但無法彌補新團隊對臨床情境的理解落差。'],
+  ['資源說','整合內部跨科別專家知識與動態學習機制，加速新進工程師理解臨床','內部閉門學習若脫離醫院實際使用情境，系統仍容易被臨床退件。'],
+  ['價值說','建立與醫院臨床團隊共同覆盤迭代機制，讓經驗留在實際使用情境中','透過服務主導邏輯與體驗共創，讓知識在醫護互動學習中持續生成。'],
+  ['結構說','將臨床工作流介面設計申請專利保護，防止競爭者模仿產品體驗','智財保護能防範對手模仿，卻無法幫助新團隊理解臨床真實需求。'],
+  ['互賴說','與醫學中心及醫材夥伴共組跨組織知識網絡，持續吸收第一線醫學知識','外部網絡能取得醫學新知，但產品價值仍須在醫師日常使用互動中生成。']],2),
+ mfg:mk(null,[
+  ['效率說','將資深技師調機參數與異常特徵轉化為數位模組，跨廠重複套用','運用數位知識低複製成本的特性，以模組化放大投入並實現跨廠複製。'],
+  ['資源說','設立內部專家知識庫與情境演練機制，培養新進工程師現場判斷力','培養專家週期過長，無法解決多廠同時擴張的交付瓶頸。'],
+  ['結構說','針對獨家製程優化演算法與感測器介面申請專利，建立技術授權門檻','專利能卡住對手抄襲，但現場調機仍受限於技師人數，無法快速交付。'],
+  ['互賴說','與上游設備商建立跨組織技術協作網絡，共同研究與整合產線參數知識','外部協作能取得新機台知識，但進駐新廠若仍需人工調校，依舊卡關。'],
+  ['生態說','串聯感測器商、設備商與顧問建立互補生態系，分工交付產線方案','協調生態互補能擴大服務，但核心調校未先數位模組化，仍難確保品質。']],0)
+};
+/* 第 4 回合：AI 電力危機（宥） */
+const R4={
+ chip:mk5(['開放低功耗設計框架，讓客戶一起優化','和大學合辦低碳半導體人才培育','趁缺貨漲價，先供貨給出價最高的大廠','自購燃氣機組，限電期間照常出貨','發起綠色算力聯盟，邀上下游一起減碳'],
+  ['把節能設計推向多家客戶，下游設備的用電一起降下來，直接回應限電和碳費。','人才培育要好幾年才見效，解決不了這個夏天的用電壓力。','有限賽局的搶單思維；限電下大廠拿到晶片也沒電可用，還會失去社會信任。','只顧自家營運，碳排和碳費都更高，社區更反對。','方向對，但聯盟剛發起，本回合拿不出具體的減碳成果。'],0),
+ green:mk5(['開放能源管理軟體，讓用戶自己調度用電','擴建綠電場址，逐一爭取地方同意','綠電憑證高價賣給 AI 大廠，社區只好改用火力電','囤積儲能設備自己用','號召社區共建微電網，自己當樞紐'],
+  ['軟體只能幫已經有電的用戶調度，限電時社區還是缺電源。','社區正在抗議，一處一處談來不及。','整體排碳沒有減少，還失去地方支持。','只保住自家，社區斷電的問題沒有解決。','社區變成供電夥伴，限電時可以一起調度，也贏得地方支持。'],4),
+ server:mk5(['三班制滿載出貨，衝高產能','囤積關鍵零組件等漲價','和同業共訂能效標準，不達標就不出貨','推出模組化液冷機櫃，限電時可以分區運作','加入綠色算力聯盟當一般會員'],
+  ['用電更吃緊，碳費也更重。','「擁有資源」的舊思維，得不到社會支持。','同業一起提高門檻，低能效設備不能再靠低價搶單，整個市場的用電一起下降。','只保住自家客戶，改變不了業界的低能效競爭。','只是跟隨，沒有主導訂出能效規範，影響力不夠。'],2),
+ cloud:mk5(['把運算排程移到離峰時段','和在地社區共管水電、公開用電數據，換取營運許可','砸錢搶下最後一塊電網容量','自建柴油發電機，保證客戶不斷線並加價','把閒置算力開放給學校和偏鄉醫院'],
+  ['能省一點電，但沒有回應社區對水電的疑慮，營運許可還是卡關。','把社區當成共同維護水電的夥伴，才能被允許繼續營運。','排擠其他用戶，抗議只會更激烈。','柴油發電增加碳排和空污，社區更反對。','是好事，但沒有解決用水用電的爭議。'],1),
+ med:mk5(['把 AI 模型縮小，降低用電','簽長約鎖定大量算力，獨占醫院資料合作','用「醫療優先」遊說豁免限電，排擠其他用戶','和社區醫院共建停電應變網絡，一起承擔斷電風險','開發偏鄉遠距醫療，開拓還沒人服務的市場'],
+  ['省下的電有限，一停電照護服務還是會中斷。','擁有和控制的思維；限電時鎖到的算力也用不了。','把風險轉嫁給別人，失去社會信任。','和醫院共同承擔停電風險，必要的照護不會中斷。','新市場很好，但遠距醫療本身也要靠穩定供電。'],3),
+ mfg:mk5(['導入智慧排程，避開尖峰用電','和工業區共建循環水與廢熱回收','號召供應鏈共訂減碳公約，共享訂單和產能','自備燃煤汽電共生機組，限電照樣滿載','把高耗能產線移到法規寬鬆的地區'],
+  ['只靠一家工廠調度不夠，限電時還是交不出貨。','建置要時間，解決不了這一季的用電和交期。','一家限電時別家可以補位，交期和減碳都能顧到。','燃煤排碳高、碳費重，和減碳要求相反。','只是把排碳搬到別處，客戶和社會都不會接受。'],2)
+};
+/* 第 6 回合：AI 供應鏈信任危機（沈） */
+const R6={
+ chip:mk5(['趁審查還沒查到自己，跳過碳盤查、產線全速衝量出貨','建立晶片碳足跡資料庫，先從自家產線開始盤查','放消息說對手的綠電來源有問題，趁亂搶單','委託第三方查核綠電來源，取得國際認證','帶上下游一起公開產品碳足跡，建立供應鏈共同揭露平台'],null,4,'把上下游的碳足跡資料串起來，讓客戶能查驗整條供應鏈。'),
+ green:mk5(['導入綠電溯源系統，每一度電的來源都查得到','趁大家急著補綠電，把來源不明的憑證打包高價轉賣','降價搶客戶，對外拍胸脯「保證通過審查」','主動請國際機構稽核所有電廠，公開每座電廠的發電紀錄','辦說明會向客戶解釋綠電來源'],null,3,'第三方查核搭配各電廠的原始紀錄，能回應對綠電來源的質疑。'),
+ server:mk5(['重新設計產品，內建能耗與碳排即時揭露，出貨就附數據','把審查成本轉嫁給下游零件商，要他們自己吸收','和晶片廠共推產品碳標籤，讓客戶一眼比較','把有疑慮的零件改從審查較鬆的國家進口，換個產地照樣出貨','發表聲明支持供應鏈透明化'],null,0,'產品在交付時就附可查的數據，客戶可直接核對設備能耗。'),
+ cloud:mk5(['導入自動化用電與碳排監測，即時回報給客戶','把資安與碳排報告外包給顧問公司處理','和同業共訂資料安全與能耗揭露標準，一起接受查核','把敏感資料緊急搬到海外機房，避開審查','買便宜碳權抵銷，對外宣稱「100% 碳中和」，照常擴建機房'],null,2,'同業以共同標準接受查核，客戶可同時檢查資料安全和能耗。'),
+ med:mk5(['精簡 AI 模型，降低用電成本','改用可溯源的綠電機房，並公開病患資料保護流程','趁對手被審查，低價搶走醫院合約、運算量爆增，資料保護先省掉','主動通報資安漏洞，協助合作醫院修補','砸錢拍公益形象廣告，實際流程沒改'],null,1,'採用可溯源機房並揭露資料保護流程，有憑據回應兩項疑慮。'),
+ mfg:mk5(['為了趕在審查前交貨，暫停節能排程、產線滿載','導入原物料溯源與廢料回收，每批產品附碳排資訊','切割出事的合作夥伴，接收他們的訂單、產能全開','準備替代供應商名單，降低被牽連的風險','和供應商共建碳足跡與資安查核平台，整條供應鏈一起通過審查'],null,4,'與供應商共用查核平台，讓上游資料也能一併接受審查。')
+};
+/* 永續投資：每家兩個方案（5 / 8 資本），付費後判斷屬於哪一說 */
+const pl=(cost,short,text,ans,why)=>({cost,short,text,ans,why:why||'',pts:cost>=8?2:1,refund:cost>=8?4:2});
+const P5={
+ chip:[pl(5,'舊電腦節能升級','開放相容的低功耗模組，讓兩間社區教室共用升級套件，延長舊電腦的使用時間。','效率說','同一套低功耗模組可以在不同教室重複使用。'),pl(8,'在地維修知識庫','與維修技師、館員一起整理常見故障和現場修法，把經驗做成可更新的診斷手冊，持續培訓各據點的維修人員。','資源說','累積的是在地維修人員共同掌握的知識，長期投入效益更大。')],
+ green:[pl(5,'診所備援演練','提供一季的備援用電測試，把每次演練發現的問題納入下一次調度，再把做法分享給其他診所。','風險說','每次演練暴露的問題都讓下一次調度更穩。'),pl(8,'社區微電網','和居民、診所與電力業者共同規劃三年供電方案，一起決定誰出資、誰維護，以及尖峰時哪些服務優先用電。','統治說','多方一起訂規則、分責任，長期投入效益更大。')],
+ server:[pl(5,'AI 專題算力試辦','與大專院校合作，提供一學期的共用算力，讓缺乏設備的學生團隊也能完成 AI 專題。','價值說','從缺乏設備的學生需求出發。'),pl(8,'共建 AI 實作環境','與大專院校合作三年，由企業提供共用算力與維運，校方將設備導入專題課程。師生每學期回饋實作中遇到的問題，企業據此改善系統，再由下一屆學生試用。','互賴說','企業與學校能力互補、長期共同投入，長期投入效益更大。')],
+ cloud:[pl(5,'在地多語查詢','邀館員、新住民和長者共同設計查詢服務，把不同語言和實際使用習慣放進系統。','資源說','把在地人的語言與使用經驗變成系統的知識。'),pl(8,'跨雲服務共通規格','邀競爭的雲端業者共訂三年資料移轉規格，讓社區據點能帶著資料換服務商，各家靠價格、維護與服務品質競爭。','競局說','同業先合作訂公平規則，再各憑服務競爭，長期投入效益更大。')],
+ med:[pl(5,'照護中斷演練','模擬網路中斷或診所臨時停診，找出最容易漏接的病患，再依演練結果改善追蹤與轉介流程。','風險說','用演練找出弱點，讓流程在衝擊後更強。'),pl(8,'社區慢性病照護網','由診所、社區據點、交通單位和居民代表共同規劃三年追蹤服務，把看診、接送和後續照護接起來。','價值說','從病患實際需要出發設計服務，長期投入效益更大。')],
+ mfg:[pl(5,'同業共用維修規格','邀同業把公共設備最常壞的一款零件做成可互換規格，讓據點可以向多家廠商買備件。','競局說','同業共訂規格，讓據點有更多選擇。'),pl(8,'在地備件再製網','與維修店、回收商簽三年協議。維修店回報缺件，回收商提供可用材料，製造商負責再製與品質檢驗，各方共同維持備件供應。','互賴說','三方能力互補、長期共同維持供應，長期投入效益更大。')]
+};
+const P8={
+ chip:[pl(5,'社區水表維修套件','開放感測模組的替換設計，提供共用測試工具，讓各區維修站能自行修復故障水表，及早找出漏水點。','效率說','自造共享：同一套工具與設計可由多個據點重複使用，維修能力也留在當地。'),pl(8,'在地漏水判讀資料庫','邀居民、師傅與工程師核對警報，把「哪些巷弄在晚餐時間本來就會降壓」等經驗納入模型，並讓社區持續修正紀錄。','資源說','場域知識、集體智慧：投資累積的是在地人和工程師共同掌握的判讀能力。')],
+ green:[pl(5,'場站清洗時段試辦','在一處太陽能場站，由居民、供水單位與業者共同決定清洗時段；住戶回報降壓時，三方依約重排。','統治說','多中心治理：居民有訂定及修改規則的權利。'),pl(8,'再生水長期供應','和水處理廠、鄰近場站簽訂長約，約定誰把關水質、誰負責運送、旱季如何分配及分攤維護費。','互賴說','價值共同體：各方以互補能力與長期承諾，共同維持替代水源。')],
+ server:[pl(5,'共用驗機回收設備','開放液冷測試線的回收裝置設計，讓園區小型組裝廠能自行建置與維修，減少每台驗機需要的新水。','效率說','自造共享：多家小廠能運用同一設計，自行改善測試用水。'),pl(8,'開放節水驗機標準','邀同業共訂客戶認可的用水測試規格，讓小廠也能使用共用設備取得驗證，通過後各自競標。','競局說','共榮發展：同業合作建立公平的參賽條件，再憑產品與服務競爭。')],
+ cloud:[pl(5,'限水減載演練','和診所試行機房減載，追查哪些急件被錯排到延後時段，修改分流規則後再測一次，核對錯排數是否下降。','風險說','反脆弱：第一次演練暴露弱點，第二次驗證系統是否因此變強。'),pl(8,'機房用水共決','由居民、供水單位與機房各派代表，共訂取水上限、民生優先時段與降載門檻。任一方都能提案調整，決定與執行紀錄對外公開。','統治說','多中心治理：三方共享決策權，也有明確的修正程序。')],
+ med:[pl(5,'限水日個別照護安排','護理師與病患逐一確認誰能改為遠距、誰需要接送，再追蹤高齡及行動不便者是否完成就診。','價值說','人本需求：成效取決於不同處境的病患能否實際取得照護。'),pl(8,'旱季社區照護網','由居民指出最容易中斷就醫的地區，串接診所、醫院、交通與社區據點，共同試辦轉介接送，並安排後續經費與維護窗口。','生態說','生命共同體：從地方需求出發，把原本分散的服務組成能長期運作的照護網。')],
+ mfg:[pl(5,'找出工廠與住戶搶水的時段','操作員、住戶與水務人員一起核對清洗紀錄和低水壓時間，整理成可更新的地方用水圖，再據此調整排程。','資源說','場域知識、集體智慧：把三方各自知道的事情接起來，找出單看廠內水表無法辨識的原因。'),pl(8,'用可查驗的承諾取得續營資格','審查會已把取水上限列為續營條件。工廠投資獨立水表及超額自動降載設備，接受外部查核，以履約紀錄取得下一期營運資格。','結構說','正當性：企業能否繼續在當地營運，取決於它能否滿足地方認可的准入條件。')]
+};
+/* 合作回合配對表 */
+const GRADE2={'green|mfg':'S','cloud|green':'S','chip|server':'A','chip|cloud':'A','chip|mfg':'A','green|server':'A','cloud|server':'A','med|server':'A','mfg|server':'A','cloud|med':'A','cloud|mfg':'A','chip|green':'B','chip|med':'B','med|mfg':'B','green|med':'C'};
+const DESC2={'green|mfg':'綠能提供場站的運轉限制，智慧製造將既有備援規則接進支援本地操作的控制器。斷線時，場站能依本地規則繼續運轉。','cloud|green':'綠能提供本地場站資料與排程規則，資料中心在園區內算出當日排程，場站人員能照表操作，完成每日調度。','chip|server':'讓影像辨識模型在本地伺服器上運行，能輸出辨識結果，還要接回產線的檢查流程。','chip|cloud':'讓常用模型改在本地晶片上處理單筆任務，跨據點的工作分派仍待恢復。','chip|mfg':'在機台旁恢復一種常見瑕疵的辨識，其餘瑕疵仍要人工檢查。','green|server':'用本地伺服器接回場站感測資料，讓人員看得到即時異常，排程仍得另外處理。','cloud|server':'用園區內的伺服器和暫存資料恢復查詢，外部資料更新仍要等連線恢復。','med|server':'用院內設備恢復影像初篩，醫護人員可以查看初篩結果，仍要手動帶回原有判讀流程。','mfg|server':'恢復產線感測資料的收集和基本告警，原本由遠端系統負責的異常分析仍未恢復。','cloud|med':'把影像分析搬到院內，醫師能查看分析結果，送件與覆核紀錄仍需接回院內系統。','cloud|mfg':'恢復單廠的品質分析，仍無法比對其他廠區的資料來追查共同異常。','chip|green':'測出低功耗模組能讀取場站資料，還需要接入現場控制器才能用於調度。','chip|med':'驗證模型能在本地晶片上跑，還缺院內部署與醫師可操作的介面。','med|mfg':'做出符合醫護流程的離線操作介面樣品，院內分析系統尚未接上。','green|med':'雙方各有場站調度和醫療判讀的專長，這次還找不到能靠兩家一起恢復的工作。'};
+const GRADE7={'green|mfg':'S','chip|server':'S','cloud|med':'S','cloud|green':'A','cloud|mfg':'A','green|server':'A','med|server':'A','med|mfg':'A','chip|green':'B','chip|med':'B','chip|mfg':'B','cloud|server':'B','mfg|server':'B','chip|cloud':'C','green|med':'C'};
+const DESC7={'green|mfg':'綠能提供分時供電與排放資料，製造廠核對相同合格產量下的排放，並用班表確認節電是否增加員工的夜班負擔。','chip|server':'將新晶片裝進整機，執行同一批客戶任務，把主機與散熱耗電一起量測。在相同供電條件下比較排放，並確認任務仍準時完成。','cloud|med':'雲端以作業編號將機房能耗對回每件合格判讀，醫療端核對急件等候時間與開診紀錄，能確認減量後病患仍照常獲得服務。','cloud|green':'將可延後的運算移到低碳供電時段，能核對機房減量；服務延後對使用者的影響，仍需租戶確認。','cloud|mfg':'共同調整廠內與雲端的運算排程，能比對同批訂單的總用電與交期；換算排放仍需補齊各時段的供電資料。','green|server':'調整驗機時段，對照供電來源與整機用電，能算出每台合格設備的測試排放。證據涵蓋出廠測試，客戶使用階段仍待追蹤。','med|server':'在診所實測每件合格判讀的設備用電，並核對病患等候時間；換算排放仍需確認院端的電力排放係數。','med|mfg':'合作翻修診所設備，由製造廠記錄更換零件、診所確認設備仍能支援看診。要估算延長使用年限省下多少排放，仍需同型新品的製造排放資料。','chip|green':'能估算晶片測試階段的排放，但缺少整機耗電與實際服務量，無法判斷每次服務減少多少排放。','chip|med':'能比對晶片功耗與判讀品質，但缺少院端主機與散熱用電，無法核對整套系統的減量。','chip|mfg':'能測出辨識晶片的節電效果，但檢測工序與其他設備共用電表，無法核對整道工序的用電變化。','cloud|server':'能量出設備與機房用電下降，但兩家都缺一般租戶的實際工作量，無法排除當月訂單減少的影響。','mfg|server':'能量出廠內伺服器的節電量，但設備同時支援多條產線，現有紀錄無法將減量歸到指定產品。','chip|cloud':'新晶片尚未部署到該機房。晶片測試報告與既有機房電表量的是不同設備，無法證明雙方已完成共同減量。','green|med':'綠能有供電紀錄，診所有看診人次，但診所使用共用機房，兩家無法將該段供電對回指定醫療服務。'};
+const HAND7={chip:'你有新晶片執行相同任務的功耗紀錄。新晶片已裝進伺服器公司的測試機，也能在製造廠的檢測機台試跑，但還沒部署到園區的雲端機房。',green:'你有園區每個時段的供電來源與排放資料，可以配合企業調整供電。工廠和機房各有電表，使用共用機房的個別診所沒有獨立電表。',server:'你有整機測試設備，能把晶片、主機和散熱的耗電一起量出來。你也能把設備帶進診所實測，但看不到雲端租戶各自完成了哪些工作。',cloud:'你有機房的分時電表及工作排程。醫療影像服務留有可對照的作業編號；一般租戶的電表紀錄只到機房層級。',med:'你知道各診所完成多少件合格判讀、急件等了多久，也知道哪些據點曾停診。你拿得到院端設備紀錄，無法單獨拆出共用機房的用電。',mfg:'你有產線電表、合格產量、班表與維修紀錄，能比較調班前後的差異。廠內有些設備跨產線共用，只有部分工序能獨立計量。'};
+const EXTRA={S:[1,1,1,2,2,2,2,3,3,3,4],A:[1,1,1,1,2,2,2,2,3,3,3],B:[0,0,1,1,1,1,1,1,1,1,2],C:[0,0,0,0,0,0,0,0,0,0,0]};
+const GCOL={S:'#2b6fb0',A:'#12a3bd',B:'#86a826',C:'#98a0ad'};
+const pairKey=(a,b)=>[a,b].sort().join('|');
+/* 八回合故事線：每回合的事件都接著上一回合 */
+const ROUNDS=[
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'AI 開源革命',ctxLabel:'你的處境',data:R1,scene:0,
+  event:'全球科技巨頭公開最新 AI 模型與開發工具，讓其他公司也能低成本使用先進 AI 技術。短短三個月內，市場出現大量相似產品，競爭越來越激烈。當大家都能使用相同的 AI 技術，你的公司該如何保持競爭力？',
+  trailer:['台北，一座正在長大的 AI 園區','六家新創，在同一條街上起跑','這一天，全球科技巨頭公開了最新 AI 模型與開發工具','先進 AI，人人都能低成本取得','短短三個月，市場湧進大量相似產品','當大家都用得到同一套 AI','你的公司，要靠什麼留下來？']},
+ {type:'coop',era:'3.0',eraName:'3.0 知識經濟',title:'園區對外連線中斷',grades:GRADE2,desc:DESC2,scene:1,
+  event:'上一回合，AI 訂單突然暴增，園區裡的工廠加開產線，資料中心增加運算班次，綠能場站也要更頻繁地更新供電排程。就在大家忙著擴充營運時，園區的對外網路反覆中斷。工廠收不到遠端的瑕疵判讀結果，綠能場站等不到調度指令，醫療系統也連不上外部的影像分析服務。園區內部網路和現有設備仍然能用。六家公司有機會把各自的技術和現場經驗接起來，先讓一項關鍵工作在本地繼續。做得成的方案，也能留下來，應付下一次業務量暴增。',
+  trailer:['前情提要：開源浪潮過後，AI 訂單突然暴增','工廠加開產線，資料中心加開運算班次','就在大家忙著擴充的時候','園區的對外網路，反覆中斷','工廠收不到瑕疵判讀，場站等不到調度指令','醫院也連不上外部的影像分析','園區內部的網路和設備，還能用','找一個夥伴，讓一項關鍵工作在本地繼續']},
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'關鍵人才流動',data:R3,scene:2,
+  event:'AI 產業人才競爭升溫，部分關鍵工程師收到競爭對手的高薪邀約。公司發現部分製程、系統調校與客戶經驗只掌握在少數資深員工手中。公司該如何避免人才流動造成核心知識流失？',
+  trailer:['前情提要：園區撐過了斷線，訂單還在湧入','AI 人才的爭奪戰跟著升溫','關鍵工程師，陸續收到對手的高薪邀約','公司這才發現','製程、系統調校、客戶經驗','只掌握在少數資深員工的腦袋裡','人會走，知識要怎麼留下來？']},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 電力危機',data:R4,scene:3,
+  event:'AI 算力擴張讓用電暴增，夏季備轉容量告急。政府宣布碳費上路，大用電戶都要提出減碳計畫，社區也開始抗議新建資料中心。到了 4.0，問題不再是「賺不賺錢」，而是「你還能不能被允許繼續營運」。',
+  trailer:['前情提要：知識留住了，算力卻越擴越大','AI 算力擴張讓用電暴增','夏季備轉容量告急～～～Hot Hot><','政府宣布碳費上路','大用電戶都要提出減碳計畫（蛤？？？可惡）','社區也開始抗議新建資料中心','到了 4.0，問題不再是「賺不賺錢」','而是「你還能不能被允許繼續營運」']},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'社區三年公共服務計畫',plans:P5,scene:6,
+  event:'AI 園區擴張滿一年，企業接到更多訂單，也帶來了新的工作機會。上回合的電力危機過後，地方政府召開了一場檢討會，邀請園區企業、居民、診所和學校一起談園區擴張對地方的影響。會議上，一位館員提到，圖書館的電腦常常一壞就停用好幾週，想上網辦事的居民只能等。附近診所也說，他們試辦過遠距追蹤，但補助一到期，就沒有足夠人力繼續服務。居民代表問：「園區就在旁邊，有這麼多懂設備、能源和數位服務的公司，我們能不能一起做一些地方真的用得到、幾年後也還在的服務？」會後，地方政府和社區據點共同提出一項三年公共服務改善計畫，邀請企業自願投入。每家公司可以先做一季試辦，也可以承擔更長期的維護、培訓或服務。',
+  trailer:['前情提要：電力危機過後，園區擴張滿一年','地方政府召開檢討會','企業、居民、診所和學校，第一次坐在同一張桌子','館員說：圖書館的電腦，一壞就停用好幾週','診所說：遠距追蹤試辦過，補助一到期就沒人力','居民代表問：','「園區有這麼多懂技術的公司」','「能不能一起做幾年後還在的服務？」','三年公共服務計畫，邀你投入']},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 供應鏈信任危機',data:R6,scene:5,
+  event:'公共服務計畫進行到第二年，園區企業的永續報告書一份比一份漂亮。直到一份國際調查報告出爐，揭露部分企業的永續承諾與實際營運存在落差：綠電來源不明、產品碳排資訊不透明，還有資料安全與產品責任問題。調查員也到地方走了一圈：圖書館館員說，有些公司說好要來修電腦，試辦一季後就沒再出現；診所的遠距追蹤系統，病患資料存在哪、誰看得到，沒人說得清楚；居民代表只問了一句：「去年在檢討會上答應我們的事，還算數嗎？」消息曝光後，國際客戶宣布重新審查整條 AI 供應鏈。就算沒有直接違規，也可能因為合作夥伴被牽連。被懷疑的時候，你要拿什麼證明自己？',
+  trailer:['前情提要：公共服務計畫，進行到第二年','永續報告書，一份比一份漂亮','直到一份國際調查報告出爐','綠電來源不明、碳排不透明（蛤？？？說好的永續呢）','館員說：有些公司修了一季電腦，就沒再出現','診所的病患資料存在哪、誰看得到，沒人說得清楚','居民代表只問一句：','「去年答應我們的事，還算數嗎？」','被懷疑的時候，你要拿什麼證明自己？']},
+ {type:'coop',era:'4.0',eraName:'4.0 人文永續',title:'少用的電，還是少做的服務？',grades:GRADE7,desc:DESC7,hand:HAND7,scene:4,
+  event:'上回合的供應鏈調查結束後，國際買方要求園區企業提出共同減碳成果。說明會上，一家企業拿出機房電表：「上季的用電降了。」參與公共服務計畫的診所主任卻問：「可是我們有兩天沒開診。少看了病人，也會少用電。你們怎麼知道是哪一種？」買方因此要求各組選定一項產品或服務，比較改善前後的排放，並找實際使用的人確認：完成同樣的工作，排放有沒有下降？原本需要這項服務的人，還能不能照常使用？請找一家夥伴，決定雙方各自投入多少資本。',
+  trailer:['前情提要：審查結束，國際買方要看共同減碳成果','說明會上，企業拿出機房電表','「上季的用電，降了。」','診所主任舉手：「我們有兩天沒開診。」','「少看了病人，也會少用電。你們怎麼知道是哪一種？」','完成同樣的工作，排放有沒有下降？','需要這項服務的人，還能不能照常使用？','找一個夥伴，拿出雙方都能核對的成果']},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'園區要用的水，誰來決定？',plans:P8,scene:7,
+  event:'旱季進入第三個月，地方政府宣布下個月將減少園區供水，並召開營運許可審查會。上回合一起核對減碳成果的居民帶來兩份紀錄：工廠的月用水量確實下降了，但工廠改在傍晚清洗設備後，附近住戶煮晚餐時，水龍頭連續幾天只剩細細一條水。居民代表問：「你們的總表看得見省了多少水，看得見我們什麼時候沒水用嗎？如果下個月再減供，誰可以要求你們改？」審查會請各家公司提出一項投資，說清楚會改善哪個用水環節、誰能從中受益，以及地方如何確認承諾有做到。這是最後一輪，你可以投資，也可以保留資本。',
+  trailer:['前情提要：減碳成果，居民一起幫忙核對了','旱季進入第三個月','下個月，園區供水還要再減','工廠的月用水量，確實下降了','但改在傍晚清洗後，住戶煮晚餐只剩細細一條水','「你們的總表，看得見我們什麼時候沒水用嗎？」','「如果再減供，誰可以要求你們改？」','這是最後一輪','你的最後一筆資本，要投在哪裡？']}
+];
+const N=ROUNDS.length;
+const rCol=st=>st.type==='coop'?RCOL.coop:st.type==='invest'?RCOL.invest:RCOL[st.era];
+const TYPENAME={risk:'事件＋說',coop:'合作回合',invest:'永續投資'};
+
+/* ───────── 初始優勢（規則書：全場限用 1 次） ───────── */
+const ADV={
+ chip:  {name:'關鍵技術',shuo:'競局說',when:'合作回合',text:'邀請真人組別合作時，指定對方不能拒絕（等級、得分、綜效都照配對表）。'},
+ green: {name:'綠電供應',shuo:'互賴說',when:'合作回合',text:'鎖定合作時使用：公布等級時升一級，綜效也照升級後的等級計算，夥伴一起受惠。'},
+ server:{name:'備援產線',shuo:'風險說',when:'事件回合',text:'事件回合可以選兩個說，任一答對就得 1 分。'},
+ cloud: {name:'平台資訊',shuo:'生態說',when:'合作回合',text:'合作配對前，私下問主持人某一組配對的等級。'},
+ med:   {name:'臨床信任',shuo:'資源說',when:'合作回合',text:'合作等級為 B 時，仍得 1 策略分（綜效照 B 級）。第一次拿到 B 級時自動使用。'},
+ mfg:   {name:'共用模組',shuo:'效率說',when:'事件回合',text:'事件回合選擇前，請主持人刪掉兩個錯誤選項。'}
+};
+const LV=['C','B','A','S'];const upG=g=>LV[Math.min(3,LV.indexOf(g)+1)];
+const HOSTC='#20b2a4';
+
+/* ───────── 小工具 ───────── */
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const lsSet=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+function hashStr(s){let h=1779033703^s.length;for(let i=0;i<s.length;i++){h=Math.imul(h^s.charCodeAt(i),3432918353);h=h<<13|h>>>19;}return h>>>0;}
+function rng(seed){let a=hashStr(String(seed));return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const coOf=id=>COMP[CI[id]];
+
+/* ───────── 狀態 ───────── */
+const S={phase:'lobby',co:null,nick:'',cap:6,sc:0,round:0,picks:{},advUsed:false,room:'',
+  removed:[],cur:null,bots:{},botPick:{},botsDone:-1,waitT0:0,skipWait:false,inviting:null,handledInv:{},mute:lsGet('six-mute')==='1'};
+let uiBusy=0;
+
+/* ───────── 3D 世界 ───────── */
+const canvas=$('c');
+const isTouch=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0||'ontouchstart' in window;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
+renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+const scene=new THREE.Scene();scene.background=new THREE.Color('#aee3f5');scene.fog=new THREE.Fog('#c6ebf6',110,330);
+const camera=new THREE.PerspectiveCamera(58,1,0.3,700);camera.rotation.order='YXZ';
+scene.add(new THREE.HemisphereLight('#ffffff','#b9d39a',0.52));
+const sun=new THREE.DirectionalLight('#fff3d6',0.5);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
+{const c=sun.shadow.camera;c.left=-30;c.right=30;c.top=30;c.bottom=-30;c.near=1;c.far=160;}sun.shadow.bias=-0.0004;sun.shadow.normalBias=0.05;scene.add(sun,sun.target);
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?72:58;camera.updateProjectionMatrix();}
+addEventListener('resize',resize);resize();
+const GRAD=new THREE.DataTexture(new Uint8Array([150,150,150,255,210,210,210,255,255,255,255,255]),3,1,THREE.RGBAFormat);
+GRAD.minFilter=GRAD.magFilter=THREE.NearestFilter;GRAD.generateMipmaps=false;GRAD.needsUpdate=true;
+const MATS={};const M=c=>MATS[c]||(MATS[c]=new THREE.MeshToonMaterial({color:c,gradientMap:GRAD}));
+const mesh=(geo,c,x=0,y=0,z=0)=>{const m=new THREE.Mesh(geo,typeof c==='string'?M(c):c);m.position.set(x,y,z);m.castShadow=m.receiveShadow=true;return m;};
+const HOUSE_R=29, WORLD=165;
+const houseAng=i=>i*Math.PI/3+Math.PI/6;
+const housePos=i=>({x:Math.sin(houseAng(i))*HOUSE_R,z:Math.cos(houseAng(i))*HOUSE_R});
+const doorPos=i=>({x:Math.sin(houseAng(i))*(HOUSE_R-5.6),z:Math.cos(houseAng(i))*(HOUSE_R-5.6)});
+const colliders=[];
+
+/* 區域：中央廣場在中間，四個區域放在公司房子之間的空隙方向 */
+const zAt=(deg,d)=>({x:Math.sin(deg*Math.PI/180)*d,z:Math.cos(deg*Math.PI/180)*d});
+const ZONES=[
+ {id:'hub', name:'中央廣場',  ...{x:0,z:13}, color:'#20b2a4',desc:'主持人、說的守護者、規則布告欄和思華老師都在這裡。每回合從這裡開始。'},
+ {id:'town',name:'幸福社區',  ...zAt(0,104), color:'#ee8a6c',desc:'圖書館、診所和小學。第 5 回合的公共服務計畫就從這裡開始。'},
+ {id:'tech',name:'AI 科技園區',...zAt(120,104),color:'#3d6cf0',desc:'資料中心、晶圓廠和伺服器倉庫，園區的算力都在這裡。'},
+ {id:'coast',name:'綠能海岸', ...zAt(180,104),color:'#27a854',desc:'風機、太陽能場站和海風。限電與清洗用水的故事都跟這裡有關。'},
+ {id:'hill',name:'水源山丘',  ...zAt(300,104),color:'#1599b5',desc:'水庫、壩體和抽水站。旱季限水時，大家都會來這裡看水位。'}
+];
+const smooth=v=>v<=0?0:v>=1?1:v*v*(3-2*v);
+function rawH(x,z){const d=Math.hypot(x,z);let h=0;
+  if(d>42){const t=smooth((d-42)/30);h=(Math.sin(x*0.05)*1.5+Math.cos(z*0.043)*1.7+Math.sin((x-z)*0.021)*2.3+2.4)*t;}
+  h+=24*Math.exp(-(((x+128)**2)+((z-82)**2))/1500)+14*Math.exp(-(((x+70)**2)+((z-128)**2))/900);
+  h-=6*Math.exp(-(((x+112)**2)+((z-38)**2))/260);
+  h-=Math.max(0,-z-118)*0.55;h-=Math.max(0,d-WORLD)*0.8;return h;}
+ZONES.forEach(z=>{z.h=z.id==='hub'?0:Math.max(0.6,rawH(z.x,z.z));});
+function H(x,z){let h=rawH(x,z);for(const zn of ZONES){if(zn.id==='hub')continue;const dd=Math.hypot(x-zn.x,z-zn.z);if(dd<34){const w=smooth(1-Math.max(0,dd-18)/16);h=h*(1-w)+zn.h*w;}}return h;}
+const LAKE={x:-112,z:38,r:15};LAKE.y=H(LAKE.x+LAKE.r,LAKE.z)-0.9;
+
+function canvasTex(w,h,draw){const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new THREE.CanvasTexture(c);t.anisotropy=4;return t;}
+function rr(x,X,Y,W,H2,R){x.beginPath();x.moveTo(X+R,Y);x.arcTo(X+W,Y,X+W,Y+H2,R);x.arcTo(X+W,Y+H2,X,Y+H2,R);x.arcTo(X,Y+H2,X,Y,R);x.arcTo(X,Y,X+W,Y,R);x.closePath();}
+const FONT='"Huninn","Noto Sans TC","PingFang TC",sans-serif';
+function label(text,bg,fg,scale=1,world=false){
+  const fs=44;const ctx=document.createElement('canvas').getContext('2d');ctx.font=fs+'px '+FONT;const w=Math.ceil(ctx.measureText(text).width)+56;
+  const t=canvasTex(w,84,(x,W,H2)=>{rr(x,4,6,W-8,H2-14,32);x.fillStyle='rgba(110,88,61,.18)';x.fill();rr(x,4,2,W-8,H2-14,32);x.fillStyle=bg;x.fill();
+    x.font=fs+'px '+FONT;x.fillStyle=fg;x.textAlign='center';x.textBaseline='middle';x.fillText(text,W/2,H2/2-4);});
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,depthTest:world,transparent:true}));s.scale.set(w/84*0.9*scale,0.9*scale,1);s.renderOrder=world?0:10;return s;
+}
+const BANG=canvasTex(96,112,(x)=>{x.fillStyle='rgba(110,88,61,.2)';x.beginPath();x.arc(48,50,40,0,7);x.fill();x.fillStyle='#f8d454';x.beginPath();x.arc(48,46,40,0,7);x.fill();
+  x.beginPath();x.moveTo(36,80);x.lineTo(48,104);x.lineTo(58,80);x.fill();x.fillStyle='#6e583d';x.font='bold 56px Fredoka, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText('!',48,48);});
+function bangSprite(){const s=new THREE.Sprite(new THREE.SpriteMaterial({map:BANG,depthTest:false,transparent:true}));s.scale.set(0.95,1.1,1);s.renderOrder=11;return s;}
+
+/* 同一區的靜態物件依材質合併，一區只剩幾次繪製；分區合併讓視野外的區域照樣被剔除 */
+function mergeGroup(g){g.updateMatrixWorld(true);const buckets=new Map();
+  g.traverse(o=>{if(o.isMesh&&!o.isInstancedMesh){let b=buckets.get(o.material);if(!b)buckets.set(o.material,b=[]);b.push(o);}});
+  const out=new THREE.Group();
+  for(const [mat,list] of buckets){let n=0;const geos=list.map(o=>{const gg=o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone();gg.applyMatrix4(o.matrixWorld);n+=gg.attributes.position.count;return gg;});
+    const pos=new Float32Array(n*3),nor=new Float32Array(n*3);let off=0;for(const gg of geos){pos.set(gg.attributes.position.array,off*3);nor.set(gg.attributes.normal.array,off*3);off+=gg.attributes.position.count;gg.dispose();}
+    const bg=new THREE.BufferGeometry();bg.setAttribute('position',new THREE.BufferAttribute(pos,3));bg.setAttribute('normal',new THREE.BufferAttribute(nor,3));bg.computeBoundingSphere();
+    const mm=new THREE.Mesh(bg,mat);mm.castShadow=mm.receiveShadow=true;out.add(mm);}
+  scene.add(out);return out;}
+
+function buildTerrain(){
+  const S2=(WORLD+60)*2,SEG=220;const geo=new THREE.PlaneGeometry(S2,S2,SEG,SEG);geo.rotateX(-Math.PI/2);
+  const p=geo.attributes.position,col=new Float32Array(p.count*3),c=new THREE.Color(),g1=new THREE.Color('#8fcf68'),g2=new THREE.Color('#7cc25a'),sand=new THREE.Color('#f2e2b4'),rock=new THREE.Color('#b8a98d'),road=new THREE.Color('#e7d3a6');
+  const roads=ZONES.filter(z=>z.id!=='hub').map(z=>{const d=Math.hypot(z.x,z.z);return {ux:z.x/d,uz:z.z/d,len:d};});
+  for(let i=0;i<p.count;i++){const x=p.getX(i),z=p.getZ(i),h=H(x,z);p.setY(i,h);
+    const slope=Math.abs(H(x+1.5,z)-h)+Math.abs(H(x,z+1.5)-h);
+    c.copy(g1).lerp(g2,(Math.sin(x*0.13)*Math.cos(z*0.11)+1)/2);
+    if(slope>1.6||h>17)c.copy(rock);
+    if(h<0.25&&Math.hypot(x,z)>40)c.copy(sand);
+    for(const r of roads){const t=x*r.ux+z*r.uz,off=Math.abs(x*r.uz-z*r.ux);if(t>30&&t<r.len-12&&off<3.2){c.copy(road);break;}}
+    col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));geo.computeVertexNormals();
+  const t=new THREE.Mesh(geo,new THREE.MeshToonMaterial({vertexColors:true,gradientMap:GRAD}));t.receiveShadow=true;scene.add(t);
+  const sea=new THREE.Mesh(new THREE.CircleGeometry(700,64),new THREE.MeshToonMaterial({color:'#5ccbe6',gradientMap:GRAD}));sea.rotation.x=-Math.PI/2;sea.position.y=-0.6;scene.add(sea);FX.sea=sea;
+  const lake=new THREE.Mesh(new THREE.CircleGeometry(LAKE.r+2,40),new THREE.MeshToonMaterial({color:'#6fd0e6',gradientMap:GRAD}));lake.rotation.x=-Math.PI/2;lake.position.set(LAKE.x,LAKE.y,LAKE.z);scene.add(lake);
+}
+/* 樹、花、石頭全部用 InstancedMesh */
+const TREES=[],FLW=[],ROCKS=[];
+const FLOWERC=['#ff8fa3','#ffd25e','#ffffff','#ff7b54','#c39bff'];
+function okSpot(x,z,pad){if(Math.hypot(x,z)>WORLD-4)return false;const h=H(x,z);if(h<0.35&&Math.hypot(x,z)>40)return false;if(Math.hypot(x-LAKE.x,z-LAKE.z)<LAKE.r+3)return false;
+  if(colliders.some(c=>Math.hypot(c.x-x,c.z-z)<c.r+pad))return false;
+  if(Math.hypot(x,z)<12)return false;if(Math.abs(x)<7&&z>2&&z<34)return false;
+  for(let i=0;i<6;i++){const ha=houseAng(i);const t=x*Math.sin(ha)+z*Math.cos(ha),off=Math.abs(x*Math.cos(ha)-z*Math.sin(ha));if(t>8&&t<HOUSE_R+6&&off<4)return false;}
+  for(const zn of ZONES){if(zn.id==='hub')continue;const d=Math.hypot(zn.x,zn.z),ux=zn.x/d,uz=zn.z/d;const t=x*ux+z*uz,off=Math.abs(x*uz-z*ux);if(t>6&&t<d&&off<5.5)return false;if(Math.hypot(x-zn.x,z-zn.z)<24)return false;}
+  return true;}
+function scatter(R){
+  let n=0,g=0;while(n<40&&g++<1500){const a=R()*Math.PI*2,d=13+R()*29;const x=Math.sin(a)*d,z=Math.cos(a)*d;if(okSpot(x,z,2.4)){TREES.push([x,z,0.8+R()*0.45]);colliders.push({x,z,r:1.0});n++;}}
+  n=0;g=0;while(n<330&&g++<6000){const x=(R()*2-1)*WORLD,z=(R()*2-1)*WORLD;if(Math.hypot(x,z)<46)continue;if(okSpot(x,z,2)){const s=0.85+R()*0.7;TREES.push([x,z,s]);if(Math.hypot(x,z)<120)colliders.push({x,z,r:1.0*s});n++;}}
+  for(let k=0;k<70;k++){const a=R()*Math.PI*2,d=12+R()*30;const x=Math.sin(a)*d,z=Math.cos(a)*d;if(okSpot(x,z,0.6))FLW.push([x,z,FLOWERC[Math.floor(R()*5)]]);}
+  for(let k=0;k<260;k++){const x=(R()*2-1)*WORLD,z=(R()*2-1)*WORLD;if(Math.hypot(x,z)>44&&okSpot(x,z,0.6))FLW.push([x,z,FLOWERC[Math.floor(R()*5)]]);}
+  for(let k=0;k<40;k++){const x=(R()*2-1)*WORLD,z=(R()*2-1)*WORLD;if(Math.hypot(x,z)>16&&okSpot(x,z,1)){ROCKS.push([x,z,0.6+R()*0.8]);colliders.push({x,z,r:0.9});}}
+}
+function plantInstances(){
+  const m=new THREE.Matrix4(),q=new THREE.Quaternion(),v=new THREE.Vector3(),sc=new THREE.Vector3(),col=new THREE.Color();const greens=['#5bb34a','#6cc457','#4fa645'];
+  const n=TREES.length,trunk=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.28,0.36,2,7),M('#8a6a48'),n),
+    can1=new THREE.InstancedMesh(new THREE.SphereGeometry(1.5,12,9),new THREE.MeshToonMaterial({gradientMap:GRAD}),n),can2=new THREE.InstancedMesh(new THREE.SphereGeometry(1.1,10,8),new THREE.MeshToonMaterial({gradientMap:GRAD}),n);
+  TREES.forEach(([x,z,s],i)=>{const y=H(x,z);sc.set(s,s,s);trunk.setMatrixAt(i,m.compose(v.set(x,y+s,z),q,sc));can1.setMatrixAt(i,m.compose(v.set(x,y+2.7*s,z),q,sc));can2.setMatrixAt(i,m.compose(v.set(x+0.6*s,y+3.5*s,z+0.2*s),q,sc));
+    col.set(greens[i%3]);can1.setColorAt(i,col);can2.setColorAt(i,col);});
+  can1.instanceColor.needsUpdate=can2.instanceColor.needsUpdate=true;
+  const fl=FLW.length,bl=new THREE.InstancedMesh(new THREE.SphereGeometry(0.3,8,6),new THREE.MeshToonMaterial({gradientMap:GRAD}),fl),ce=new THREE.InstancedMesh(new THREE.SphereGeometry(0.11,6,5),M('#f8d454'),fl),st=new THREE.InstancedMesh(new THREE.CylinderGeometry(0.03,0.03,0.4,4),M('#4fa645'),fl);
+  const flat=new THREE.Vector3(1,0.45,1),one=new THREE.Vector3(1,1,1);
+  FLW.forEach(([x,z,c],i)=>{const y=H(x,z);bl.setMatrixAt(i,m.compose(v.set(x,y+0.45,z),q,flat));bl.setColorAt(i,col.set(c));ce.setMatrixAt(i,m.compose(v.set(x,y+0.53,z),q,one));st.setMatrixAt(i,m.compose(v.set(x,y+0.2,z),q,one));});
+  bl.instanceColor.needsUpdate=true;
+  const rk=new THREE.InstancedMesh(new THREE.DodecahedronGeometry(0.8,0),M('#c9c2b2'),ROCKS.length);
+  ROCKS.forEach(([x,z,s],i)=>{rk.setMatrixAt(i,m.compose(v.set(x,H(x,z)+0.2*s,z),q,sc.set(s,s*0.7,s)));});
+  [trunk,can1,can2,rk].forEach(o=>{o.castShadow=o.receiveShadow=true;scene.add(o);});[bl,ce,st].forEach(o=>{o.receiveShadow=true;scene.add(o);});
+}
+
+function boardTex(){const rd=ROUNDS[Math.min(S.round,ROUNDS.length-1)],col=rCol(rd),r=Math.min(S.round,ROUNDS.length-1);
+  return canvasTex(1024,640,(x,W,H2)=>{x.fillStyle='#fffcf1';x.fillRect(0,0,W,H2);x.fillStyle=col;x.fillRect(0,0,W,108);
+    x.fillStyle='#fff';x.font='30px '+FONT;x.textBaseline='middle';x.fillText(`第 ${r+1} 回合規則布告欄・${TYPENAME[rd.type]}・限時 ${fmtSec(ROUND_SEC[r])}`,40,36);
+    x.font='50px '+FONT;x.fillText(rd.title.length>17?rd.title.slice(0,16)+'…':rd.title,40,80);
+    x.fillStyle='#6e583d';x.font='34px '+FONT;let y=168;for(const l of roundRules(rd)){for(const w2 of wrap(x,'・'+l,940).slice(0,2)){x.fillText(w2,40,y);y+=48;}y+=8;}
+    x.fillStyle='#a08a6b';x.font='26px '+FONT;x.fillText('勝負：第 8 回合後策略分最高者獲勝（滿分 10 分）・走近按 E 看完整規則',40,H2-36);});}
+
+function buildHub(){
+  const g=new THREE.Group();scene.add(g);
+  g.add(mesh(new THREE.CylinderGeometry(11,11,0.1,48),'#ecd9ae',0,0.01,0));
+  const ring=mesh(new THREE.RingGeometry(7.8,8.6,48),'#e2c995',0,0.09,0);ring.rotation.x=-Math.PI/2;g.add(ring);
+  for(let i=0;i<6;i++){const a=houseAng(i);const len=HOUSE_R-5.6-10;const p=mesh(new THREE.BoxGeometry(3.2,0.06,len),'#ecd9ae',Math.sin(a)*(10+len/2),0.01,Math.cos(a)*(10+len/2));p.rotation.y=a;g.add(p);}
+  // 服務處帳篷
+  const tent=new THREE.Group();tent.position.set(0,0,-8.6);g.add(tent);
+  tent.add(mesh(new THREE.CylinderGeometry(3.2,3.4,2.4,16),'#fffaf0',0,1.2,0),mesh(new THREE.ConeGeometry(4,2.6,16),'#20b2a4',0,3.7,0),mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,6),'#6e583d',0,5.6,0),mesh(new THREE.BoxGeometry(0.9,0.5,0.05),'#f8d454',0.45,6.1,0));
+  const sign=label('園區服務處','#20b2a4','#ffffff',1.15,true);sign.position.set(0,5,-5.3);scene.add(sign);colliders.push({x:0,z:-8.6,r:3.7});
+  // 規則布告欄
+  const bb=new THREE.Group();bb.position.set(7.2,0,-6.2);bb.rotation.y=-0.62;g.add(bb);
+  bb.add(mesh(new THREE.BoxGeometry(0.28,3.6,0.28),'#9a7650',-2.9,1.8,0),mesh(new THREE.BoxGeometry(0.28,3.6,0.28),'#9a7650',2.9,1.8,0),mesh(new THREE.BoxGeometry(6.2,3.9,0.2),'#b98d5f',0,2.75,-0.02));
+  FX.boardMat=new THREE.MeshBasicMaterial({map:boardTex()});const board=new THREE.Mesh(new THREE.PlaneGeometry(5.8,3.6),FX.boardMat);
+  board.position.set(7.2,2.75,-6.2);board.rotation.y=-0.62;board.translateZ(0.11);scene.add(board);colliders.push({x:7.2,z:-6.2,r:2.2});
+  // 六家公司
+  COMP.forEach((c,i)=>{const p=housePos(i);const h=new THREE.Group();h.position.set(p.x,0,p.z);h.rotation.y=houseAng(i)+Math.PI;g.add(h);
+    h.add(mesh(new THREE.BoxGeometry(7,4.2,6),'#fbf4e4',0,2.2,0));
+    const roof=mesh(new THREE.ConeGeometry(5.6,3.2,4),c.color,0,5.9,0);roof.rotation.y=Math.PI/4;roof.scale.set(1,1,0.88);h.add(roof);
+    h.add(mesh(new THREE.BoxGeometry(1.6,2.6,0.3),c.color,0,1.4,3.06),mesh(new THREE.SphereGeometry(0.13,8,8),'#f8d454',0.55,1.4,3.26));
+    [-2.3,2.3].forEach(x=>{h.add(mesh(new THREE.BoxGeometry(1.4,1.2,0.2),'#bfe6f2',x,2.6,3.06),mesh(new THREE.BoxGeometry(1.7,0.18,0.35),'#fbf4e4',x,1.95,3.1));});
+    h.add(mesh(new THREE.BoxGeometry(7.4,0.12,6.4),'#d8c7a4',0,0.06,0));
+    h.add(mesh(new THREE.CylinderGeometry(0.1,0.1,1.2,6),'#9a7650',2.9,0.6,4.4),mesh(new THREE.BoxGeometry(0.7,0.5,0.9),c.color,2.9,1.4,4.4));
+    const s=label(c.name,c.color,'#ffffff',1.1,true);s.position.set(p.x,8,p.z);scene.add(s);colliders.push({x:p.x,z:p.z,r:4.6});});
+  return g;
+}
+/* 區域建築 */
+const ROTORS=[];
+function buildZones(){
+  const R=rng('zones-v2');
+  for(const zn of ZONES){if(zn.id==='hub')continue;const g=new THREE.Group();g.position.set(zn.x,zn.h,zn.z);const face=Math.atan2(-zn.x,-zn.z);
+    const box=(w,h,d,c,x,y,z,ry=0)=>{const m=mesh(new THREE.BoxGeometry(w,h,d),c,x,y,z);m.rotation.y=ry;g.add(m);colliders.push({x:zn.x+x,z:zn.z+z,r:Math.max(w,d)/2+0.2,b:true});return m;};
+    const deco=(m)=>{g.add(m);return m;};
+    deco(mesh(new THREE.CylinderGeometry(9,9,0.1,36),'#e7d3a6',0,0.03,0));
+    if(zn.id==='town'){
+      box(10,6,7,'#f4e6c8',-12,3,-4);deco(mesh(new THREE.ConeGeometry(7.6,3,4),'#c97b5a',-12,7.5,-4)).rotation.y=Math.PI/4;
+      for(let k=0;k<4;k++)deco(mesh(new THREE.CylinderGeometry(0.35,0.35,4.5,10),'#ffffff',-15+k*2,2.3,-0.2));
+      box(8,5,7,'#ffffff',12,2.5,-5);deco(mesh(new THREE.BoxGeometry(2.6,0.7,0.2),'#e25b5b',12,4,-1.4));deco(mesh(new THREE.BoxGeometry(0.7,2.6,0.2),'#e25b5b',12,4,-1.4));
+      box(12,5,6,'#f8d9a0',0,2.5,-16);deco(mesh(new THREE.BoxGeometry(2.2,3,2.2),'#f8d9a0',0,6.5,-16));deco(mesh(new THREE.CylinderGeometry(0.8,0.8,0.15,20),'#ffffff',0,6.8,-14.8)).rotation.x=Math.PI/2;
+      for(let k=0;k<5;k++){const a=-1.2+k*0.6;const x=Math.sin(a)*20,z=Math.cos(a)*20;const hc=['#9fd0e8','#f2b8c6','#c8e6a0','#f6d08a','#cdb8f0'][k];
+        box(4.6,3.2,4.2,'#fffaf0',x,1.6,z);deco(mesh(new THREE.ConeGeometry(3.8,2.2,4),hc,x,4.3,z)).rotation.y=Math.PI/4;}
+      deco(mesh(new THREE.BoxGeometry(3,0.3,0.8),'#b98d5f',5,0.8,5));
+    }
+    if(zn.id==='tech'){
+      for(let k=0;k<3;k++){box(14,5,6,'#eef2f4',-8,2.5,-14+k*9);deco(mesh(new THREE.BoxGeometry(14.1,0.6,6.1),'#3d6cf0',-8,4.2,-14+k*9));for(let u=0;u<3;u++)deco(mesh(new THREE.CylinderGeometry(0.9,0.9,0.8,12),'#c9d3d8',-12+u*4,5.4,-14+k*9));}
+      box(11,8,10,'#f7f1e6',12,4,-6);deco(mesh(new THREE.CylinderGeometry(0.9,1.1,7,12),'#d8d0c0',15,11,-9));deco(mesh(new THREE.CylinderGeometry(0.9,1.1,5,12),'#d8d0c0',9,10,-9));
+      box(9,4,7,'#fbf4e4',12,2,10);deco(mesh(new THREE.BoxGeometry(9.1,1,7.1),'#8551de',12,3.6,10));
+    }
+    if(zn.id==='coast'){
+      for(let k=0;k<5;k++){const x=-24+k*12,z=-18-(k%2)*6;const tw=new THREE.Group();tw.position.set(zn.x+x,zn.h+H(zn.x+x,zn.z+z)-zn.h,zn.z+z);
+        tw.add(mesh(new THREE.CylinderGeometry(0.35,0.6,14,10),'#ffffff',0,7,0),mesh(new THREE.BoxGeometry(1.2,1,2.4),'#ffffff',0,14.2,0));scene.add(tw);
+        const rot=new THREE.Group();rot.position.set(0,14.2,1.3);for(let b=0;b<3;b++){const bl=mesh(new THREE.BoxGeometry(0.5,6.5,0.15),'#ffffff',0,3.2,0);const p=new THREE.Group();p.rotation.z=b*Math.PI*2/3;p.add(bl);rot.add(p);}
+        tw.add(rot);ROTORS.push(rot);colliders.push({x:zn.x+x,z:zn.z+z,r:0.9});}
+      const pg=new THREE.InstancedMesh(new THREE.BoxGeometry(2.4,0.12,1.4),M('#2f5f9e'),30),m4=new THREE.Matrix4(),q=new THREE.Quaternion().setFromEuler(new THREE.Euler(-0.5,0,0)),v=new THREE.Vector3(),one=new THREE.Vector3(1,1,1);
+      for(let k=0;k<30;k++){const x=zn.x-14+(k%6)*2.8,z=zn.z+4+Math.floor(k/6)*2;pg.setMatrixAt(k,m4.compose(v.set(x,zn.h+0.9,z),q,one));}
+      pg.castShadow=pg.receiveShadow=true;scene.add(pg);colliders.push({x:zn.x-7,z:zn.z+8,r:5});
+      box(6,3.4,5,'#fffaf0',12,1.7,6);deco(mesh(new THREE.ConeGeometry(4.6,2.2,4),'#27a854',12,4.5,6)).rotation.y=Math.PI/4;
+    }
+    if(zn.id==='hill'){
+      box(8,4,6,'#eef2f4',8,2,-6);deco(mesh(new THREE.CylinderGeometry(1.6,1.6,5,16),'#c9d3d8',-2,2.5,-10));
+      const dx=LAKE.x-zn.x,dz=LAKE.z-zn.z,dd=Math.hypot(dx,dz);const pipe=mesh(new THREE.CylinderGeometry(0.4,0.4,dd-LAKE.r,8),'#1599b5',dx/2*(1-LAKE.r/dd)/1,0.6,dz/2*(1-LAKE.r/dd));pipe.rotation.z=Math.PI/2;pipe.rotation.y=-Math.atan2(dz,dx);g.add(pipe);
+    }
+    const s=label(zn.name,zn.color,'#fff',1.6,true);s.position.set(zn.x,zn.h+11,zn.z);scene.add(s);
+    g.rotation.y=0;scene.add(g);mergeGroup(g);scene.remove(g);
+  }
+  // 水庫壩體
+  const dam=mesh(new THREE.BoxGeometry(LAKE.r*1.6,3,2),'#d8d0c0',LAKE.x+LAKE.r*0.95,LAKE.y-0.6,LAKE.z+LAKE.r*0.5);dam.rotation.y=-0.9;scene.add(dam);
+}
+/* 傳送信標：每區一座，靠近按 E 就能在區域之間移動 */
+const BEACONS=[];
+function buildBeacons(){const crystal=new THREE.OctahedronGeometry(0.9,0);
+  ZONES.forEach(zn=>{const b=zn.id==='hub'?{x:-8,z:5}:{x:zn.x-1,z:zn.z+15};const y=H(b.x,b.z);
+    const base=mesh(new THREE.CylinderGeometry(1,1.3,0.6,12),'#e2d5b5',b.x,y+0.3,b.z);scene.add(base);
+    const cr=new THREE.Mesh(crystal,new THREE.MeshBasicMaterial({color:'#7fe3d8',transparent:true,opacity:.9}));cr.position.set(b.x,y+2.2,b.z);cr.scale.y=1.5;scene.add(cr);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(1.3,0.06,6,32),new THREE.MeshBasicMaterial({color:'#ffffff'}));ring.position.copy(cr.position);ring.rotation.x=Math.PI/2;scene.add(ring);
+    BEACONS.push({cr,ring,y});colliders.push({x:b.x,z:b.z,r:1.2});
+    NPCS.push({id:'b'+zn.id,kind:'beacon',zone:zn.id,name:'傳送信標・'+zn.name,color:'#20b2a4',pos:b,bang:null});});}
+function buildWorld(){buildTerrain();const hub=buildHub();buildZones();scatter(rng('island-v2'));plantInstances();mergeGroup(hub);scene.remove(hub);buildBeacons();}
+
+/* 角色：大頭小身體 */
+const EYE=new THREE.MeshBasicMaterial({color:'#3b2f24'});const BLUSH=new THREE.MeshBasicMaterial({color:'#ffb2a6',transparent:true,opacity:.8});
+function chibi(color,k,opt={}){
+  const root=new THREE.Group();const g=new THREE.Group();root.add(g);
+  const skin=SKINS[k%6],hair=opt.hair||HAIRS[k%6];
+  const legs=[-0.2,0.2].map(x=>{const p=new THREE.Group();p.position.set(x,0.5,0);p.add(mesh(new THREE.CylinderGeometry(0.13,0.15,0.5,8),'#6e583d',0,-0.25,0));g.add(p);return p;});
+  g.add(mesh(new THREE.CylinderGeometry(0.42,0.52,0.85,14),color,0,0.88,0));
+  g.add(mesh(new THREE.SphereGeometry(0.42,14,10),color,0,1.28,0));
+  const arms=[-1,1].map(s=>{const p=new THREE.Group();p.position.set(s*0.5,1.2,0);p.add(mesh(new THREE.SphereGeometry(0.17,10,8),skin,0,-0.38,0));p.add(mesh(new THREE.CylinderGeometry(0.11,0.13,0.4,8),color,0,-0.15,0));g.add(p);return p;});
+  const head=new THREE.Group();head.position.y=2.15;g.add(head);
+  head.add(mesh(new THREE.SphereGeometry(0.78,22,18),skin));
+  const hr=mesh(new THREE.SphereGeometry(0.82,22,14,0,Math.PI*2,0,Math.PI*0.5),hair,0,0.06,-0.04);hr.rotation.x=-0.45;head.add(hr);
+  const bang=mesh(new THREE.SphereGeometry(0.5,14,10,0,Math.PI*2,0,Math.PI*0.4),hair,0,0.44,0.38);bang.rotation.x=0.9;head.add(bang);
+  [-0.27,0.27].forEach(x=>{const e=new THREE.Mesh(new THREE.SphereGeometry(0.085,10,8),EYE);e.position.set(x,0.02,0.72);e.scale.set(1,1.5,0.6);head.add(e);
+    const b=new THREE.Mesh(new THREE.CircleGeometry(0.12,12),BLUSH);b.position.set(x*1.45,-0.18,0.69);b.rotation.y=x*0.6;head.add(b);});
+  if(opt.hat){head.add(mesh(new THREE.CylinderGeometry(0.55,0.75,0.35,16),opt.hat,0,0.72,0),mesh(new THREE.CylinderGeometry(1.05,1.05,0.06,20),opt.hat,0,0.56,0));}
+  if(opt.glasses){[-0.27,0.27].forEach(x=>{const r=new THREE.Mesh(new THREE.TorusGeometry(0.17,0.035,6,18),EYE);r.position.set(x,0.03,0.76);head.add(r);});const br=new THREE.Mesh(new THREE.BoxGeometry(0.2,0.03,0.03),EYE);br.position.set(0,0.06,0.79);head.add(br);}
+  const sh=new THREE.Mesh(new THREE.CircleGeometry(0.7,20),new THREE.MeshBasicMaterial({color:0x3b2f24,transparent:true,opacity:.16,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=0.03;root.add(sh);
+  root.traverse(o=>{if(o.isMesh)o.castShadow=!(o.material===EYE||o.material===BLUSH||o===sh);});
+  return {root,g,head,legs,arms,walk:0,talk:0};
+}
+function animChar(ch,dt,moving,t,run){
+  ch.walk+=dt*(moving?(run?15:11):0);const s=moving?Math.sin(ch.walk):0;
+  ch.legs[0].rotation.x=s*0.7;ch.legs[1].rotation.x=-s*0.7;ch.arms[0].rotation.x=-s*0.6;ch.arms[1].rotation.x=s*0.6;
+  ch.g.position.y=moving?Math.abs(Math.sin(ch.walk))*0.12:Math.sin(t*2+ch.root.id)*0.03;
+  if(ch.talk>0){ch.talk-=dt;ch.head.rotation.z=Math.sin(t*14)*0.08;ch.arms[1].rotation.z=0.6+Math.sin(t*10)*0.3;}else{ch.head.rotation.z*=0.9;ch.arms[1].rotation.z*=0.9;}
+}
+
+/* ───────── NPC 與互動點 ───────── */
+const FX={boardMat:null};
+const NPCS=[];
+function addNpc(o){const ch=chibi(o.color,o.k??0,o.opt||{});const y=H(o.x,o.z);ch.root.position.set(o.x,y,o.z);ch.root.rotation.y=Math.atan2(-o.x+(o.fx??0),-o.z+(o.fz??0));
+  const lb=label(o.name,o.lbg||'#fffcf1',o.lfg||'#6e583d',0.8);lb.position.y=3.9;ch.root.add(lb);const bang=bangSprite();bang.position.y=4.9;bang.visible=false;ch.root.add(bang);
+  ch.root.traverse(m=>{m.userData.npc=o.id;});scene.add(ch.root);const col={x:o.x,z:o.z,r:0.8,npc:o.id};colliders.push(col);const n=Object.assign(o,{ch,lb,bang,col,pos:{x:o.x,z:o.z}});NPCS.push(n);return n;}
+function setLabel(n,text,bg,fg){n.ch.root.remove(n.lb);n.lb.material.map.dispose();n.lb=label(text,bg,fg,0.8);n.lb.position.y=3.9;n.ch.root.add(n.lb);}
+function buildNpcs(){
+  addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:0,z:-4.6,fx:0,fz:6,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
+  addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:-6.6,z:-5.2,fx:0,fz:4,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
+  for(let k=0;k<5;k++){const a=-1.04+k*0.52;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*7.6,z:Math.cos(a)*7.6-2.6,fx:0,fz:-2.6});}
+  for(let k=0;k<2;k++)addNpc({id:'a'+k,kind:'plan',k:k+3,pk:k,name:'方案顧問',color:'#ee8a6c',x:0,z:0,opt:{hat:'#ffffff'}});
+  NPCS.push({id:'board',kind:'board',name:'規則布告欄',color:'#20b2a4',pos:{x:5.6,z:-4.6},bang:null});
+  COMP.forEach((c,i)=>{const d=doorPos(i);NPCS.push({id:'h'+c.id,kind:'house',co:c.id,name:c.name,color:c.color,pos:d,bang:null});});
+  FX.houseBang={};COMP.forEach((c,i)=>{const b=bangSprite();const p=housePos(i);b.position.set(p.x,9.6,p.z);b.scale.set(1.5,1.75,1);b.visible=false;scene.add(b);FX.houseBang[c.id]=b;});
+  FOLK.forEach((f,i)=>{const zn=ZONES.find(z=>z.id===f.zone);addNpc({id:'f'+i,kind:'folk',name:f.name,color:f.color,k:i,x:zn.x+f.dx,z:zn.z+f.dz,fx:zn.x,fz:zn.z,opt:f.opt||{},lines:f.lines});});
+}
+function placeAdvisors(){const i=CI[S.co];const d=doorPos(i),a=houseAng(i);const inX=-Math.sin(a),inZ=-Math.cos(a),sx=Math.cos(a),sz=-Math.sin(a);
+  [-1,1].forEach((s,k)=>{const n=NPCS.find(n=>n.id==='a'+k);const x=d.x+inX*1.5+sx*s*2.4,z=d.z+inZ*1.5+sz*s*2.4;n.pos={x,z};n.ch.root.position.set(x,0,z);n.ch.root.rotation.y=Math.atan2(inX,inZ);});}
+
+/* 玩家與其他真人 */
+const P={x:0,z:13,y:0,vy:0,ry:Math.PI,tx:null,tz:null,goNpc:null,run:false};
+let meCh=null,plumb=null;
+const remote={};
+function makeMe(){const i=CI[S.co];meCh=chibi(COMP[i].color,i);scene.add(meCh.root);
+  plumb=new THREE.Mesh(new THREE.OctahedronGeometry(0.32,0),new THREE.MeshBasicMaterial({color:'#5fe36a',transparent:true,opacity:.92}));plumb.scale.y=1.7;plumb.position.y=4.1;meCh.root.add(plumb);
+  const lb=label(S.nick,COMP[i].color,'#fff',0.75);lb.position.y=3.35;meCh.root.add(lb);}
+
+/* ───────── 鏡頭與操作：第三人稱跟隨，V 切換第一人稱 ───────── */
+const CAM={yaw:0,pitch:0.38,dist:10,fp:false,fpPitch:-0.05};
+const K={};const joy={x:0,y:0};
+let locked=false;
+function unlockMouse(){try{if(document.pointerLockElement)document.exitPointerLock();}catch(e){}}
+function lockMouse(){if(isTouch||S.phase==='lobby'||uiBusy||overlayOpen()||film)return;try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;lookHint();});
+function lookHint(){const el=$('lookHint');if(el)el.hidden=isTouch||locked||S.phase==='lobby'||!!uiBusy||overlayOpen()||!!film;}
+function look(dx,dy){CAM.yaw-=dx*0.0026;if(CAM.fp)CAM.fpPitch=Math.max(-1.3,Math.min(1.3,CAM.fpPitch-dy*0.0022));else CAM.pitch=Math.max(0.04,Math.min(1.25,CAM.pitch+dy*0.0022));}
+function toggleView(){CAM.fp=!CAM.fp;if(meCh)meCh.root.visible=!CAM.fp;if(CAM.fp)CAM.fpPitch=-0.05;toast(CAM.fp?'第一人稱視角（V 切回第三人稱）':'第三人稱視角（V 切到第一人稱）',1600);}
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;K[e.code]=true;
+  if(film){if(e.code==='Escape'){endFilm();}if(e.code==='KeyP'||e.code==='Space'){e.preventDefault();filmPause();}return;}
+  if(e.code==='Tab'){if(S.phase==='lobby'||dlgActive()||!$('cardWrap').hidden)return;e.preventDefault();togglePhone();return;}
+  if(e.code==='Escape'){if(!$('phone').hidden)togglePhone(false);return;}
+  if(dlgActive()){if(['KeyE','Space','Enter'].includes(e.code)){e.preventDefault();dlgAdvance();}
+    if(/^Digit[1-9]$/.test(e.code)){const b=$('choices').querySelectorAll('.ch')[+e.code.slice(5)-1];if(b&&!b.disabled)b.click();}return;}
+  if(uiBusy||overlayOpen()||S.phase==='lobby')return;
+  if(e.code==='KeyE'||e.code==='Enter'){e.preventDefault();interact();}
+  if(e.code==='Space'){e.preventDefault();if(P.grounded){P.vy=10.5;P.grounded=false;}}
+  if(e.code==='KeyV')toggleView();});
+addEventListener('keyup',e=>{K[e.code]=false;});
+addEventListener('blur',()=>{for(const k in K)K[k]=false;});
+document.addEventListener('mousemove',e=>{if(locked)look(e.movementX,e.movementY);});
+canvas.addEventListener('wheel',e=>{if(S.phase==='lobby')return;e.preventDefault();CAM.dist=Math.max(4,Math.min(18,CAM.dist+e.deltaY*0.01));},{passive:false});
+const ray=new THREE.Raycaster();
+let drag=null;
+function pickNpc(cx,cy){const r=canvas.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),camera);
+  const hits=ray.intersectObjects(NPCS.filter(n=>n.ch&&n.ch.root.visible).map(n=>n.ch.root),true);return hits.length?NPCS.find(n=>n.id===hits[0].object.userData.npc):null;}
+canvas.addEventListener('pointerdown',e=>{if(S.phase==='lobby'||uiBusy||overlayOpen())return;
+  if(locked){if(e.button===0)interact();return;}
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,moved:0};try{canvas.setPointerCapture(e.pointerId);}catch(err){}});
+canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const dx=e.clientX-drag.lx,dy=e.clientY-drag.ly;drag.lx=e.clientX;drag.ly=e.clientY;drag.moved+=Math.abs(dx)+Math.abs(dy);look(dx*(isTouch?1.6:1),dy*(isTouch?1.6:1));});
+canvas.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const d=drag;drag=null;if(d.moved>10)return;
+  const n=pickNpc(e.clientX,e.clientY);if(n){walkTo(n);return;}if(!isTouch)lockMouse();});
+function walkTo(n){const dx=P.x-n.pos.x,dz=P.z-n.pos.z,d=Math.hypot(dx,dz)||1;P.tx=n.pos.x+dx/d*1.7;P.tz=n.pos.z+dz/d*1.7;P.goNpc=n;}
+const joyEl=$('joy'),knob=$('knob');let joyId=null;
+function moveJoy(t){const r=joyEl.getBoundingClientRect();let dx=t.clientX-(r.left+r.width/2),dy=t.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy),m=44;if(d>m){dx*=m/d;dy*=m/d;}
+  knob.style.transform=`translate(${dx}px,${dy}px)`;joy.x=dx/m;joy.y=dy/m;}
+joyEl.addEventListener('touchstart',e=>{e.preventDefault();const t=e.changedTouches[0];joyId=t.identifier;moveJoy(t);P.tx=null;},{passive:false});
+joyEl.addEventListener('touchmove',e=>{e.preventDefault();for(const t of e.changedTouches)if(t.identifier===joyId)moveJoy(t);},{passive:false});
+const endJoy=e=>{for(const t of e.changedTouches)if(t.identifier===joyId){joyId=null;joy.x=joy.y=0;knob.style.transform='';}};
+joyEl.addEventListener('touchend',endJoy);joyEl.addEventListener('touchcancel',endJoy);
+$('aBtn').addEventListener('click',()=>{if(dlgActive())dlgAdvance();else if(!uiBusy)interact();});
+$('jBtn').addEventListener('click',()=>{if(!uiBusy&&P.grounded){P.vy=10.5;P.grounded=false;}});
+$('vBtn').addEventListener('click',()=>{if(!uiBusy)toggleView();});
+$('prompt').addEventListener('click',()=>{if(!uiBusy)interact();});
+
+function blocked(x,z){const d=Math.hypot(x,z);if(d>WORLD-2)return true;if(H(x,z)<-0.3&&d>40)return true;if(Math.hypot(x-LAKE.x,z-LAKE.z)<LAKE.r)return true;
+  for(const c of colliders){if(Math.abs(c.x-x)<c.r+0.5&&Math.abs(c.z-z)<c.r+0.5&&Math.hypot(c.x-x,c.z-z)<c.r+0.45)return true;}return false;}
+function stepPlayer(dt){
+  if(!meCh)return false;
+  let ix=0,iz=0;const free=!uiBusy&&!overlayOpen();
+  if(free){ix=(K.KeyD||K.ArrowRight?1:0)-(K.KeyA||K.ArrowLeft?1:0)+joy.x;iz=(K.KeyW||K.ArrowUp?1:0)-(K.KeyS||K.ArrowDown?1:0)-joy.y;}
+  const fx=-Math.sin(CAM.yaw),fz=-Math.cos(CAM.yaw),rx=Math.cos(CAM.yaw),rz=-Math.sin(CAM.yaw);
+  let vx=rx*ix+fx*iz,vz=rz*ix+fz*iz;
+  if(ix||iz){P.tx=null;P.goNpc=null;}
+  else if(free&&P.tx!=null){const dx=P.tx-P.x,dz=P.tz-P.z,d=Math.hypot(dx,dz);const near=P.goNpc&&Math.hypot(P.goNpc.pos.x-P.x,P.goNpc.pos.z-P.z)<2.9;
+    if(d>=0.25&&!near&&P.stall>0.45){P.tx=null;P.stall=0;if(P.goNpc&&Math.hypot(P.goNpc.pos.x-P.x,P.goNpc.pos.z-P.z)<4.4){const n=P.goNpc;P.goNpc=null;talkTo(n);}else P.goNpc=null;}
+    else if(d<0.25||near){P.stall=0;P.tx=null;if(P.goNpc){const n=P.goNpc;P.goNpc=null;P.ry=Math.atan2(n.pos.x-P.x,n.pos.z-P.z);talkTo(n);}}else{vx=dx/d;vz=dz/d;}}
+  // 跳躍與重力
+  const ground=H(P.x,P.z);P.vy-=30*dt;P.y+=P.vy*dt;if(P.y<=ground){P.y=ground;P.vy=0;P.grounded=true;}else if(P.y-ground>0.05)P.grounded=false;
+  const l=Math.hypot(vx,vz);if(l<0.05){P.run=false;return false;}if(l>1){vx/=l;vz/=l;}
+  P.run=!!(K.ShiftLeft||K.ShiftRight)||Math.hypot(joy.x,joy.y)>0.95;
+  const sp=(P.run?12:6.5)*dt;const nx=P.x+vx*sp,nz=P.z+vz*sp;const ox=P.x,oz=P.z;
+  if(!blocked(nx,nz)){P.x=nx;P.z=nz;}
+  else{const side=P.tx!=null?(P.side||(P.side=Math.random()<.5?1:-1)):1;
+    for(const t of [0.7,-0.7,1.3,-1.3]){const a=t*side,c=Math.cos(a),s2=Math.sin(a);const ax2=vx*c+vz*s2,az2=-vx*s2+vz*c;const ax=P.x+ax2*sp,az=P.z+az2*sp;if(!blocked(ax,az)){P.x=ax;P.z=az;vx=ax2;vz=az2;break;}}}
+  if(P.tx==null)P.side=0;
+  P.stall=Math.hypot(P.x-ox,P.z-oz)<sp*0.3?(P.stall||0)+dt:0;
+  if(P.grounded&&P.y<H(P.x,P.z))P.y=H(P.x,P.z);
+  if(CAM.fp)P.ry=CAM.yaw+Math.PI;else{const want=Math.atan2(vx,vz);let d=want-P.ry;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;P.ry+=d*Math.min(1,dt*12);}
+  return true;
+}
+const camPos=new THREE.Vector3(0,30,60),_v1=new THREE.Vector3(),_v2=new THREE.Vector3();
+let lobbyT=0;
+function stepCamera(dt,t){
+  if(S.phase==='lobby'||!meCh){lobbyT+=dt*0.05;camera.position.set(Math.sin(lobbyT)*70,42,Math.cos(lobbyT)*70);camera.lookAt(0,0,0);sun.position.set(-30,60,20);sun.target.position.set(0,0,0);return;}
+  if(FX.focus){const f=FX.focus;camPos.lerp(_v1.set(f.x,f.y??9,f.z+15),Math.min(1,dt*3));camera.position.copy(camPos);camera.lookAt(f.x,1.6,f.z);}
+  else if(CAM.fp){camera.position.set(P.x,P.y+2.25,P.z);camera.rotation.set(CAM.fpPitch,CAM.yaw,0);camPos.copy(camera.position);}
+  else{const tx=P.x,ty=P.y+1.8,tz=P.z,cp=Math.cos(CAM.pitch);
+    _v1.set(tx+Math.sin(CAM.yaw)*cp*CAM.dist,ty+Math.sin(CAM.pitch)*CAM.dist,tz+Math.cos(CAM.yaw)*cp*CAM.dist);
+    const k=camClip(tx,ty,tz,_v1.x,_v1.y,_v1.z);if(k<1)_v1.set(tx+(_v1.x-tx)*k,ty+(_v1.y-ty)*k,tz+(_v1.z-tz)*k);
+    const gy=H(_v1.x,_v1.z)+0.8;if(_v1.y<gy)_v1.y=gy;
+    camPos.lerp(_v1,Math.min(1,dt*12));camera.position.copy(camPos);camera.lookAt(tx,ty,tz);}
+  sun.position.set(P.x-24,P.y+44,P.z+18);sun.target.position.set(P.x,P.y,P.z);
+}
+/* 鏡頭碰撞：樹或房子擋在角色和鏡頭之間時，把鏡頭拉近 */
+function camClip(tx,ty,tz,cx,cy,cz){for(let i=2;i<=14;i++){const f=i/14,x=tx+(cx-tx)*f,y=ty+(cy-ty)*f,z=tz+(cz-tz)*f;
+    for(const c of colliders){if(c.npc||y>7)continue;const dx=c.x-x,dz=c.z-z,r=c.r+0.5;if(dx*dx+dz*dz<r*r)return Math.max(0.22,f-0.1);}}return 1;}
+function teleport(zid){const zn=ZONES.find(z=>z.id===zid);const b=zid==='hub'?{x:0,z:13}:{x:zn.x+2,z:zn.z+10};P.x=b.x;P.z=b.z;P.y=H(b.x,b.z);P.vy=0;P.tx=null;
+  CAM.yaw=Math.atan2(b.x-zn.x,b.z-zn.z)||0;camPos.set(P.x,P.y+8,P.z+10);const f=$('fade');f.hidden=false;f.style.animation='none';void f.offsetWidth;f.style.animation='';setTimeout(()=>f.hidden=true,700);blip(880,0.25,0.05,'sine');}
+
+/* ───────── 互動 ───────── */
+function activeNpc(n){
+  const rd=ROUNDS[S.round];if(S.phase!=='act'||!rd)return false;
+  if(n.kind==='host')return false;
+  if(rd.type==='risk'&&n.kind==='shuo')return !S.removed.includes(n.k)&&!(S.cur&&S.cur.ch.includes(n.k));
+  if(rd.type==='coop'&&n.kind==='house')return n.co!==S.co;
+  if(rd.type==='invest'&&n.kind==='plan')return true;
+  return false;
+}
+function visibleNpc(n){const rd=ROUNDS[S.round];if(n.kind==='prof'||n.kind==='folk')return true;if(n.kind==='shuo')return !!rd&&rd.type==='risk'&&S.phase!=='lobby'&&S.phase!=='end';if(n.kind==='plan')return !!rd&&rd.type==='invest'&&S.phase!=='lobby'&&S.phase!=='end';return true;}
+function nearest(){let best=null,bd=3;for(const n of NPCS){if(n.ch&&!n.ch.root.visible)continue;const d=Math.hypot(n.pos.x-P.x,n.pos.z-P.z)+(n.kind==='board'||n.kind==='beacon'?-0.4:0);if(d<bd){bd=d;best=n;}}return best;}
+function refreshWorld(){
+  if(!FX.houseBang)return;
+  const rd=ROUNDS[S.round];
+  NPCS.forEach(n=>{if(n.ch)n.ch.root.visible=visibleNpc(n);if(n.bang)n.bang.visible=activeNpc(n);});
+  COMP.forEach(c=>{FX.houseBang[c.id].visible=activeNpc(NPCS.find(n=>n.id==='h'+c.id));});
+  if(rd&&rd.type==='risk'&&S.co){const d=rd.data[S.co];NPCS.filter(n=>n.kind==='shuo').forEach(n=>{const s=d.opts[n.k].s;const col=TH[s].color;const gone=S.removed.includes(n.k);
+    setLabel(n,gone?s+'（已刪除）':s,gone?'#d8d0bb':col,'#fff');n.ch.g.children[2].material=M(gone?'#d8d0bb':col);n.ch.g.children[3].material=M(gone?'#d8d0bb':col);n.ch.root.rotation.x=0;n.ch.g.scale.setScalar(gone?0.82:1);});}
+  if(rd&&rd.type==='invest'&&S.co){placeAdvisors();NPCS.filter(n=>n.kind==='plan').forEach(n=>{const p=rd.plans[S.co][n.pk];setLabel(n,`方案${'AB'[n.pk]}・${p.cost} 資本`,'#ee8a6c','#fff');});}
+  NPCS.forEach(n=>{if(n.col){const v=n.ch.root.visible;n.col.x=v?n.pos.x:999;n.col.z=v?n.pos.z:999;}});
+  if(plumb)plumb.material.color.set(S.phase==='act'?'#5fe36a':S.phase==='wait'||S.phase==='inviting'?'#f8d454':'#7ad0f0');
+  if(FX.boardMat&&FX.boardR!==S.round){FX.boardR=S.round;FX.boardMat.map.dispose();FX.boardMat.map=boardTex();FX.boardMat.needsUpdate=true;}
+  if(plumb)plumb.visible=!CAM.fp;
+}
+function interact(){if(S.phase==='lobby')return;const n=nearest();if(n)talkTo(n);}
+function talkTo(n){if(uiBusy||overlayOpen())return;if(n.ch){n.ch.talk=1.2;const dx=P.x-n.pos.x,dz=P.z-n.pos.z;n.ch.root.rotation.y=Math.atan2(dx,dz);}
+  ({host:talkHost,shuo:talkGuardian,plan:talkAdvisor,house:talkHouse,prof:talkProf,board:talkBoard,beacon:talkBeacon,folk:talkFolk})[n.kind](n);}
+
+/* ───────── 對話框、卡片、手機 ───────── */
+let actx=null;
+function blip(f=520,d=0.05,v=0.035,type='triangle'){if(S.mute)return;try{if(!actx)actx=new (window.AudioContext||window.webkitAudioContext)();const t=actx.currentTime;const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d);}catch(e){}}
+const chime=(ok)=>{(ok?[659,784,1047]:[392,330]).forEach((f,i)=>setTimeout(()=>blip(f,0.18,0.06,'sine'),i*110));};
+let D=null;
+const dlgActive=()=>!!D;
+function dialog(name,color,text,opts,o={}){
+  return new Promise(res=>{uiBusy++;unlockMouse();lookHint();document.body.classList.add('talk');D={res,text,opts,i:0,done:false,timer:null};
+    $('dlgName').textContent=name;$('dlg').style.setProperty('--nc',color||'#f8d454');$('dlg').hidden=false;$('dlgCaret').hidden=true;$('choices').hidden=true;
+    $('dlgSkip').hidden=!o.skip;D.skip=o.skip;$('dlgText').textContent='';
+    const tick=()=>{if(!D)return;D.i=Math.min(text.length,D.i+1);$('dlgText').textContent=text.slice(0,D.i);if(D.i%2===0&&text[D.i-1]&&text[D.i-1].trim())blip(380+Math.random()*320,0.045,0.025);
+      if(D.i>=text.length){finishType();return;}D.timer=setTimeout(tick,/[，。？！：]/.test(text[D.i-1])?110:26);};
+    tick();});
+}
+function finishType(){if(!D)return;clearTimeout(D.timer);D.i=D.text.length;$('dlgText').textContent=D.text;D.done=true;
+  if(D.opts&&D.opts.length){const box=$('choices');box.className=D.opts.length>4?'grid':'';box.innerHTML=D.opts.map((t,i)=>{const dis=typeof t==='object'&&t.dis;const lab=typeof t==='object'?t.t:t;return `<button class="ch" data-i="${i}" ${dis?'disabled':''}>${esc(lab)}</button>`;}).join('');
+    box.hidden=false;box.style.bottom=($('dlg').offsetHeight+28)+'px';const f=box.querySelector('.ch:not(:disabled)');if(f)f.focus({preventScroll:true});}
+  else $('dlgCaret').hidden=false;}
+function closeDlg(v){if(!D)return;const r=D.res;clearTimeout(D.timer);D=null;document.body.classList.remove('talk');$('dlg').hidden=true;$('choices').hidden=true;uiBusy=Math.max(0,uiBusy-1);r(v);setTimeout(lookHint,0);}
+function dlgAdvance(){if(!D)return;if(!D.done){finishType();return;}if(!(D.opts&&D.opts.length))closeDlg(0);}
+$('dlg').addEventListener('click',e=>{if(e.target.id==='dlgSkip'){closeDlg('skip');return;}dlgAdvance();});
+$('choices').addEventListener('click',e=>{const b=e.target.closest('.ch');if(!b||b.disabled)return;blip(660,0.06,0.04);closeDlg(+b.dataset.i);});
+async function talk(name,color,lines){for(const l of lines){const v=await dialog(name,color,l,null,{skip:lines.length>2});if(v==='skip')break;}}
+
+let cardRes=null;
+const overlayOpen=()=>!$('cardWrap').hidden||!$('phone').hidden;
+function card(head,color,body,buttons){return new Promise(res=>{if(cardRes)cardRes(null);cardRes=res;uiBusy++;unlockMouse();
+  $('card').style.setProperty('--cc',color||HOSTC);
+  $('card').innerHTML=`<div class="card-h"><small>${head.top||''}</small><h2>${head.title}</h2></div><div class="card-b">${body}<div class="btns">${(buttons||[['好','ok']]).map(([t,v,cls],i)=>`<button class="btn ${cls||''}" data-v="${v}" ${i===0?'data-f':''}>${t}</button>`).join('')}</div></div>`;
+  $('cardWrap').hidden=false;$('card').scrollTop=0;const f=$('card').querySelector('[data-f]');if(f)f.focus({preventScroll:true});});}
+function closeCard(v){if(!cardRes)return;const r=cardRes;cardRes=null;$('cardWrap').hidden=true;uiBusy=Math.max(0,uiBusy-1);r(v);canvas.focus({preventScroll:true});setTimeout(lookHint,0);}
+$('card').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b&&!b.disabled)closeCard(b.dataset.v);});
+
+function toast(t,ms=3200){const el=$('toast');el.textContent=t;el.hidden=false;el.style.animation='none';void el.offsetWidth;el.style.animation='';clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,ms);}
+function banner(top,big,color){$('bnTop').textContent=top;$('bnBig').textContent=big;$('banner').style.setProperty('--bc',color);$('banner').classList.add('show');clearTimeout(banner.t);banner.t=setTimeout(()=>$('banner').classList.remove('show'),2600);}
+
+/* HUD */
+function hud(){if(!S.co)return;$('capV').textContent=S.cap;$('scV').textContent=S.sc;
+  $('dots').innerHTML=ROUNDS.map((rd,i)=>`<i class="${i<S.round?'done':i===S.round?'cur':''}" style="--c:${rCol(rd)}" title="第 ${i+1} 回合"></i>`).join('')+(S.round<ROUNDS.length?`<span>第 ${S.round+1} 回合・${TYPENAME[ROUNDS[S.round].type]}</span>`:'<span>八回合完成</span>');}
+
+/* ───────── 連線：Firebase Realtime Database ───────── */
+const FB_CFG={apiKey:"AIzaSyBLZt8ar5ozKam6CEWQraIeemWK9cCUWiQ",authDomain:"earth-partners.firebaseapp.com",databaseURL:"https://earth-partners-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"earth-partners",storageBucket:"earth-partners.firebasestorage.app",messagingSenderId:"140494852296",appId:"1:140494852296:web:41bfe557f458ee3b2555fd"};
+let db=null,roomRef=null,meRef=null,netTried=false;const players={};let invs={};
+const uid=(()=>{if(/[?&]tab\b/.test(location.search)){try{let v=sessionStorage.getItem('six-uid');if(!v){v='t'+Math.random().toString(36).slice(2,10);sessionStorage.setItem('six-uid',v);}return v;}catch(e){}}
+  let v=lsGet('six-uid');if(!v){v='u'+Math.random().toString(36).slice(2,12);lsSet('six-uid',v);}return v;})();
+function loadScript(src){return new Promise((res,rej)=>{const el=document.createElement('script');el.src=src;el.onload=res;el.onerror=rej;document.head.appendChild(el);});}
+async function netInit(){try{const V='10.12.2';await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-app-compat.js`);await loadScript(`https://www.gstatic.com/firebasejs/${V}/firebase-database-compat.js`);
+  db=firebase.initializeApp(FB_CFG).database();}catch(e){db=null;}netTried=true;}
+function joinRoom(code){
+  if(roomRef){roomRef.child('players').off();roomRef.child('inv').off();}
+  S.room=code;roomRef=db.ref('rooms/'+code);meRef=roomRef.child('players/'+uid);lsSet('six-room',code);
+  roomRef.child('players').on('value',s=>{for(const k in players)delete players[k];Object.assign(players,s.val()||{});onPlayers();});
+  roomRef.child('inv').on('value',s=>{invs=s.val()||{};onInvs();});
+  db.ref('.info/connected').on('value',s=>{if(s.val()&&meRef){meRef.child('online').onDisconnect().set(false);if(S.co)meRef.child('online').set(true);}netBadge();});
+}
+function push(patch){if(meRef)meRef.update(JSON.parse(JSON.stringify(patch))).catch(()=>toast('連線不穩，資料可能沒存到。'));}
+const humans=()=>Object.entries(players).filter(([id,p])=>id!==uid&&p&&p.online&&p.co&&CI[p.co]!=null);
+function humanOf(co){const h=humans().find(([,p])=>p.co===co);return h?h[1]:null;}
+/* 有人選過的公司永遠不當電腦代打，就算那組暫時離線（例如手機鎖屏） */
+function humanAny(co){const l=Object.entries(players).filter(([id,p])=>id!==uid&&p&&p.co===co&&p.round!=null);return ((l.find(([,p])=>p.online)||l[0])||[])[1]||null;}
+function netBadge(){const on=!!roomRef;$('netBub').classList.toggle('on',on);const narrow=innerWidth<=640;$('netTxt').textContent=on?(narrow?`${S.room}・${humans().length+1} 組`:`房間 ${S.room}・線上 ${humans().length+1} 組`):(narrow?'單人模式':'單人模式・其他公司由電腦代打');}
+function onPlayers(){netBadge();if(S.phase==='lobby')renderLobby();
+  for(const [id,p] of humans()){let r=remote[id];if(!r){const i=CI[p.co];const ch=chibi(COMP[i].color,i+1);const lb=label(p.nick||COMP[i].short,COMP[i].color,'#fff',0.75);lb.position.y=3.35;ch.root.add(lb);scene.add(ch.root);r=remote[id]={ch,x:p.x||0,z:p.z||0,ry:0};}r.tx=p.x||0;r.tz=p.z||0;r.tr=p.ry||0;}
+  for(const id in remote){if(!humans().some(([k])=>k===id)){scene.remove(remote[id].ch.root);delete remote[id];}}
+  checkWait();}
+let lastPub=0,pubPos=[0,0];
+function pubPos2(t){if(!meRef||S.phase==='lobby'||t-lastPub<0.2)return;if(Math.hypot(P.x-pubPos[0],P.z-pubPos[1])<0.08)return;lastPub=t;pubPos=[P.x,P.z];meRef.update({x:+P.x.toFixed(2),z:+P.z.toFixed(2),ry:+P.ry.toFixed(2)}).catch(()=>{});}
+
+/* ───────── 大廳 ───────── */
+let pickedCo=null;
+function renderLobby(){
+  const taken={};humans().forEach(([,p])=>taken[p.co]=p.nick||'另一組');
+  const mine=players[uid];const resume=mine&&mine.co&&(mine.round||0)<ROUNDS.length&&mine.picks;
+  const online=!!db;
+  const body=`
+   <p>六家 AI 新創在同一座園區小島上，要闖過八回合：用九說判斷策略、找夥伴合作、把資本投進永續方案。每家從 <b>6 資本、0 策略分</b>出發，第 8 回合結束時策略分最高的公司獲勝（滿分 10 分）。</p>
+   <h3>你的組名</h3>
+   <div class="inrow"><input class="txt" id="nickIn" maxlength="12" placeholder="例如：第五組" value="${esc(S.nick||lsGet('six-nick')||'')}"></div>
+   <h3>房間</h3>
+   ${online?`<div class="inrow"><input class="txt code" id="roomIn" maxlength="4" placeholder="房號" value="${esc(S.room)}" autocomplete="off"><button class="btn ghost" data-v="join">加入房間</button><button class="btn ghost" data-v="newroom">開新房間</button></div>
+   <p class="note">${roomRef?`你在房間 <b class="num">${esc(S.room)}</b>，目前線上 ${humans().length} 組。把房號告訴其他組，大家進同一間就會同時亮牌、可以互相合作。`:'同一班請進同一個房間。第一組按「開新房間」，再把 4 碼房號告訴其他組。'}</p>`
+   :netTried?'<p class="note">目前連不上連線服務，這次是單人模式：其他五家由電腦代打。</p>':'<p class="note">正在連線…</p>'}
+   ${resume?`<div class="note task">你上次在這個房間玩到 <b>第 ${(mine.round||0)+1} 回合</b>（${esc(coOf(mine.co).name)}，${mine.sc||0} 分）。<div class="btns" style="margin-top:8px"><button class="btn" data-v="resume">繼續上次進度</button></div></div>`:''}
+   <h3>選你的公司</h3>
+   <div class="cogrid">${COMP.map(c=>{const t=taken[c.id];const a=ADV[c.id];return `<button class="cob ${pickedCo===c.id?'sel':''}" data-v="co:${c.id}" ${t?'disabled':''}><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>核心：${c.core}</small><small>初始優勢：${a.name}（${a.shuo}）</small>${t?`<small><b>${esc(t)} 已選</b></small>`:''}</button>`;}).join('')}</div>`;
+  const buttons=[[pickedCo?`以「${coOf(pickedCo).name}」出發`:'先選一家公司','start']];
+  const keepNick=$('nickIn')?$('nickIn').value:null,keepRoom=$('roomIn')?$('roomIn').value:null;
+  if(!cardRes){card({top:'策略思維與永續發展・第五組',title:'永續價值進化：新創競技場'},HOSTC,body,buttons).then(onLobby);}
+  else{$('card').querySelector('.card-b').innerHTML=body+`<div class="btns"><button class="btn" data-v="start">${buttons[0][0]}</button></div>`;}
+  if(keepNick!=null&&$('nickIn'))$('nickIn').value=keepNick;if(keepRoom!=null&&$('roomIn'))$('roomIn').value=keepRoom;
+  const sb=$('card').querySelector('[data-v="start"]');if(sb)sb.disabled=!pickedCo;
+}
+async function onLobby(v){
+  const nick=($('nickIn')&&$('nickIn').value.trim().slice(0,12))||S.nick;
+  if(nick){S.nick=nick;lsSet('six-nick',nick);}
+  if(v&&v.startsWith('co:')){pickedCo=v.slice(3);renderLobby();return;}
+  if(v==='newroom'){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let code='';for(let k=0;k<5;k++){code='S'+Array.from({length:3},()=>A[Math.floor(Math.random()*A.length)]).join('');const s=await db.ref('rooms/'+code+'/players').get();if(!s.exists())break;}joinRoom(code);renderLobby();return;}
+  if(v==='join'){const code=($('roomIn').value||'').trim().toUpperCase();if(!/^[A-Z0-9]{4}$/.test(code)){toast('房號是 4 個英文或數字。');renderLobby();return;}joinRoom(code);renderLobby();return;}
+  if(v==='resume'){const m=players[uid];S.co=m.co;S.nick=m.nick||S.nick;S.cap=m.cap??6;S.sc=m.sc||0;S.round=m.round||0;S.advUsed=!!m.advUsed;S.picks={};if(m.picks)Object.keys(m.picks).forEach(k=>{if(m.picks[k])S.picks[k]=m.picks[k];});
+    startGame(true);return;}
+  if(v==='start'){if(!pickedCo){renderLobby();return;}if(humanOf(pickedCo)){toast('這家公司剛被別組選走了。');renderLobby();return;}
+    if(!S.nick){S.nick=coOf(pickedCo).short+'組';}S.co=pickedCo;S.cap=6;S.sc=0;S.round=0;S.picks={};S.advUsed=false;startGame(false);return;}
+  renderLobby();
+}
+function startGame(resumed){
+  S.phase='intro';
+  if(meRef)meRef.set(JSON.parse(JSON.stringify({nick:S.nick,co:S.co,round:S.round,cap:S.cap,sc:S.sc,advUsed:S.advUsed,online:true,x:0,z:11,ry:Math.PI,picks:resumed?S.picks:null})));
+  makeMe();P.x=0;P.z=11;P.ry=Math.PI;
+  const i=CI[S.co];$('meIc').style.background=COMP[i].color;$('meIc').textContent=COMP[i].short.slice(0,1);$('meName').textContent=`${COMP[i].name}・${S.nick}`;
+  ['hudL','dots','hudR'].forEach(id=>$(id).hidden=false);
+  if(matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0||'ontouchstart' in window){$('joy').hidden=false;$('aBtn').hidden=false;$('jBtn').hidden=false;$('vBtn').hidden=false;}else $('keys').hidden=false;
+  netBadge();hud();S.botsDone=-1;S.bots={};S.botPick={};
+  if(S.round>=ROUNDS.length){ending();return;}
+  if(S.picks[S.round]){S.phase='wait';S.waitT0=Date.now();refreshWorld();checkWait();return;}
+  if(!resumed)welcome();else beginRound();
+}
+async function welcome(){S.phase='intro';refreshWorld();FX.focus={x:0,z:-3};
+  await talk('主持人 阿綠',HOSTC,[`歡迎來到 AI 園區小島，${S.nick}！我是主持人阿綠。`,`你代表「${coOf(S.co).name}」，手上有 6 資本、0 策略分。接下來八回合，每回合開始我都會在這裡宣布事件。`,`你的初始優勢是「${ADV[S.co].name}」：${ADV[S.co].text}全場只能用 1 次，時機到了我會問你。`,'WASD 走路、Shift 跑、空白鍵跳；點一下畫面就能用滑鼠轉視角，V 切換第一／第三人稱。走到人旁邊按 E（手機按 A）就能對話。','島上不只這座廣場：沿著小路可以走到幸福社區、AI 科技園區、綠能海岸和水源山丘。每個區域都有傳送信標，手機地圖也能直接傳送。','廣場上的規則布告欄隨時可以看，思華老師也在旁邊。卡住的時候可以請教他，不過他只會問問題，不會直接告訴你答案。']);
+  beginRound();}
+
+let film=null;
+const NOSTART='，。、；：）」』！？';
+function wrap(x,text,maxW){const out=[];let cur='';for(const ch of text){const t=cur+ch;if(x.measureText(t).width>maxW&&cur&&!NOSTART.includes(ch)){out.push(cur);cur=ch;}else cur=t;}if(cur)out.push(cur);return out;}
+/* ───────── 風險快訊影片 ───────── */
+const ease=v=>v<=0?0:v>=1?1:1-Math.pow(1-v,3);
+function splitSent(t){return (t.match(/[^。？！]+[。？！]?/g)||[t]).map(s=>s.trim()).filter(Boolean);}
+function gear(x,cx,cy,r,teeth,rot,fill){x.save();x.translate(cx,cy);x.rotate(rot);x.beginPath();for(let k=0;k<teeth*2;k++){const a=k*Math.PI/teeth;const rad=k%2?r:r+18;x.lineTo(Math.cos(a-0.13)*rad,Math.sin(a-0.13)*rad);x.lineTo(Math.cos(a+0.13)*rad,Math.sin(a+0.13)*rad);}x.closePath();x.fillStyle=fill;x.fill();x.fillStyle='#ffffff';x.beginPath();x.arc(0,0,r*0.35,0,7);x.fill();x.restore();}
+function stamp(x,txt,cx,cy,col,k){if(k<=0)return;x.save();x.translate(cx,cy);x.rotate(-0.12);const s=1+(1-Math.min(1,k))*0.8;x.scale(s,s);x.globalAlpha=Math.min(1,k);x.font='54px '+FONT;const w=x.measureText(txt).width+52;x.strokeStyle=col;x.lineWidth=7;x.strokeRect(-w/2,-42,w,84);x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,0,2);x.restore();}
+const SCENES=[
+ // 0 算力需求暴增
+ (x,t,col)=>{const bx=110,by=520;x.strokeStyle='#d9c89f';x.lineWidth=3;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+470,by);x.stroke();
+  [60,85,110,150,210,300].forEach((v,k)=>{const h=v*ease((t-0.3-k*0.3)/0.6);x.fillStyle=k===5?col:'#e2cfa4';x.fillRect(bx+22+k*74,by-h,50,h);});
+  x.textAlign='left';x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('AI 算力需求',bx,by+38);
+  const gate=1080,cy=400;x.fillStyle='#efe2c3';x.fillRect(660,cy+44,440,14);
+  for(let k=0;k<8;k++){const px=Math.min(620+t*170-k*70,gate-48-k*52);if(px<640)continue;x.fillStyle='#fff';x.strokeStyle='#8a6a48';x.lineWidth=3;x.fillRect(px,cy,44,44);x.strokeRect(px,cy,44,44);x.fillStyle='#8a6a48';x.fillRect(px+14,cy+14,16,16);}
+  x.fillStyle=col;x.fillRect(gate,cy-50,14,108);x.textAlign='center';x.fillStyle='#6e583d';x.font='900 30px '+FONT;x.fillText('交付瓶頸',gate+7,cy-74);
+  const wk=Math.max(1,6-Math.floor(t/1.6));x.font='700 26px '+FONT;x.fillStyle='#a08a6b';x.fillText('距離交付',880,200);x.font='900 84px '+FONT;x.fillStyle=col;x.fillText(wk+' 週',880,270);},
+ // 1 原型整合標案
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#a08a6b';x.font='700 28px '+FONT;x.fillText('設備整合 · 院端部署 · 能源管理 · 製造',640,215);
+  const e=ease((t-0.5)/1.6);const lx=200+260*e,rx=1080-260*e;
+  [[lx,'技術','#e2cfa4'],[rx,'應用',col]].forEach(([cx,label,fill])=>{x.fillStyle=fill;rr(x,cx-120,300,240,150,18);x.fill();x.fillStyle='#fff';x.font='900 50px '+FONT;x.fillText(label,cx,377);});
+  if(e>=1){x.strokeStyle=col;x.lineWidth=6;const pulse=70+10*Math.sin(t*6);for(let k=0;k<8;k++){const a=k*Math.PI/4+t;x.beginPath();x.moveTo(640+Math.cos(a)*36,375+Math.sin(a)*36);x.lineTo(640+Math.cos(a)*pulse,375+Math.sin(a)*pulse);x.stroke();}}
+  const wk=Math.max(1,6-Math.floor(t/1.5));x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('原型展示倒數 '+wk+' 週',640,535);},
+ // 2 客戶要求客製
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#a08a6b';x.font='700 28px '+FONT;x.fillText('標準品 → 每家客戶都要不一樣的版本',640,210);
+  for(let k=0;k<6;k++){const cx=170+k*188,cy=360;const e=ease((t-0.6-k*0.45)/0.7);const w=90+Math.sin(k*1.7+1)*40*e,h=90+Math.cos(k*1.3)*40*e;
+   x.fillStyle='#fff';x.strokeStyle=e>0.99?col:'#c9b994';x.lineWidth=5;x.fillRect(cx-w/2,cy-h/2,w,h);x.strokeRect(cx-w/2,cy-h/2,w,h);
+   if(e>0.99){x.strokeStyle=col;x.lineWidth=9;x.beginPath();x.moveTo(cx-22,cy+96);x.lineTo(cx-4,cy+114);x.lineTo(cx+28,cy+78);x.stroke();}}
+  const wk=Math.max(1,8-Math.floor(t/1.2));x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('續約倒數 '+wk+' 週',640,540);},
+ // 3 AI 電力危機
+ (x,t,col)=>{const cx=330,cy=480,r=180;x.lineWidth=34;x.strokeStyle='#efe2c3';x.beginPath();x.arc(cx,cy,r,Math.PI,0);x.stroke();
+  const f=0.7-0.62*ease(t/5.5);x.strokeStyle=col;x.beginPath();x.arc(cx,cy,r,Math.PI,Math.PI+Math.PI*f);x.stroke();
+  const a=Math.PI+Math.PI*f;x.strokeStyle='#6e583d';x.lineWidth=8;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(a)*(r-30),cy+Math.sin(a)*(r-30));x.stroke();x.fillStyle='#6e583d';x.beginPath();x.arc(cx,cy,14,0,7);x.fill();
+  x.textAlign='center';x.textBaseline='middle';x.font='900 54px '+FONT;x.fillStyle='#6e583d';x.fillText((f*15).toFixed(1)+'%',cx,cy-70);x.font='700 26px '+FONT;x.fillStyle='#a08a6b';x.fillText('備轉容量率',cx,cy+44);
+  [[640,150,260],[780,120,320],[890,160,220],[1040,110,290],[1140,110,230]].forEach(([bx,bw,bh],k)=>{x.fillStyle='#f3e8cf';x.fillRect(bx,550-bh,bw-14,bh);
+   for(let r2=0;r2<Math.floor((bh-20)/40);r2++)for(let c2=0;c2<3;c2++){const id=k*37+r2*7+c2*3;const off=((id*9301+49297)%233280)/233280<ease((t-1)/5);x.fillStyle=off?'#d6c9a8':'#f8d454';x.fillRect(bx+10+c2*((bw-30)/3),550-bh+14+r2*40,(bw-50)/3,22);}});
+  if(Math.sin(t*9)>0.5&&t<5){x.fillStyle=col;x.beginPath();x.moveTo(960,200);x.lineTo(920,290);x.lineTo(955,290);x.lineTo(925,380);x.lineTo(1005,265);x.lineTo(965,265);x.lineTo(995,200);x.closePath();x.fill();}
+  stamp(x,'碳費上路',700,220,col,(t-3)/0.5);},
+ // 4 供應鏈共同減碳
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';gear(x,470,380,90,10,t*0.9,'#e2cfa4');gear(x,662,380,90,10,-t*0.9+0.31,col);
+  const s=1-0.35*ease((t-1.5)/4);const cx=1010,cy=350;x.fillStyle='#f3e8cf';[[0,0,90],[-80,20,60],[80,20,62],[-40,-40,58],[40,-45,60]].forEach(([dx,dy,r])=>{x.beginPath();x.arc(cx+dx*s,cy+dy*s,r*s,0,Math.PI*2);x.fill();});
+  x.fillStyle='#8a6a48';x.font='900 '+Math.round(54*s)+'px '+FONT;x.fillText('CO2',cx,cy+6);
+  x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('排放 '+Math.round(100-30*ease((t-1.5)/4)),cx,cy+150);
+  x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('兩家公司 · 一份可查證的減碳方案',566,540);},
+ // 5 AI 供應鏈信任危機
+ (x,t,col)=>{const cy=390;const broken=t>3;
+  for(let k=0;k<7;k++){const lx=190+k*150;x.lineWidth=14;x.strokeStyle=broken&&k===3?'#d9c89f':'#8a6a48';x.beginPath();
+   if(broken&&k===3)x.ellipse(lx,cy+22,70,30,0.25,0.4,Math.PI*2-0.4);else x.ellipse(lx,cy,70,k%2?16:34,0,0,Math.PI*2);x.stroke();}
+  const mx=150+((t*200)%980),my=cy-10;x.lineWidth=10;x.strokeStyle=col;x.beginPath();x.arc(mx,my,62,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(mx+44,my+44);x.lineTo(mx+100,my+100);x.stroke();
+  stamp(x,'供應鏈重新審查',640,230,col,(t-1.8)/0.5);},
+ // 6 限電下的供電危機
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const night=t>4;
+  if(night){x.fillStyle='#5d74a8';x.fillRect(60,150,1160,420);x.fillStyle='#fffcf1';x.beginPath();x.arc(1060,230,40,0,Math.PI*2);x.fill();x.fillStyle='#5d74a8';x.beginPath();x.arc(1078,218,36,0,Math.PI*2);x.fill();}
+  else{const a=Math.PI*(1-Math.min(1,t/4));x.fillStyle='#f8d454';x.beginPath();x.arc(640+Math.cos(a)*480,520-Math.sin(a)*300,38,0,Math.PI*2);x.fill();}
+  const lv=night?0.92-0.5*ease((t-4)/4):0.2+0.72*ease(t/4);
+  x.fillStyle=night?'#6e84b8':'#fff';x.strokeStyle=col;x.lineWidth=6;x.fillRect(560,260,160,240);x.strokeRect(560,260,160,240);x.fillStyle=col;x.fillRect(605,240,70,20);x.fillRect(572,488-216*lv,136,216*lv);
+  x.fillStyle=night?'#fff':'#6e583d';x.font='900 30px '+FONT;x.fillText(Math.round(lv*100)+'%',640,225);
+  x.font='700 28px '+FONT;x.fillStyle=night?'#fffcf1':'#a08a6b';x.fillText(night?'晚間尖峰：儲能優先供給關鍵設備':'白天：綠電充進園區儲能',640,535);
+  stamp(x,'晚間限電',300,240,night?'#f8d454':col,(t-1.5)/0.5);},
+ // 7 旱季限水
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const lv=0.85-0.6*ease(t/6);
+  x.strokeStyle='#8a6a48';x.lineWidth=6;x.strokeRect(180,200,380,330);x.fillStyle='#5ccbe6';x.fillRect(183,530-327*lv,374,327*lv);
+  const ly=530-327*0.45;x.setLineDash([16,12]);x.strokeStyle=col;x.lineWidth=5;x.beginPath();x.moveTo(160,ly);x.lineTo(580,ly);x.stroke();x.setLineDash([]);
+  x.fillStyle=col;x.font='900 28px '+FONT;x.textAlign='left';x.fillText('限額',590,ly);x.textAlign='center';
+  x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('淡水取用量',370,560);
+  x.fillStyle='#b9a988';x.fillRect(800,230,200,26);x.fillRect(975,230,26,70);
+  for(let k=0;k<4;k++){const y=310+((t*160+k*60)%200);x.fillStyle='#5ccbe6';x.beginPath();x.moveTo(988,y-14);x.quadraticCurveTo(1002,y+4,988,y+8);x.quadraticCurveTo(974,y+4,988,y-14);x.fill();}
+  stamp(x,'限水',880,450,col,(t-2)/0.5);}
+];
+function chunkLines(text){const out=[];(text.match(/[^。？！]+[。？！]?/g)||[text]).forEach(seg=>{seg=seg.trim();if(!seg)return;
+  if(seg.length<=26){out.push(seg);return;}let cur='';seg.split(/(?<=，)/).forEach(p=>{if((cur+p).length>26&&cur){out.push(cur);cur=p;}else cur+=p;});if(cur)out.push(cur);});return out;}
+function boom(big){if(S.mute)return;(big?[784,988,1319]:[659]).forEach((fq,i)=>setTimeout(()=>blip(fq,big?0.5:0.35,big?0.05:0.035,'sine'),i*120));}
+function cloud(x,cx,cy,k){x.beginPath();[[0,0,46],[44,-14,38],[86,4,34],[40,16,40]].forEach(([dx,dy,r])=>{x.moveTo(cx+dx*k+r*k,cy+dy*k);x.arc(cx+dx*k,cy+dy*k,r*k,0,Math.PI*2);});x.fill();}
+function drawFilm(t){
+  const c=$('filmC'),x=c.getContext('2d');const rd=ROUNDS[film.i];const col=rCol(rd);
+  const SF='"Noto Serif TC","Songti TC",serif',NF='"Noto Sans TC","PingFang TC",sans-serif';
+  x.globalAlpha=1;x.shadowBlur=0;x.fillStyle='#0b0f17';x.fillRect(0,0,1280,720);
+  x.save();x.globalAlpha=0.22;SCENES[rd.scene](x,t,col);x.restore();
+  const vg=x.createRadialGradient(640,360,200,640,360,760);vg.addColorStop(0,'rgba(11,15,23,0)');vg.addColorStop(1,'rgba(11,15,23,.85)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
+  for(let k=0;k<120;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
+  const L=film.lines,per=film.per,t0=1.6,tEnd=t0+L.length*per;
+  x.textAlign='center';x.textBaseline='middle';
+  if(t<t0){const a=Math.min(1,t/0.5)*Math.min(1,(t0-t)/0.4);x.globalAlpha=Math.max(0,a);
+    x.fillStyle='#c9d1db';x.font='700 30px '+NF;x.fillText(rd.type==='coop'?'合作回合':rd.type==='invest'?'永續投資回合':'風險卡',640,320);
+    x.font='900 68px '+SF;x.fillStyle='#fff';x.fillText('第 '+(film.i+1)+' 回合',640,395);x.globalAlpha=1;}
+  else if(t<tEnd){const idx=Math.floor((t-t0)/per);const lt=(t-t0)-idx*per;if(film.last!==idx){film.last=idx;boom(false);}
+    const a=Math.min(1,lt/0.35)*Math.min(1,(per-lt)/0.3);const sc=1.06-0.06*ease(lt/per);
+    x.save();x.globalAlpha=Math.max(0,a);x.translate(640,360);x.scale(sc,sc);x.fillStyle='#ffffff';x.font='900 54px '+SF;x.shadowColor='rgba(0,0,0,.7)';x.shadowBlur=14;
+    const ls=wrap(x,L[idx],1040).slice(0,3);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*74));x.restore();}
+  else{const lt=t-tEnd;if(film.last!=='end'){film.last='end';boom(true);}const a=Math.min(1,lt/0.6);x.globalAlpha=a;
+    x.fillStyle='#c9d1db';x.font='700 28px '+NF;x.fillText('第 '+(film.i+1)+' 回合 · '+rd.eraName,640,250);
+    x.save();x.shadowColor=col;x.shadowBlur=36;x.fillStyle='#fff';let fs=104;x.font='900 '+fs+'px '+SF;while(x.measureText(rd.title).width>1120&&fs>56){fs-=6;x.font='900 '+fs+'px '+SF;}x.fillText(rd.title,640,350);x.restore();
+    const e=ease(lt/0.8);x.fillStyle=col;x.fillRect(640-160*e,428,320*e,4);
+    x.fillStyle='#fff';x.font='700 34px '+NF;x.fillText(rd.type==='coop'?'找到你的夥伴':rd.type==='invest'?'押上你的資本':'選擇你的說',640,482);x.globalAlpha=1;}
+  x.fillStyle='#000';x.fillRect(0,0,1280,78);x.fillRect(0,642,1280,78);
+  x.textAlign='left';x.fillStyle='#7d8693';x.font='700 20px '+NF;x.fillText((rd.type==='coop'?'合作':rd.type==='invest'?'投資':'風險')+'快訊 · 第 '+(film.i+1)+' 回合',32,40);
+  x.textAlign='right';x.fillText('Esc 略過 · 空白鍵暫停',1248,682);
+  $('filmProg').style.width=Math.min(100,t/film.dur*100)+'%';
+  if(t>=film.dur)endFilm();
+}
+function playFilm(i){return new Promise(then=>{
+  uiBusy++;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;
+  const rd=ROUNDS[i];const lines=rd.trailer||chunkLines(rd.event);const per=lines.length>8?2.3:2.8;
+  film={i,then,t:0,prev:performance.now(),speed:1,paused:false,dur:1.6+lines.length*per+3.4,lines,per,last:null};
+  $('filmLabel').textContent='第 '+(i+1)+' 回合 · '+rd.title;$('filmProg').style.width='0%';$('filmPause').textContent='暫停';$('filmSpeed').textContent='2 倍速';
+  $('film').hidden=false;lookHint();boom(true);
+  setTimeout(()=>$('filmSkip').focus({preventScroll:true}),30);
+  const tick=now=>{if(!film)return;const dt=Math.min(0.1,(now-film.prev)/1000);film.prev=now;if(!film.paused)film.t+=dt*film.speed;drawFilm(film.t);requestAnimationFrame(tick);};requestAnimationFrame(tick);
+});}
+function endFilm(){if(!film)return;const f=film;film=null;$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});lookHint();if(f.then)f.then();}
+function filmPause(){if(!film)return;film.paused=!film.paused;$('filmPause').textContent=film.paused?'繼續':'暫停';}
+$('filmSkip').addEventListener('click',endFilm);
+$('filmPause').addEventListener('click',filmPause);
+$('filmSpeed').addEventListener('click',()=>{if(!film)return;film.speed=film.speed===1?2:1;$('filmSpeed').textContent=film.speed===1?'2 倍速':'1 倍速';});
+
+/* ───────── 回合限時與規則布告欄（時間依規則書：合作回合 3 分鐘，其餘 1.5 分鐘） ───────── */
+const ROUND_SEC=[90,180,90,90,90,90,180,90];
+const fmtSec=s=>s>=60?`${Math.floor(s/60)} 分${s%60?' '+(s%60)+' 秒':'鐘'}`:`${s} 秒`;
+function roundRules(rd){
+  if(rd.type==='coop')return ['走到其他公司門口邀請一家合作；真人組別要對方答應才成立。','雙方各投入 1～6 資本，鎖定後公布等級：S ×1.6、A ×1.5、B ×1.25、C ×1.0。','S、A 級各得 1 策略分；雙方拿回本金，再平分額外綜效。時間到還沒配對，就算這回合不合作。'];
+  if(rd.type==='invest')return ['回到自己公司門口，兩位方案顧問各有一個方案（5 或 8 資本）。','買下一個方案後，判斷它屬於九說的哪一說：答對得 1 或 2 分。','答錯不得分，退回 2 或 4 資本；也可以保留資本不投資。時間到還沒決定，就算不投資。'];
+  return ['聽完事件，到廣場找五位說的守護者，選一個最適合你公司處境的說。','答中主持人答案得 1 策略分，資本不變；每回合只能選一次。','時間到還沒選，這回合就不得分。'];
+}
+function rulesHTML(){const r=Math.min(S.round,ROUNDS.length-1),rd=ROUNDS[r];
+  return `<div class="note task"><b>第 ${r+1} 回合・${TYPENAME[rd.type]}・限時 ${fmtSec(ROUND_SEC[r])}</b><br>${roundRules(rd).map(l=>'・'+l).join('<br>')}</div>
+  <p>六家公司各從 <b>6 資本、0 策略分</b>開局，第 8 回合後策略分最高者獲勝（滿分 10 分），同分並列。</p>
+  <div class="note"><b>事件＋說（第 1、3、4、6 回合）</b><br>選一個說，答中得 1 分，資本不變。</div>
+  <div class="note"><b>合作（第 2、7 回合）</b><br>雙方各投入 1～6 資本，S、A 級各得 1 分；雙方拿回本金，再平分額外綜效。第 2 回合的收益可以用在第 5 回合投資或第 7 回合合作。</div>
+  <div class="note"><b>永續投資（第 5、8 回合）</b><br>買 5 或 8 資本的方案，判斷它屬於哪一說：答對得 1 或 2 分；答錯退回 2 或 4 資本。</div>
+  <div class="note"><b>初始優勢</b><br>每家一項，全場限用 1 次，時機到了主持人會問你。</div>
+  <div class="note"><b>同步亮牌</b><br>同房間的組別都選完才一起亮牌；最多等 ${WAIT_S} 秒，也可以按「不等了」。</div>`;}
+function talkBoard(){return card({top:'規則布告欄',title:`第 ${Math.min(S.round,7)+1} 回合怎麼玩`},rCol(ROUNDS[Math.min(S.round,7)]),rulesHTML(),[['看懂了','ok']]);}
+
+const live=()=>S.phase==='act'||S.phase==='inviting';
+function tickTimer(){const el=$('timerBub');if(!live()||!S.deadline){el.hidden=true;return;}
+  const left=Math.max(0,Math.ceil((S.deadline-Date.now())/1000));el.hidden=false;$('timerTxt').textContent=`${Math.floor(left/60)}:${String(left%60).padStart(2,'0')}`;el.classList.toggle('low',left<=20);
+  if(left<=0)timeUp();}
+function timeUp(){if(!live())return;const rd=ROUNDS[S.round];
+  if(S.inviting&&roomRef){roomRef.child('inv/'+S.inviting.id).update({st:'x'});}S.inviting=null;
+  const pick=rd.type==='risk'?{kind:'risk',ch:(S.cur&&S.cur.ch.length)?S.cur.ch.slice():[]}:rd.type==='coop'?{kind:'coop',partner:null}:{kind:'invest',plan:-1};
+  S.phase='act';submit(pick);
+  if(D)closeDlg(-1);if(cardRes)closeCard(null);if(!$('phone').hidden)togglePhone(false);
+  toast('時間到！這回合用你目前的決定結算。',3600);chime(false);}
+
+/* ───────── 思華老師：只問問題，不給答案 ───────── */
+const PROFC='#4f5a7a',PROF='思華老師';
+const QQ={
+ '3.0':{'效率說':'同一套東西，能不能被很多人、在很多地方重複用？','資源說':'你手上有什麼是別人買不到、學不走，而且還能持續更新的？','競局說':'對手和夥伴的界線，會不會比你以為的還模糊？','風險說':'看不清楚的時候，能不能先小步試、保留轉彎的空間？','生態說':'這件事需要一群角色同時到位嗎？誰來讓大家對齊？','互賴說':'這件事你一家做得完嗎？誰的能力剛好補上你缺的那一塊？','結構說':'有沒有一個關鍵位置，佔住了，別人就繞不過你？','統治說':'與其自己做完，能不能訂一套規則，讓供給和需求自己配對？','價值說':'真正用的人需要的是什麼？你有沒有跟他們一起做？'},
+ '4.0':{'效率說':'這個做法會讓參與的人越做越有能力，還是越做越被耗盡？','資源說':'你的行動，能不能讓這個地方繼續願意支持你、讓你留下來？','競局說':'這種競爭方式，社會能接受多久？它的後果誰來承擔？','風險說':'最壞的情況發生時，誰承擔？承擔得起嗎？承擔之後還能存續嗎？','生態說':'既有的做法撐不住時，誰願意站出來，把大家串成新的運作方式？','互賴說':'這段關係是一次性的交易，還是能長期經營、彼此信任的夥伴？','結構說':'你能不能滿足這個地方認可的條件，讓自己被允許繼續營運？','統治說':'誰有權利訂規則、改規則？能不能讓更多人一起決定？','價值說':'對不同處境的人來說，這件事真的有幫到他們嗎？'}
+};
+const ERA_HINT={'3.0':'3.0 是知識經濟：環境變得很快，大家互相依賴。關鍵常在知識和能力怎麼被放大、怎麼跟別人接起來。','4.0':'到了 4.0，問題常常不是賺不賺錢，而是「你還能不能被允許繼續做下去」。'};
+const EVOL={'效率說':['節省','放大','生成'],'資源說':['擁有並防禦資源存量','生成並更新能力與資本','共同維護場域資本'],'競局說':['有限賽局中的理性互動','合作競爭與平台集體博弈','無限賽局下的競局治理與承擔'],'互賴說':['治理依賴','設計互賴','經營社群'],'風險說':['風險隔離','在不確定中主動掌握','承擔結構後果、重組再生'],'生態說':['制度順應、被留下來','既有生態中的平衡治理','創建新生態、承擔生成責任']};
+function profHint(){
+  const rd=ROUNDS[S.round],r=S.round;if(!S.hint||S.hint.r!==r)S.hint={r,lv:0};const lv=S.hint.lv++;
+  const R=rng(S.room+'|hint|'+r+'|'+S.co);const two=(a,b)=>(R()<0.5?[a,b]:[b,a]);
+  if(lv>=2)return '老師能說的就到這裡了。剩下的，跟組員討論出來——那才是你們自己的策略。';
+  if(rd.type==='risk'){const d=myRisk(),best=d.opts[d.best].s;
+    if(lv===0)return `${ERA_HINT[rd.era]}\n先用一句話說出${coOf(S.co).short}的困境：卡住你的，是時間、知識、夥伴、規則，還是信任？`;
+    const others=d.opts.map((o,j)=>j).filter(j=>j!==d.best&&!S.removed.includes(j));const dis=d.opts[others[Math.floor(R()*others.length)]].s;
+    const [a,b]=two(QQ[rd.era][best],QQ[rd.era][dis]);return `老師只問你兩個問題，你自己判斷哪一個更貼近你的困境：\n① ${a}\n② ${b}`;}
+  if(rd.type==='coop'){
+    if(lv===0)return '合作不是找最大的公司，是找手上剛好有你缺的那一塊的公司。先想想：這回合的任務，你一家做不到的是哪一段？';
+    return rd.hand?'看看你的手卡：你能證明什麼、證明不了什麼？誰手上的紀錄，剛好能補上你證明不了的那一段？':'斷線的時候，哪一項關鍵工作要兩家的東西才接得起來？你出什麼，對方出什麼？客戶要驗收的是什麼？';}
+  const ps=rd.plans[S.co];
+  if(lv===0)return '先別管價格。問自己：這個方案的效果，是靠什麼產生的？是讓一套東西被很多人重複用、累積別人學不走的知識、讓大家一起訂規則，還是把一群人串成長期運作的網絡？';
+  const pool=Object.keys(QQ['4.0']).filter(s=>s!==ps[0].ans&&s!==ps[1].ans);const dis=pool[Math.floor(R()*pool.length)];
+  const qs=[ps[0].ans,ps[1].ans,dis].map(s=>QQ['4.0'][s]).sort(()=>R()-0.5);
+  return `這三個問題裡，有兩個分別對應你的兩個方案。哪一個問題，最能說明你看中的那個方案？\n① ${qs[0]}\n② ${qs[1]}\n③ ${qs[2]}`;
+}
+async function talkProf(){
+  const intro=S.phase==='act'?'我是思華老師。九說我最熟，但答案要你們自己找。想問什麼？':S.phase==='wait'?'你已經做了決定。等亮牌之後，回頭想想：為什麼不是另一個說？':'我是思華老師。九說有什麼想問的，都可以來找我。';
+  const opts=[...(S.phase==='act'?['請老師給一點提示']:[]),'3.0 和 4.0 差在哪裡？','想了解某一說','謝謝老師'];
+  const i=await dialog(PROF,PROFC,intro,opts);const o=opts[i];
+  if(o==='請老師給一點提示'){if(!live())return;await dialog(PROF,PROFC,profHint());return;}
+  if(o==='3.0 和 4.0 差在哪裡？'){await talk(PROF,PROFC,['3.0 是知識和數位經濟：環境變得快、大家互相依賴。策略重在調適、學習，和設計彼此接得起來的結構。','4.0 是人文永續經濟：制度信任不足，風險會外溢到別人身上。策略要能承擔後果，也要被社會允許繼續做下去。','記得，這不是新的取代舊的。先判斷眼前的情境，原來的判斷方式還適不適用。']);return;}
+  if(o==='想了解某一說'){const j=await dialog(PROF,PROFC,'想聽哪一說？',SHUO9);if(j<0)return;const s=SHUO9[j],e=EVOL[s];
+    await dialog(PROF,PROFC,e?`${s}一路從「${e[0]}」走到「${e[1]}」，再到「${e[2]}」。\n${TH[s].desc}`:`${s}：${TH[s].desc}`);}
+}
+
+/* ───────── 各區居民與傳送 ───────── */
+const FOLK=[
+ {zone:'town',name:'館員 小芸',color:'#ee8a6c',dx:-6,dz:5,lines:['圖書館的電腦常常一壞就停好幾週，想上網辦事的居民只能等。','如果園區的公司願意來幫忙，我希望是幾年後還在的服務，不是只做一季。']},
+ {zone:'town',name:'護理師 阿美',color:'#e86f8f',dx:7,dz:4,lines:['診所試辦過遠距追蹤，補助一到期就沒有人力了。','停電、停水的時候，最怕急件沒人接手。']},
+ {zone:'tech',name:'工程師 阿哲',color:'#3d6cf0',dx:-3,dz:7,lines:['開源模型一出來，大家都做得出差不多的產品。','最近好幾位資深同事被挖角，調校的經驗都在他們腦袋裡。']},
+ {zone:'tech',name:'機房主管 莉莉',color:'#1599b5',dx:7,dz:5,lines:['夏天備轉容量告急，機房的電和水都被盯得很緊。','客戶要的不只是電表數字，還要證明服務沒有因此變差。']},
+ {zone:'coast',name:'場站站長 大海',color:'#27a854',dx:-4,dz:9,lines:['新案場還沒併網，舊電廠出力又不穩。','旱季清洗面板要用水，居民會問：這些水從哪裡來？']},
+ {zone:'hill',name:'居民代表 阿伯',color:'#8a6a48',dx:5,dz:7,lines:['工廠的月用水量是下降了，可是傍晚我家水龍頭只剩細細一條。','如果下個月再減供，誰可以要求你們改？']},
+ {zone:'hill',name:'水務員 小安',color:'#1599b5',dx:-6,dz:4,lines:['水庫水位每天都在看。限水不是省下來就好，要看是誰沒水用。']}
+];
+async function talkFolk(n){await talk(n.name,n.color,n.lines);}
+async function talkBeacon(n){const others=ZONES.filter(z=>z.id!==n.zone);
+  const i=await dialog('傳送信標','#20b2a4','要傳送到哪裡？',[...others.map(z=>z.name),'先不用']);if(i<0||i>=others.length)return;teleport(others[i].id);}
+
+/* ───────── 回合流程 ───────── */
+const myRisk=()=>ROUNDS[S.round].data[S.co];
+function taskHint(){const rd=ROUNDS[S.round];return rd.type==='risk'?'去廣場找頭上有「!」的說守護者，選一個說。':rd.type==='coop'?'走到其他公司家門口，邀請一家合作。':'回你自己的公司門口，跟兩位方案顧問談投資。';}
+async function beginRound(){
+  const r=S.round,rd=ROUNDS[r];S.phase='intro';S.cur={ch:[]};S.removed=[];S.inviting=null;S.skipWait=false;
+  push({round:r});hud();refreshWorld();P.x=0;P.z=9.5;P.y=0;P.vy=0;P.tx=null;P.ry=Math.PI;CAM.yaw=0;S.deadline=0;FX.focus={x:0,z:-3};
+  banner(`第 ${r+1} 回合・${rd.eraName}`,rd.title,rCol(rd));blip(523,0.15,0.05,'sine');setTimeout(()=>blip(784,0.2,0.05,'sine'),160);
+  await sleep(1200);
+  await playFilm(r);
+  await dialog('主持人 阿綠',rCol(rd),`第 ${r+1} 回合「${rd.title}」開始了！事件卡在這裡，看完就出發吧。`);
+  await eventCard();
+  if(rd.type==='risk'&&S.co==='mfg'&&!S.advUsed){
+    const i=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「共用模組」：要我先刪掉兩個錯誤選項嗎？全場只能用 1 次。',['使用共用模組','留到之後再用']);
+    if(i===0){useAdv();const d=myRisk();const wrong=d.opts.map((o,j)=>j).filter(j=>j!==d.best).sort(()=>Math.random()-.5).slice(0,2);S.removed=wrong;
+      await dialog('主持人 阿綠',HOSTC,`好，${wrong.map(j=>d.opts[j].s).join('和')}這回合先退場。剩下三個裡有一個是答案。`);}}
+  if(rd.type==='coop'&&S.co==='cloud'&&!S.advUsed){
+    const i=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「平台資訊」：要私下問我某一組配對的等級嗎？全場只能用 1 次。',['使用平台資訊','留到之後再用']);
+    if(i===0){useAdv();const others=COMP.filter(c=>c.id!==S.co);const j=await dialog('主持人 阿綠',HOSTC,'想問你和哪一家的配對？',others.map(c=>c.name));
+      const g=rd.grades[pairKey(S.co,others[j].id)];await dialog('主持人 阿綠',HOSTC,`小聲說：你和${others[j].name}這回合是 ${g} 級。別告訴別人喔。`);}}
+  FX.focus=null;S.phase='act';S.deadline=Date.now()+ROUND_SEC[r]*1000;refreshWorld();toast(taskHint()+` 限時 ${fmtSec(ROUND_SEC[r])}，右上角有倒數。`,4600);
+}
+function useAdv(){S.advUsed=true;push({advUsed:true});}
+function eventCard(){const rd=ROUNDS[S.round],me=coOf(S.co);
+  let ctx='';if(rd.type==='risk'&&rd.data[S.co].ctx)ctx=`<div class="note"><b>你的處境：</b>${rd.data[S.co].ctx}</div>`;if(rd.hand)ctx=`<div class="note"><b>你的手卡：</b>${rd.hand[S.co]}</div>`;
+  const task=rd.type==='coop'?`這回合是<b>合作回合</b>。走到其他公司門口邀請一家配對，雙方各投入 1～6 資本。鎖定後才公布等級：S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。也可以找主持人說這回合不合作。`
+    :rd.type==='invest'?`這回合是<b>永續投資</b>。回你公司門口，兩位方案顧問各拿一張方案卡（5 或 8 資本）。付費買一張，再判斷它屬於九說的哪一說：答對 5 資本方案得 1 分、8 資本方案得 2 分；答錯不得分，退回 2 或 4 資本。也可以保留資本不投資。你目前有 <b>${S.cap}</b> 資本。`
+    :`這回合是<b>事件＋說</b>。廣場上五位守護者，各舉著${me.name}在這回合可以用的一說。走過去聽聽他們的做法，選一個。答中主持人答案得 1 策略分，<b>每回合只能選一次</b>。`;
+  return card({top:`第 ${S.round+1} 回合・${TYPENAME[rd.type]}・${rd.eraName}`,title:rd.title},rCol(rd),`<p>${rd.event}</p>${ctx}<div class="note task">${task}</div>`,[['出發','go']]);}
+
+async function talkHost(){
+  const rd=ROUNDS[S.round];
+  if(S.phase==='act'){const opts=['重看事件卡','重播前導影片'];if(rd.type==='coop')opts.push('這回合不合作');if(rd.type==='invest')opts.push('這回合不投資');opts.push('沒事了');
+    const i=await dialog('主持人 阿綠',HOSTC,taskHint(),opts);
+    if(opts[i]==='重看事件卡')await eventCard();
+    if(opts[i]==='重播前導影片')await playFilm(S.round);
+    if(opts[i]==='這回合不合作'){const j=await dialog('主持人 阿綠',HOSTC,'確定這回合不找夥伴嗎？資本和分數都維持原狀。',['確定不合作','再想想']);if(j===0)submit({kind:'coop',partner:null});}
+    if(opts[i]==='這回合不投資'){const j=await dialog('主持人 阿綠',HOSTC,'確定這回合保留資本、不投資嗎？會得 0 分。',['確定不投資','再想想']);if(j===0)submit({kind:'invest',plan:-1});}
+    return;}
+  if(S.phase==='wait'){await dialog('主持人 阿綠',HOSTC,'你已經決定好了。等其他組也選完，就會一起亮牌。');return;}
+  if(S.phase==='end'){await dialog('主持人 阿綠',HOSTC,'八回合都結束了，辛苦了！打開手機可以再看一次排行。');return;}
+  await dialog('主持人 阿綠',HOSTC,'今天也是適合做策略的好天氣。');
+}
+async function talkGuardian(n){
+  const rd=ROUNDS[S.round];if(rd.type!=='risk')return;const d=myRisk();const o=d.opts[n.k];const col=TH[o.s].color;
+  if(S.removed.includes(n.k)){await dialog(o.s+'守護者','#b9ad92','主持人說我這回合先退場，去問其他人吧。');return;}
+  if(S.phase!=='act'){await dialog(o.s+'守護者',col,S.cur&&S.cur.ch.includes(n.k)?'你選了我，等大家亮牌吧！':`${TH[o.s].desc}`);return;}
+  if(S.cur.ch.includes(n.k)){await dialog(o.s+'守護者',col,'你已經選了我，再去找另一位吧。');return;}
+  const i=await dialog(o.s+'守護者',col,`${TH[o.s].desc}\n${coOf(S.co).short}用${o.s}會：「${o.a}」`,[`就選${o.s}`,'再想想']);
+  if(i!==0)return;
+  S.cur.ch.push(n.k);n.bang.visible=false;chime(true);
+  if(S.cur.ch.length===1&&S.co==='server'&&!S.advUsed){
+    const j=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「備援產線」：要再選第二個說嗎？任一個答對就得 1 分。全場只能用 1 次。',['使用，再選一個','不用，就這樣']);
+    if(j===0){useAdv();refreshWorld();toast('再去找另一位守護者選第二個說。');return;}}
+  submit({kind:'risk',ch:S.cur.ch.slice()});
+}
+async function askBet(){const max=Math.min(6,S.cap);if(max<1){await dialog('主持人 阿綠',HOSTC,'你手上沒有資本可以投入，這回合沒辦法合作。');return null;}
+  if(!live())return null;const i=await dialog('互賴說',TH['互賴說'].color,`你要投入多少資本？（手上有 ${S.cap}）雙方都會拿回本金，再各拿配對綜效。`,Array.from({length:max},(_,k)=>`投入 ${k+1}`));return live()&&i>=0?i+1:null;}
+async function askGreenUp(){if(S.co!=='green'||S.advUsed)return false;
+  const i=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「綠電供應」：要讓這組合作在公布時升一級嗎？全場只能用 1 次。',['使用綠電供應','不用']);if(i===0&&live()){useAdv();return true;}return false;}
+async function talkHouse(n){
+  const rd=ROUNDS[S.round];const c=coOf(n.co);
+  if(n.co===S.co){await dialog(c.name,c.color,rd&&rd.type==='invest'&&S.phase==='act'?'這是你的公司。門口兩位方案顧問在等你。':`這是你的公司。初始優勢「${ADV[S.co].name}」${S.advUsed?'已經用過了':'還沒用'}。`);return;}
+  const h=humanAny(n.co);
+  if(rd.type!=='coop'||S.phase!=='act'){await dialog(c.name,c.color,h?`這是 ${h.nick||'另一組'} 的公司。`:`這是${c.name}（電腦代打）的公司。合作回合可以來這裡邀請他們。`);return;}
+  const hand=rd.hand?`\n他們的手卡：${rd.hand[n.co]}`:`\n核心：${c.core}；需要：${c.need}`;
+  if(h){ // 真人
+    if(!h.online){await dialog(c.name,c.color,`${h.nick||'這一組'}目前離線（可能手機鎖屏了），先找別家吧。`);return;}
+    if(h.round!==S.round||(h.picks&&h.picks[S.round])){await dialog(c.name,c.color,`${h.nick||'這一組'}現在不在這個回合，或已經完成配對了，找別家吧。`);return;}
+    if(Object.values(invs).some(v=>v&&v.r===S.round&&v.st==='p'&&(v.to===n.co||v.from===n.co))){await dialog(c.name,c.color,'他們正在跟別家談合作，等等再來，或找別家。');return;}
+    const i=await dialog(c.name,c.color,`要邀請 ${h.nick||'這一組'}（真人）合作嗎？${hand}`,['送出合作邀請','再想想']);if(i!==0)return;
+    const bet=await askBet();if(!bet)return;
+    let force=false;if(S.co==='chip'&&!S.advUsed){const j=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「關鍵技術」：要讓對方不能拒絕嗎？全場只能用 1 次。',['使用關鍵技術','不用']);if(j===0){useAdv();force=true;}}
+    const up=await askGreenUp();
+    const id=`r${S.round}_${S.co}_${n.co}`;await roomRef.child('inv/'+id).set({r:S.round,from:S.co,to:n.co,fb:bet,st:'p',force,up});
+    S.phase='inviting';S.inviting={id,co:n.co,bet};refreshWorld();
+    const v=await card({top:'合作邀請',title:`等 ${esc(h.nick||c.name)} 回覆`},TH['互賴說'].color,`<p>你投入 <b>${bet}</b> 資本，邀請${c.name}合作。對方答應後雙方就鎖定，等大家都配對完才公布等級。</p>${force?'<p class="note">你用了「關鍵技術」，對方不能拒絕。</p>':''}`,[['取消邀請','cancel','ghost']]);
+    if(v==='cancel'&&S.inviting){roomRef.child('inv/'+id).update({st:'x'});S.inviting=null;S.phase='act';refreshWorld();if(force){S.advUsed=false;push({advUsed:false});}if(up){S.advUsed=false;push({advUsed:false});}}
+    return;}
+  // 電腦代打
+  const i=await dialog(c.name,c.color,`要找${c.name}（電腦代打）合作嗎？${hand}`,['邀請合作','再想想']);if(i!==0)return;
+  if(Object.values(players).some(p=>p&&p.picks&&p.picks[S.round]&&p.picks[S.round].partner===n.co)){await dialog(c.name,c.color,'不好意思，我們這回合已經答應別組了。');return;}
+  const bet=await askBet();if(!bet)return;const up=await askGreenUp();
+  simBots(S.round-1);const R=rng(S.room+'|bet|'+S.round+'|'+n.co);const pbet=Math.max(1,Math.min(S.bots[n.co]?S.bots[n.co].cap:6,1+Math.floor(R()*6)));
+  await dialog(c.name,c.color,'好啊，一起來！雙方都投入了，等大家配對完就公布等級。');
+  submit({kind:'coop',partner:n.co,bet,pbet,up});
+}
+async function talkAdvisor(n){
+  const rd=ROUNDS[S.round];if(rd.type!=='invest')return;const p=rd.plans[S.co][n.pk];
+  if(S.phase!=='act'){await dialog('方案顧問','#ee8a6c',S.picks[S.round]&&S.picks[S.round].plan===n.pk?'你買了我的方案，等亮牌吧！':'這回合你已經決定好了。');return;}
+  const can=S.cap>=p.cost;
+  const i=await dialog(`方案${'AB'[n.pk]}顧問`,'#ee8a6c',`「${p.short}」\n${p.text}\n成本 ${p.cost} 資本（你有 ${S.cap}）。`,[{t:can?`付 ${p.cost} 資本買下`:'資本不足',dis:!can},'這回合不投資','再想想']);
+  if(i===1){submit({kind:'invest',plan:-1});return;}if(i!==0)return;
+  if(!live())return;const j=await dialog('主持人 阿綠',HOSTC,`你買下了「${p.short}」。這個方案主要靠什麼產生效果？從九說選一個。`,SHUO9);if(j<0||!live())return;
+  submit({kind:'invest',plan:n.pk,guess:SHUO9[j]});chime(true);
+}
+
+/* 收到真人邀請 */
+function onInvs(){
+  if(S.inviting){const v=invs[S.inviting.id];if(v&&v.st==='ok'){const inv=S.inviting;S.inviting=null;closeCard(null);
+      dialog(coOf(inv.co).name,coOf(inv.co).color,'對方接受了！雙方都已鎖定，等大家配對完就公布等級。');submit({kind:'coop',partner:inv.co,bet:inv.bet,pbet:v.tb,up:!!v.up});}
+    else if(v&&v.st==='no'){const inv=S.inviting;S.inviting=null;closeCard(null);S.phase='act';refreshWorld();dialog(coOf(inv.co).name,coOf(inv.co).color,'對方婉拒了，可以再去找別家。');}}
+}
+async function checkIncoming(){
+  if(S.phase!=='act'||uiBusy||overlayOpen()||!roomRef)return;
+  const e=Object.entries(invs).find(([id,v])=>v&&v.to===S.co&&v.r===S.round&&v.st==='p'&&!S.handledInv[id]);if(!e)return;
+  const [id,inv]=e;S.handledInv[id]=1;const c=coOf(inv.from);const h=humanOf(inv.from);
+  const hand=ROUNDS[S.round].hand?`\n他們的手卡：${ROUNDS[S.round].hand[inv.from]}`:'';
+  const i=await dialog('合作邀請',TH['互賴說'].color,`${h?h.nick:c.name}（${c.name}）想和你合作，對方投入 ${inv.fb} 資本。${inv.force?'\n對方用了「關鍵技術」，你不能拒絕。':''}${hand}`,inv.force?['接受']:['接受','婉拒']);
+  if(!live())return;const now=(await roomRef.child('inv/'+id).get()).val();if(!now||now.st!=='p'){await dialog('合作邀請',TH['互賴說'].color,'對方已經取消邀請了。');return;}
+  if(i===1){roomRef.child('inv/'+id).update({st:'no'});return;}
+  let bet=await askBet();if(!bet)bet=inv.force?1:null;if(!bet){roomRef.child('inv/'+id).update({st:'no'});return;}
+  const upMe=await askGreenUp();const up=!!inv.up||upMe;
+  await roomRef.child('inv/'+id).update({tb:bet,st:'ok',up});
+  submit({kind:'coop',partner:inv.from,bet,pbet:inv.fb,up});
+}
+
+/* 送出、等待、亮牌 */
+function submit(pick){if(S.phase!=='act'&&S.phase!=='inviting')return;S.picks[S.round]=pick;push({['picks/'+S.round]:pick});S.phase='wait';S.waitT0=Date.now();refreshWorld();
+  toast(humans().length?'已送出。等其他組選完就一起亮牌。':'已送出，準備亮牌。');setTimeout(checkWait,humans().length?400:1200);}
+function pendingHumans(){return humans().filter(([,p])=>p.round===S.round&&!(p.picks&&p.picks[S.round]));}
+const WAIT_S=75;
+function checkWait(){
+  if(S.phase!=='wait'){$('waitBub').hidden=true;return;}
+  const pend=pendingHumans(),left=Math.max(0,WAIT_S-Math.floor((Date.now()-S.waitT0)/1000));
+  if(pend.length&&left>0&&!S.skipWait){$('waitBub').hidden=false;$('waitTxt').textContent=`等 ${pend.length} 組選完（${pend.map(([,p])=>p.nick||'?').join('、')}）・${left} 秒`;return;}
+  $('waitBub').hidden=true;if(uiBusy||overlayOpen())return;reveal();
+}
+$('skipWait').addEventListener('click',()=>{S.skipWait=true;checkWait();});
+
+function resultOf(co,pick,r,mine){
+  const rd=ROUNDS[r];if(!pick)return {sc:0,cap:0,txt:'還在思考'};
+  if(pick.res&&!mine)return pick.res;
+  if(pick.kind==='risk'){const d=rd.data[co];const ok=pick.ch.includes(d.best);return {sc:ok?1:0,cap:0,ok,txt:pick.ch.length?`選了${pick.ch.map(k=>d.opts[k].s).join('、')}`:'時間到，沒有選說'};}
+  if(pick.kind==='coop'){if(!pick.partner)return {sc:0,cap:0,txt:'這回合沒有合作'};
+    let g=rd.grades[pairKey(co,pick.partner)];if(pick.up)g=upG(g);const tot=Math.min(12,(pick.bet||1)+(pick.pbet||1));const extra=EXTRA[g][Math.max(0,tot-2)];
+    let sc=(g==='S'||g==='A')?1:0,med=false;if(!sc&&g==='B'&&co==='med'&&mine&&!S.advUsed){sc=1;med=true;}
+    return {sc,cap:extra,g,ok:sc>0,med,txt:`和${coOf(pick.partner).short}合作・${g} 級${pick.up?'（綠電升級）':''}・綜效 +${extra}`};}
+  if(pick.kind==='invest'){if(pick.plan<0||pick.plan==null)return {sc:0,cap:0,txt:'保留資本，不投資'};const p=rd.plans[co][pick.plan];const ok=pick.guess===p.ans;
+    return {sc:ok?p.pts:0,cap:ok?-p.cost:-p.cost+p.refund,ok,txt:`買${p.cost} 資本方案，判斷是${pick.guess}`};}
+  return {sc:0,cap:0,txt:''};
+}
+/* 電腦代打：用房號＋回合當亂數種子，同一房間每台電腦算出來一樣 */
+function simBots(r){for(let k=S.botsDone+1;k<=r;k++)simRound(k);if(r>S.botsDone)S.botsDone=r;}
+function simRound(k){
+  const rd=ROUNDS[k];if(!rd)return;const others=COMP.map(c=>c.id).filter(id=>id!==S.co);const out={};
+  others.forEach(co=>{S.bots[co]=S.bots[co]||{cap:6,sc:0};});
+  if(rd.type==='risk')others.forEach(co=>{const R=rng(S.room+'|'+k+'|'+co);const d=rd.data[co];const ok=R()<0.45;const alt=d.opts.map((o,j)=>j).filter(j=>j!==d.best);out[co]={kind:'risk',ch:[ok?d.best:alt[Math.floor(R()*alt.length)]]};});
+  if(rd.type==='invest')others.forEach(co=>{const R=rng(S.room+'|'+k+'|'+co);const b=S.bots[co];let plan=-1;if(b.cap>=8&&R()<0.45)plan=1;else if(b.cap>=5&&R()<0.8)plan=0;
+    const p=plan>=0?rd.plans[co][plan]:null;out[co]={kind:'invest',plan,guess:p?(R()<0.5?p.ans:SHUO9[Math.floor(R()*9)]):null};});
+  if(rd.type==='coop'){const fixed={};const add=(a,pk)=>{if(pk&&pk.kind==='coop'&&pk.partner&&!fixed[pk.partner])fixed[pk.partner]={kind:'coop',partner:a,bet:pk.pbet,pbet:pk.bet,up:pk.up};};
+    add(S.co,S.picks[k]);Object.values(players).forEach(p=>{if(p&&p.co&&p.co!==S.co&&p.picks)add(p.co,p.picks[k]);});
+    const free=others.filter(co=>!fixed[co]&&!humanAny(co));const R=rng(S.room+'|pair|'+k);free.sort(()=>R()-0.5);
+    for(let j=0;j+1<free.length;j+=2){const a=free[j],b=free[j+1];const ba=Math.max(1,Math.min(S.bots[a].cap,1+Math.floor(R()*6))),bb=Math.max(1,Math.min(S.bots[b].cap,1+Math.floor(R()*6)));
+      out[a]={kind:'coop',partner:b,bet:ba,pbet:bb};out[b]={kind:'coop',partner:a,bet:bb,pbet:ba};}
+    others.forEach(co=>{if(!out[co])out[co]=fixed[co]||{kind:'coop',partner:null};});}
+  for(const co of others){const res=resultOf(co,out[co],k,false);out[co].res=res;S.bots[co].cap+=res.cap;S.bots[co].sc+=res.sc;}
+  S.botPick[k]=out;
+}
+async function reveal(){
+  if(S.phase!=='wait')return;S.phase='reveal';$('waitBub').hidden=true;
+  const r=S.round,rd=ROUNDS[r],pick=S.picks[r];simBots(r);
+  const res=resultOf(S.co,pick,r,true);if(res.med)useAdv();
+  S.cap+=res.cap;S.sc+=res.sc;pick.res=res;push({cap:S.cap,sc:S.sc,['picks/'+r]:pick});hud();chime(res.sc>0);
+  let head,detail='';const d=rd.type==='risk'?myRisk():null;
+  if(rd.type==='risk'){const best=d.opts[d.best];head=res.ok?'答對了！得 1 分':'這回合沒答中';
+    detail=`<div class="note"><b>主持人答案：${best.s}</b>。${esc(d.why)}</div><p>你${res.txt}。${pick.ch.filter(k=>k!==d.best).map(k=>`<br>${d.opts[k].s}：${esc(d.opts[k].n)}`).join('')}</p>`;}
+  else if(rd.type==='coop'){head=pick.partner?`${coOf(S.co).short} × ${coOf(pick.partner).short}：${res.g} 級`:'這回合沒有合作';
+    if(pick.partner){const key=pairKey(S.co,pick.partner);detail=`<div class="note">${esc(rd.desc[key])}</div><p>你投入 ${pick.bet}，對方投入 ${pick.pbet}。雙方拿回本金，各拿配對綜效 <b>${res.cap}</b> 資本。${res.sc?'S、A 級得 1 策略分。':'B、C 級不得分。'}${res.med?'你用了「臨床信任」，B 級也得 1 分。':''}</p>`;
+      const bestP=COMP.filter(c=>c.id!==S.co&&rd.grades[pairKey(S.co,c.id)]==='S').map(c=>c.name);if(res.g!=='S')detail+=`<p class="note">這回合${coOf(S.co).name}的 S 級夥伴：${bestP.length?bestP.join('、'):'沒有，A 級就是最好的選擇'}。</p>`;}}
+  else{const p=pick.plan>=0?rd.plans[S.co][pick.plan]:null;head=p?(res.ok?`判斷正確！得 ${p.pts} 分`:`判斷錯誤，退回 ${p.refund} 資本`):'這回合保留資本';
+    detail=rd.plans[S.co].map((q,j)=>`<div class="note"${pick.plan===j?' style="outline:3px solid var(--sun)"':''}><b>方案${'AB'[j]}・${q.cost} 資本「${q.short}」→ ${q.ans}</b><br>${esc(q.why)}</div>`).join('')+(p?`<p>你判斷的是 ${pick.guess}。</p>`:'');}
+  const chips=`<div class="chips">${res.sc?`<span class="chip up">策略分 +${res.sc}</span>`:''}${res.cap?`<span class="chip ${res.cap>0?'up':'dn'}">資本 ${res.cap>0?'+':'−'}${Math.abs(res.cap)}</span>`:''}<span class="chip">目前 ${S.sc} 分・${S.cap} 資本</span></div>`;
+  const rows=COMP.filter(c=>c.id!==S.co).map(c=>{const h=humanAny(c.id);let pk,rs,who;
+    if(h){pk=h.picks&&h.picks[r];rs=pk?resultOf(c.id,pk,r,false):{txt:'還在思考',sc:0};who=h.nick||'真人';}else{pk=S.botPick[r][c.id];rs=pk.res;who='電腦代打';}
+    return `<div class="row"><span class="dot" style="background:${c.color}"></span><span>${c.name}<small>${esc(who)}・${esc(rs.txt||'')}</small></span><span class="pts">${rs.sc?'+'+rs.sc:'0'} 分</span></div>`;}).join('');
+  await card({top:`第 ${r+1} 回合亮牌・${rd.title}`,title:head},rCol(rd),`<div class="res"><span class="big" style="background:${res.sc?'#79c652':'#c9b994'}">${rd.type==='coop'&&pick.partner?res.g:res.sc?'✓':'—'}</span><div>${chips}</div></div>${detail}<h3>其他公司同時亮牌</h3><div class="rows">${rows}</div>`,[[r<ROUNDS.length-1?`前往第 ${r+2} 回合`:'看最終結果','next']]);
+  S.round++;push({round:S.round});hud();
+  if(S.round>=ROUNDS.length)ending();else beginRound();
+}
+
+/* 排行與結局 */
+function standings(){const list=COMP.map(c=>{if(c.id===S.co)return {c,who:S.nick+'（你）',sc:S.sc,cap:S.cap,me:true};const h=humanAny(c.id);if(h)return {c,who:h.nick||'真人',sc:h.sc||0,cap:h.cap??6};const b=S.bots[c.id]||{sc:0,cap:6};return {c,who:'電腦代打',sc:b.sc,cap:b.cap};});
+  return list.sort((a,b)=>b.sc-a.sc||b.cap-a.cap);}
+const stars=n=>'★'.repeat(n)+`<s>${'★'.repeat(5-n)}</s>`;
+async function ending(){S.phase='end';refreshWorld();simBots(ROUNDS.length-1);FX.focus={x:0,z:-3};
+  const st=standings();const avg=st.reduce((a,x)=>a+x.sc,0)/st.length;const isl=Math.max(1,Math.min(5,Math.round(avg/2)));const mine=Math.max(1,Math.min(5,Math.ceil(S.sc/2)));
+  const top=st[0].sc;const winners=st.filter(x=>x.sc===top).map(x=>x.c.name);
+  await talk('主持人 阿綠',HOSTC,['八回合結束了！大家辛苦了。',`這次策略分最高的是：${winners.join('、')}，${top} 分！`,`整座園區的平均是 ${avg.toFixed(1)} 分，園區評價 ${isl} 顆星。`]);
+  const v=await card({top:'八回合結算・滿分 10 分',title:winners.includes(coOf(S.co).name)?'你們是最強的新創！':`${winners.join('、')} 獲勝`},HOSTC,
+   `<div class="res"><div><div class="stars">${stars(mine)}</div><p>你的公司：<b>${S.sc} 分</b>・剩 ${S.cap} 資本</p></div></div>
+    <div class="note">園區評價 <span class="stars" style="font-size:20px">${stars(isl)}</span><br>六家平均 ${avg.toFixed(1)} 分。分數看的是每回合有沒有選對策略邏輯：3.0 重知識與效率，4.0 重信任、共生與治理。</div>
+    <h3>最終排行</h3><div class="rows">${st.map((x,i)=>`<div class="row ${x.me?'me':''}"><span class="dot" style="background:${x.c.color}"></span><span>${i+1}. ${x.c.name}<small>${esc(x.who)}・剩 ${x.cap} 資本</small></span><span class="pts">${x.sc} 分</span></div>`).join('')}</div>`,
+   [['再玩一次','again'],['留在島上逛逛','stay','ghost']]);
+  FX.focus=null;
+  if(v==='again'){S.cap=6;S.sc=0;S.round=0;S.picks={};S.advUsed=false;S.bots={};S.botPick={};S.botsDone=-1;S.handledInv={};push({cap:6,sc:0,round:0,advUsed:false,picks:null});hud();beginRound();}
+}
+
+/* 園區手機 */
+const ICONS={card:'<path d="M5 4h10l4 4v12H5z" fill="#fff"/><path d="M8 11h8M8 14h8M8 17h5" stroke="#20b2a4" stroke-width="1.8" stroke-linecap="round"/>',
+ rule:'<path d="M4 5.5c3-1.5 5-1.5 8 0v14c-3-1.5-5-1.5-8 0zM20 5.5c-3-1.5-5-1.5-8 0v14c3-1.5 5-1.5 8 0z" fill="#fff"/>',
+ rank:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM10 15h4v3h3v2H7v-2h3z" fill="#fff"/>',
+ adv:'<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" fill="#fff"/>',
+ shuo:'<circle cx="12" cy="12" r="8" fill="#fff"/><path d="M12 6v6l4 2" stroke="#ee8a6c" stroke-width="2" stroke-linecap="round"/>',
+map:'<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z" fill="#fff"/><path d="M9 4v14M15 6v14" stroke="#5cb8e6" stroke-width="1.6"/>',
+ prof:'<circle cx="12" cy="8" r="4" fill="#fff"/><path d="M4 21c0-4.5 3.6-7 8-7s8 2.5 8 7z" fill="#fff"/>',
+ snd:'<path d="M4 9h4l5-4v14l-5-4H4z" fill="#fff"/><path d="M16 9c1.5 1.5 1.5 4.5 0 6M18.5 7c3 3 3 7 0 10" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/>'};
+const APPS=[['map','地圖','#5cb8e6'],['prof','思華老師','#4f5a7a'],['card','事件卡','#20b2a4'],['rank','排行','#f0bd2e'],['adv','我的優勢','#ee8a6c'],['shuo','九說小抄','#a454c6'],['rule','規則','#79c652'],['snd','音效','#7ab8e8']];
+function togglePhone(on){const el=$('phone');const show=on===undefined?el.hidden:on;if(show&&(uiBusy&&!cardRes))return;
+  if(show){if(cardRes)return;unlockMouse();el.hidden=false;phoneHome();}else el.hidden=true;lookHint();}
+$('phoneBtn').addEventListener('click',()=>togglePhone());$('phClose').addEventListener('click',()=>{if($('phTitle').textContent!=='園區手機')phoneHome();else togglePhone(false);});
+$('phone').addEventListener('click',e=>{if(e.target.id==='phone')togglePhone(false);const tp=e.target.closest('[data-tp]');if(tp){togglePhone(false);teleport(tp.dataset.tp);return;}const a=e.target.closest('[data-app]');if(a)openApp(a.dataset.app);});
+function phoneHome(){$('phTitle').textContent='園區手機';$('phClose').textContent='關閉';$('phBody').innerHTML=`<div class="apps">${APPS.map(([k,t,c])=>`<button class="app" data-app="${k}"><i style="background:${c}"><svg viewBox="0 0 24 24">${ICONS[k]}</svg></i>${t}</button>`).join('')}</div>
+  <div class="note" style="margin-top:22px">${S.co?`${esc(coOf(S.co).name)}・${esc(S.nick)}<br>第 ${Math.min(S.round+1,8)} / 8 回合・${S.sc} 分・${S.cap} 資本`:''}</div>`;}
+function openApp(k){const b=$('phBody');$('phClose').textContent='返回';const set=t=>$('phTitle').textContent=t;
+  if(k==='prof'){togglePhone(false);talkProf();return;}
+  if(k==='map'){set('地圖・傳送');b.innerHTML=ZONES.map(z=>`<div class="note"><b style="color:${z.color}">${z.name}</b><br>${z.desc}<div class="btns" style="margin-top:8px"><button class="btn" data-tp="${z.id}" style="padding:7px 16px;font-size:14px">傳送到這裡</button></div></div>`).join('');}
+  if(k==='card'){set('事件卡');const rd=ROUNDS[Math.min(S.round,7)];b.innerHTML=`<p><b>第 ${Math.min(S.round,7)+1} 回合・${rd.title}</b></p><p>${rd.event}</p>${rd.hand?`<div class="note"><b>你的手卡：</b>${rd.hand[S.co]}</div>`:''}<div class="note">${taskHint()}</div>`;}
+  if(k==='rank'){set('排行');simBots(S.round-1);b.innerHTML=`<div class="rows">${standings().map((x,i)=>`<div class="row ${x.me?'me':''}"><span class="dot" style="background:${x.c.color}"></span><span>${i+1}. ${x.c.short}<small>${esc(x.who)}・${x.cap} 資本</small></span><span class="pts">${x.sc} 分</span></div>`).join('')}</div>`;}
+  if(k==='adv'){set('我的優勢');const a=ADV[S.co];b.innerHTML=`<div class="note"><b>${a.name}（${a.shuo}）</b><br>${a.text}<br>時機：${a.when}・${S.advUsed?'已經用過':'還沒用'}</div><p>六家的初始優勢都只能用 1 次。合作機會越少的公司，優勢越強，用來補平先天落差。</p>${COMP.filter(c=>c.id!==S.co).map(c=>`<p><b>${c.short}・${ADV[c.id].name}</b>：${ADV[c.id].text}</p>`).join('')}`;}
+  if(k==='shuo'){set('九說小抄');b.innerHTML=SHUO9.map(s=>`<p><b style="color:${TH[s].color}">${s}</b>　${TH[s].desc}</p>`).join('');}
+  if(k==='rule'){set('規則');b.innerHTML=rulesHTML();}
+  if(k==='snd'){S.mute=!S.mute;lsSet('six-mute',S.mute?'1':null);set('音效');b.innerHTML=`<p>音效已${S.mute?'關閉':'開啟'}。</p>`;}
+}
+
+/* ───────── 主迴圈 ───────── */
+const clock=new THREE.Clock();
+let promptNpc=null;
+/* 自動畫質：連續 2 秒低於 45 fps 就降一級（先降解析度、再關陰影），只降不升，避免畫面忽好忽壞 */
+const Q={lv:0,acc:0,n:0};
+function tuneQuality(raw){if(Q.lv>=3||document.hidden)return;Q.acc+=raw;Q.n++;if(Q.acc<2)return;const fps=Q.n/Q.acc;Q.acc=0;Q.n=0;if(fps>=45)return;Q.lv++;
+  if(Q.lv===1)renderer.setPixelRatio(1);
+  if(Q.lv===2){renderer.shadowMap.enabled=false;scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});}
+  if(Q.lv===3)renderer.setPixelRatio(0.75);
+  resize();}
+function loop(){
+  requestAnimationFrame(loop);
+  const raw=clock.getDelta();if(film)return;
+  const dt=Math.min(0.05,raw),t=clock.elapsedTime;if(raw<0.5)tuneQuality(raw);
+  const moving=stepPlayer(dt);
+  if(meCh){meCh.root.position.set(P.x,P.y,P.z);meCh.root.rotation.y=P.ry;animChar(meCh,dt,moving&&P.grounded,t,P.run);plumb.rotation.y=t*1.6;plumb.position.y=4.1+Math.sin(t*2.2)*0.12;}
+  for(const id in remote){const r=remote[id];const dx=r.tx-r.x,dz=r.tz-r.z;const mv=Math.hypot(dx,dz)>0.05;r.x+=dx*Math.min(1,dt*8);r.z+=dz*Math.min(1,dt*8);if(mv)r.ry=Math.atan2(dx,dz);r.ch.root.position.set(r.x,H(r.x,r.z),r.z);r.ch.root.rotation.y=r.ry;animChar(r.ch,dt,mv,t);}
+  NPCS.forEach(n=>{if(n.ch&&n.ch.root.visible)animChar(n.ch,dt,false,t);if(n.bang&&n.bang.visible)n.bang.position.y=4.9+Math.abs(Math.sin(t*3+(n.k||0)))*0.35;});
+  for(const k in FX.houseBang){const b=FX.houseBang[k];if(b.visible)b.position.y=9.6+Math.abs(Math.sin(t*3))*0.4;}
+  ROTORS.forEach((r,i)=>{r.rotation.z=t*(1.1+i*0.07);});
+  BEACONS.forEach(b=>{b.cr.rotation.y=t*1.2;b.cr.position.y=b.y+2.2+Math.sin(t*2)*0.2;b.ring.position.y=b.cr.position.y;b.ring.scale.setScalar(1+Math.sin(t*2)*0.06);});
+  stepCamera(dt,t);pubPos2(t);
+  if(S.phase!=='lobby'&&!uiBusy&&!overlayOpen()){const n=nearest();if(n!==promptNpc){promptNpc=n;$('prompt').hidden=!n;if(n){const act=activeNpc(n);
+      $('promptTxt').textContent=n.kind==='house'?(n.co===S.co?'你的公司':act?`拜訪 ${n.name}（邀請合作）`:`看看 ${n.name}`):n.kind==='shuo'?`和 ${ROUNDS[S.round].data[S.co].opts[n.k].s}守護者 說話`:n.kind==='plan'?`聽 方案${'AB'[n.pk]} 的介紹`:
+        n.kind==='prof'?'請教 思華老師':n.kind==='board'?'看 規則布告欄':n.kind==='beacon'?'使用 傳送信標':n.kind==='folk'?`和 ${n.name} 聊聊`:'和 主持人 說話';}}}
+  else if(promptNpc!==null){promptNpc=null;$('prompt').hidden=true;}
+  renderer.render(scene,camera);
+}
+setInterval(()=>{if(NPCS.length){checkWait();checkIncoming();tickTimer();}},500);
+if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H};
+(async()=>{try{await Promise.race([Promise.all([document.fonts.load('44px Huninn'),document.fonts.load('600 20px Fredoka')]),sleep(3500)]);}catch(e){}
+  buildWorld();buildNpcs();refreshWorld();loop();})();
+(async()=>{renderLobby();await netInit();
+  if(db){const last=lsGet('six-room');const q=(location.hash.match(/^#([A-Za-z0-9]{4})$/)||[])[1];const code=(q||last||'').toUpperCase();if(/^[A-Z0-9]{4}$/.test(code))joinRoom(code);}
+  renderLobby();})();
+})();
+</script>
+</body>
+</html>
