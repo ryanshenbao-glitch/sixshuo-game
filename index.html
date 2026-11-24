@@ -176,6 +176,15 @@ th{color:var(--ink2);font-weight:400;font-size:13px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body.talk #joy,body.talk #aBtn{display:none!important}
+#film{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:linear-gradient(#bfe9f7,#fff6df);padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.film-box{width:min(100%,1100px);display:flex;flex-direction:column;gap:12px}
+#filmC,#filmV{width:100%;max-width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 120px);object-fit:contain;border-radius:28px;background:#fff6df;display:block;border:6px solid #fff;box-shadow:var(--pop)}
+.film-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--ink)}
+#filmLabel{flex:1 1 200px;min-width:0;font-size:16px}
+.film-prog{flex:1 1 160px;height:8px;border-radius:4px;background:rgba(110,88,61,.12);overflow:hidden}
+.film-prog i{display:block;height:100%;width:0;background:var(--teal)}
+.film-bar .btn{font-size:14px;padding:8px 16px}
+.film-bar label.btn{cursor:pointer}
 #err{position:fixed;inset:0;display:grid;place-items:center;font-size:18px;padding:16px;text-align:center}
 </style>
 </head>
@@ -203,6 +212,7 @@ body.talk #joy,body.talk #aBtn{display:none!important}
   <div id="joy" hidden><div id="knob"></div></div>
   <button id="aBtn" hidden aria-label="對話">A</button>
 </div>
+<div id="film" hidden><div class="film-box"><canvas id="filmC" width="1280" height="720"></canvas><video id="filmV" playsinline hidden></video><div class="film-bar"><span id="filmLabel"></span><div class="film-prog"><i id="filmProg"></i></div><label class="btn ghost">換成自己的影片<input type="file" id="filmFile" accept="video/*" hidden></label><button class="btn" id="filmSkip">略過影片</button></div></div></div>
 <div class="ovl" id="cardWrap" hidden><div class="card" id="card" role="dialog" aria-modal="true"></div></div>
 <div class="ovl" id="phone" hidden><div class="ph"><div class="ph-top"><b id="phTitle">園區手機</b><button id="phClose">關閉</button></div><div class="ph-body" id="phBody"></div></div></div>
 
@@ -591,7 +601,7 @@ function makeMe(){const i=CI[S.co];meCh=chibi(COMP[i].color,i);scene.add(meCh.ro
 const K={};const joy={x:0,y:0};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;K[e.code]=true;
   if(e.code==='Tab'){if(S.phase==='lobby'||dlgActive()||!$('cardWrap').hidden)return;e.preventDefault();togglePhone();return;}
-  if(e.code==='Escape'){if(!$('phone').hidden)togglePhone(false);return;}
+  if(e.code==='Escape'){if(film){endFilm();return;}if(!$('phone').hidden)togglePhone(false);return;}
   if(['KeyE','Space','Enter'].includes(e.code)){if(dlgActive()){e.preventDefault();dlgAdvance();return;}if(!uiBusy&&!overlayOpen()){e.preventDefault();interact();}}
   if(/^Digit[1-9]$/.test(e.code)&&dlgActive()){const b=$('choices').querySelectorAll('.ch')[+e.code.slice(5)-1];if(b&&!b.disabled)b.click();}});
 addEventListener('keyup',e=>{K[e.code]=false;});
@@ -640,13 +650,13 @@ function stepPlayer(dt){
   const want=Math.atan2(vx,vz);let d=want-P.ry;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;P.ry+=d*Math.min(1,dt*12);
   return true;
 }
-const camPos=new THREE.Vector3(0,26,40),camLook=new THREE.Vector3();
+const camPos=new THREE.Vector3(0,26,40),camLook=new THREE.Vector3(),_v1=new THREE.Vector3(),_v2=new THREE.Vector3();
 let lobbyT=0;
 function stepCamera(dt,t){
   if(S.phase==='lobby'||!meCh){lobbyT+=dt*0.06;camera.position.set(Math.sin(lobbyT)*62,40,Math.cos(lobbyT)*62);camera.lookAt(0,0,0);return;}
   const focus=FX.focus||{x:P.x,z:P.z};const narrow=innerWidth<innerHeight;
-  const tgt=new THREE.Vector3(focus.x,narrow?31:19,focus.z+(narrow?27:18));camPos.lerp(tgt,Math.min(1,dt*3.2));camera.position.copy(camPos);
-  camLook.lerp(new THREE.Vector3(focus.x,0.8,focus.z),Math.min(1,dt*4));camera.lookAt(camLook);
+  camPos.lerp(_v1.set(focus.x,narrow?31:19,focus.z+(narrow?27:18)),Math.min(1,dt*3.2));camera.position.copy(camPos);
+  camLook.lerp(_v2.set(focus.x,0.8,focus.z),Math.min(1,dt*4));camera.lookAt(camLook);
   sun.position.set(focus.x-22,40,focus.z+16);sun.target.position.set(focus.x,0,focus.z);
 }
 
@@ -662,6 +672,7 @@ function activeNpc(n){
 function visibleNpc(n){const rd=ROUNDS[S.round];if(n.kind==='shuo')return !!rd&&rd.type==='risk'&&S.phase!=='lobby'&&S.phase!=='end';if(n.kind==='plan')return !!rd&&rd.type==='invest'&&S.phase!=='lobby'&&S.phase!=='end';return true;}
 function nearest(){let best=null,bd=2.9;for(const n of NPCS){if(n.ch&&!n.ch.root.visible)continue;const d=Math.hypot(n.pos.x-P.x,n.pos.z-P.z);if(d<bd){bd=d;best=n;}}return best;}
 function refreshWorld(){
+  if(!FX.houseBang)return;
   const rd=ROUNDS[S.round];
   NPCS.forEach(n=>{if(n.ch)n.ch.root.visible=visibleNpc(n);if(n.bang)n.bang.visible=activeNpc(n);});
   COMP.forEach(c=>{FX.houseBang[c.id].visible=activeNpc(NPCS.find(n=>n.id==='h'+c.id));});
@@ -796,6 +807,124 @@ async function welcome(){S.phase='intro';refreshWorld();FX.focus={x:0,z:-3};
   await talk('主持人 阿綠',HOSTC,[`歡迎來到 AI 園區小島，${S.nick}！我是主持人阿綠。`,`你代表「${coOf(S.co).name}」，手上有 6 資本、0 策略分。接下來八回合，每回合開始我都會在這裡宣布事件。`,`你的初始優勢是「${ADV[S.co].name}」：${ADV[S.co].text}全場只能用 1 次，時機到了我會問你。`,'走路用 WASD 或直接點地面；走到人旁邊按 E（手機按 A）就能對話。按 Tab 或右上角的手機，可以看規則、排行和事件卡。']);
   beginRound();}
 
+let film=null;
+const NOSTART='，。、；：）」』！？';
+function wrap(x,text,maxW){const out=[];let cur='';for(const ch of text){const t=cur+ch;if(x.measureText(t).width>maxW&&cur&&!NOSTART.includes(ch)){out.push(cur);cur=ch;}else cur=t;}if(cur)out.push(cur);return out;}
+/* ───────── 風險快訊影片 ───────── */
+const userVideos={};
+const ease=v=>v<=0?0:v>=1?1:1-Math.pow(1-v,3);
+function splitSent(t){return (t.match(/[^。？！]+[。？！]?/g)||[t]).map(s=>s.trim()).filter(Boolean);}
+function gear(x,cx,cy,r,teeth,rot,fill){x.save();x.translate(cx,cy);x.rotate(rot);x.beginPath();for(let k=0;k<teeth*2;k++){const a=k*Math.PI/teeth;const rad=k%2?r:r+18;x.lineTo(Math.cos(a-0.13)*rad,Math.sin(a-0.13)*rad);x.lineTo(Math.cos(a+0.13)*rad,Math.sin(a+0.13)*rad);}x.closePath();x.fillStyle=fill;x.fill();x.fillStyle='#ffffff';x.beginPath();x.arc(0,0,r*0.35,0,7);x.fill();x.restore();}
+function stamp(x,txt,cx,cy,col,k){if(k<=0)return;x.save();x.translate(cx,cy);x.rotate(-0.12);const s=1+(1-Math.min(1,k))*0.8;x.scale(s,s);x.globalAlpha=Math.min(1,k);x.font='54px '+FONT;const w=x.measureText(txt).width+52;x.strokeStyle=col;x.lineWidth=7;x.strokeRect(-w/2,-42,w,84);x.fillStyle=col;x.textAlign='center';x.textBaseline='middle';x.fillText(txt,0,2);x.restore();}
+const SCENES=[
+ // 0 算力需求暴增
+ (x,t,col)=>{const bx=110,by=520;x.strokeStyle='#d9c89f';x.lineWidth=3;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+470,by);x.stroke();
+  [60,85,110,150,210,300].forEach((v,k)=>{const h=v*ease((t-0.3-k*0.3)/0.6);x.fillStyle=k===5?col:'#e2cfa4';x.fillRect(bx+22+k*74,by-h,50,h);});
+  x.textAlign='left';x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('AI 算力需求',bx,by+38);
+  const gate=1080,cy=400;x.fillStyle='#efe2c3';x.fillRect(660,cy+44,440,14);
+  for(let k=0;k<8;k++){const px=Math.min(620+t*170-k*70,gate-48-k*52);if(px<640)continue;x.fillStyle='#fff';x.strokeStyle='#8a6a48';x.lineWidth=3;x.fillRect(px,cy,44,44);x.strokeRect(px,cy,44,44);x.fillStyle='#8a6a48';x.fillRect(px+14,cy+14,16,16);}
+  x.fillStyle=col;x.fillRect(gate,cy-50,14,108);x.textAlign='center';x.fillStyle='#6e583d';x.font='900 30px '+FONT;x.fillText('交付瓶頸',gate+7,cy-74);
+  const wk=Math.max(1,6-Math.floor(t/1.6));x.font='700 26px '+FONT;x.fillStyle='#a08a6b';x.fillText('距離交付',880,200);x.font='900 84px '+FONT;x.fillStyle=col;x.fillText(wk+' 週',880,270);},
+ // 1 原型整合標案
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#a08a6b';x.font='700 28px '+FONT;x.fillText('設備整合 · 院端部署 · 能源管理 · 製造',640,215);
+  const e=ease((t-0.5)/1.6);const lx=200+260*e,rx=1080-260*e;
+  [[lx,'技術','#e2cfa4'],[rx,'應用',col]].forEach(([cx,label,fill])=>{x.fillStyle=fill;rr(x,cx-120,300,240,150,18);x.fill();x.fillStyle='#fff';x.font='900 50px '+FONT;x.fillText(label,cx,377);});
+  if(e>=1){x.strokeStyle=col;x.lineWidth=6;const pulse=70+10*Math.sin(t*6);for(let k=0;k<8;k++){const a=k*Math.PI/4+t;x.beginPath();x.moveTo(640+Math.cos(a)*36,375+Math.sin(a)*36);x.lineTo(640+Math.cos(a)*pulse,375+Math.sin(a)*pulse);x.stroke();}}
+  const wk=Math.max(1,6-Math.floor(t/1.5));x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('原型展示倒數 '+wk+' 週',640,535);},
+ // 2 客戶要求客製
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';x.fillStyle='#a08a6b';x.font='700 28px '+FONT;x.fillText('標準品 → 每家客戶都要不一樣的版本',640,210);
+  for(let k=0;k<6;k++){const cx=170+k*188,cy=360;const e=ease((t-0.6-k*0.45)/0.7);const w=90+Math.sin(k*1.7+1)*40*e,h=90+Math.cos(k*1.3)*40*e;
+   x.fillStyle='#fff';x.strokeStyle=e>0.99?col:'#c9b994';x.lineWidth=5;x.fillRect(cx-w/2,cy-h/2,w,h);x.strokeRect(cx-w/2,cy-h/2,w,h);
+   if(e>0.99){x.strokeStyle=col;x.lineWidth=9;x.beginPath();x.moveTo(cx-22,cy+96);x.lineTo(cx-4,cy+114);x.lineTo(cx+28,cy+78);x.stroke();}}
+  const wk=Math.max(1,8-Math.floor(t/1.2));x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('續約倒數 '+wk+' 週',640,540);},
+ // 3 AI 電力危機
+ (x,t,col)=>{const cx=330,cy=480,r=180;x.lineWidth=34;x.strokeStyle='#efe2c3';x.beginPath();x.arc(cx,cy,r,Math.PI,0);x.stroke();
+  const f=0.7-0.62*ease(t/5.5);x.strokeStyle=col;x.beginPath();x.arc(cx,cy,r,Math.PI,Math.PI+Math.PI*f);x.stroke();
+  const a=Math.PI+Math.PI*f;x.strokeStyle='#6e583d';x.lineWidth=8;x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(a)*(r-30),cy+Math.sin(a)*(r-30));x.stroke();x.fillStyle='#6e583d';x.beginPath();x.arc(cx,cy,14,0,7);x.fill();
+  x.textAlign='center';x.textBaseline='middle';x.font='900 54px '+FONT;x.fillStyle='#6e583d';x.fillText((f*15).toFixed(1)+'%',cx,cy-70);x.font='700 26px '+FONT;x.fillStyle='#a08a6b';x.fillText('備轉容量率',cx,cy+44);
+  [[640,150,260],[780,120,320],[890,160,220],[1040,110,290],[1140,110,230]].forEach(([bx,bw,bh],k)=>{x.fillStyle='#f3e8cf';x.fillRect(bx,550-bh,bw-14,bh);
+   for(let r2=0;r2<Math.floor((bh-20)/40);r2++)for(let c2=0;c2<3;c2++){const id=k*37+r2*7+c2*3;const off=((id*9301+49297)%233280)/233280<ease((t-1)/5);x.fillStyle=off?'#d6c9a8':'#f8d454';x.fillRect(bx+10+c2*((bw-30)/3),550-bh+14+r2*40,(bw-50)/3,22);}});
+  if(Math.sin(t*9)>0.5&&t<5){x.fillStyle=col;x.beginPath();x.moveTo(960,200);x.lineTo(920,290);x.lineTo(955,290);x.lineTo(925,380);x.lineTo(1005,265);x.lineTo(965,265);x.lineTo(995,200);x.closePath();x.fill();}
+  stamp(x,'碳費上路',700,220,col,(t-3)/0.5);},
+ // 4 供應鏈共同減碳
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';gear(x,470,380,90,10,t*0.9,'#e2cfa4');gear(x,662,380,90,10,-t*0.9+0.31,col);
+  const s=1-0.35*ease((t-1.5)/4);const cx=1010,cy=350;x.fillStyle='#f3e8cf';[[0,0,90],[-80,20,60],[80,20,62],[-40,-40,58],[40,-45,60]].forEach(([dx,dy,r])=>{x.beginPath();x.arc(cx+dx*s,cy+dy*s,r*s,0,Math.PI*2);x.fill();});
+  x.fillStyle='#8a6a48';x.font='900 '+Math.round(54*s)+'px '+FONT;x.fillText('CO2',cx,cy+6);
+  x.font='900 40px '+FONT;x.fillStyle=col;x.fillText('排放 '+Math.round(100-30*ease((t-1.5)/4)),cx,cy+150);
+  x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('兩家公司 · 一份可查證的減碳方案',566,540);},
+ // 5 AI 供應鏈信任危機
+ (x,t,col)=>{const cy=390;const broken=t>3;
+  for(let k=0;k<7;k++){const lx=190+k*150;x.lineWidth=14;x.strokeStyle=broken&&k===3?'#d9c89f':'#8a6a48';x.beginPath();
+   if(broken&&k===3)x.ellipse(lx,cy+22,70,30,0.25,0.4,Math.PI*2-0.4);else x.ellipse(lx,cy,70,k%2?16:34,0,0,Math.PI*2);x.stroke();}
+  const mx=150+((t*200)%980),my=cy-10;x.lineWidth=10;x.strokeStyle=col;x.beginPath();x.arc(mx,my,62,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(mx+44,my+44);x.lineTo(mx+100,my+100);x.stroke();
+  stamp(x,'供應鏈重新審查',640,230,col,(t-1.8)/0.5);},
+ // 6 限電下的供電危機
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const night=t>4;
+  if(night){x.fillStyle='#5d74a8';x.fillRect(60,150,1160,420);x.fillStyle='#fffcf1';x.beginPath();x.arc(1060,230,40,0,Math.PI*2);x.fill();x.fillStyle='#5d74a8';x.beginPath();x.arc(1078,218,36,0,Math.PI*2);x.fill();}
+  else{const a=Math.PI*(1-Math.min(1,t/4));x.fillStyle='#f8d454';x.beginPath();x.arc(640+Math.cos(a)*480,520-Math.sin(a)*300,38,0,Math.PI*2);x.fill();}
+  const lv=night?0.92-0.5*ease((t-4)/4):0.2+0.72*ease(t/4);
+  x.fillStyle=night?'#6e84b8':'#fff';x.strokeStyle=col;x.lineWidth=6;x.fillRect(560,260,160,240);x.strokeRect(560,260,160,240);x.fillStyle=col;x.fillRect(605,240,70,20);x.fillRect(572,488-216*lv,136,216*lv);
+  x.fillStyle=night?'#fff':'#6e583d';x.font='900 30px '+FONT;x.fillText(Math.round(lv*100)+'%',640,225);
+  x.font='700 28px '+FONT;x.fillStyle=night?'#fffcf1':'#a08a6b';x.fillText(night?'晚間尖峰：儲能優先供給關鍵設備':'白天：綠電充進園區儲能',640,535);
+  stamp(x,'晚間限電',300,240,night?'#f8d454':col,(t-1.5)/0.5);},
+ // 7 旱季限水
+ (x,t,col)=>{x.textAlign='center';x.textBaseline='middle';const lv=0.85-0.6*ease(t/6);
+  x.strokeStyle='#8a6a48';x.lineWidth=6;x.strokeRect(180,200,380,330);x.fillStyle='#5ccbe6';x.fillRect(183,530-327*lv,374,327*lv);
+  const ly=530-327*0.45;x.setLineDash([16,12]);x.strokeStyle=col;x.lineWidth=5;x.beginPath();x.moveTo(160,ly);x.lineTo(580,ly);x.stroke();x.setLineDash([]);
+  x.fillStyle=col;x.font='900 28px '+FONT;x.textAlign='left';x.fillText('限額',590,ly);x.textAlign='center';
+  x.fillStyle='#a08a6b';x.font='700 26px '+FONT;x.fillText('淡水取用量',370,560);
+  x.fillStyle='#b9a988';x.fillRect(800,230,200,26);x.fillRect(975,230,26,70);
+  for(let k=0;k<4;k++){const y=310+((t*160+k*60)%200);x.fillStyle='#5ccbe6';x.beginPath();x.moveTo(988,y-14);x.quadraticCurveTo(1002,y+4,988,y+8);x.quadraticCurveTo(974,y+4,988,y-14);x.fill();}
+  stamp(x,'限水',880,450,col,(t-2)/0.5);}
+];
+function chunkLines(text){const out=[];(text.match(/[^。？！]+[。？！]?/g)||[text]).forEach(seg=>{seg=seg.trim();if(!seg)return;
+  if(seg.length<=26){out.push(seg);return;}let cur='';seg.split(/(?<=，)/).forEach(p=>{if((cur+p).length>26&&cur){out.push(cur);cur=p;}else cur+=p;});if(cur)out.push(cur);});return out;}
+function boom(big){if(S.mute)return;(big?[784,988,1319]:[659]).forEach((fq,i)=>setTimeout(()=>blip(fq,big?0.5:0.35,big?0.05:0.035,'sine'),i*120));}
+function cloud(x,cx,cy,k){x.beginPath();[[0,0,46],[44,-14,38],[86,4,34],[40,16,40]].forEach(([dx,dy,r])=>{x.moveTo(cx+dx*k+r*k,cy+dy*k);x.arc(cx+dx*k,cy+dy*k,r*k,0,Math.PI*2);});x.fill();}
+function drawFilm(now){
+  const c=$('filmC'),x=c.getContext('2d');const t=(now-film.t0)/1000;const rd=ROUNDS[film.i];const col=rCol(rd);
+  const g=x.createLinearGradient(0,0,0,720);g.addColorStop(0,'#bfe9f7');g.addColorStop(0.75,'#fff6df');x.fillStyle=g;x.fillRect(0,0,1280,720);
+  x.fillStyle='rgba(255,255,255,.9)';for(let k=0;k<4;k++){cloud(x,((t*16+k*380)%1700)-200,80+(k%2)*46,0.9+(k%2)*0.3);}
+  x.fillStyle='#cdeaa6';x.beginPath();x.ellipse(640,900,980,330,0,0,Math.PI*2);x.fill();
+  x.save();SCENES[rd.scene](x,t,col);x.restore();
+  const L=film.lines,per=film.per,t0=1.8,tEnd=t0+L.length*per;
+  x.textAlign='center';x.textBaseline='middle';
+  const bubble=(txt,a)=>{x.save();x.globalAlpha=a;x.fillStyle='rgba(110,88,61,.16)';rr(x,150,592,980,112,50);x.fill();x.fillStyle='#fffcf1';rr(x,150,586,980,112,50);x.fill();
+    x.fillStyle=col;rr(x,184,566,200,42,21);x.fill();x.fillStyle='#fff';x.font='24px '+FONT;x.fillText('園區快報',284,588);
+    x.fillStyle='#6e583d';x.font='36px '+FONT;const ls=wrap(x,txt,900).slice(0,2);ls.forEach((l,j)=>x.fillText(l,640,642+(j-(ls.length-1)/2)*44));x.restore();};
+  if(t<t0){const a=Math.min(1,t/0.5)*Math.min(1,(t0-t)/0.4);x.save();x.globalAlpha=Math.max(0,a);
+    x.fillStyle='#fffcf1';rr(x,400,250,480,190,46);x.fill();x.fillStyle=col;rr(x,520,228,240,50,25);x.fill();
+    x.fillStyle='#fff';x.font='26px '+FONT;x.fillText(TYPENAME[rd.type],640,253);x.fillStyle='#6e583d';x.font='72px '+FONT;x.fillText('第 '+(film.i+1)+' 回合',640,350);x.fillStyle='#a08a6b';x.font='26px '+FONT;x.fillText(rd.eraName,640,410);x.restore();}
+  else if(t<tEnd){const idx=Math.floor((t-t0)/per);const lt=(t-t0)-idx*per;if(film.last!==idx){film.last=idx;boom(false);}
+    bubble(L[idx].slice(0,Math.ceil(L[idx].length*Math.min(1,lt/(per*0.5)))),Math.min(1,lt/0.25)*Math.min(1,(per-lt)/0.25)+0.001);}
+  else{const lt=t-tEnd;if(film.last!=='end'){film.last='end';boom(true);}const a=Math.min(1,lt/0.5);x.save();x.globalAlpha=a;
+    const s2=0.92+0.08*ease(lt/0.5);x.translate(640,360);x.scale(s2,s2);x.translate(-640,-360);
+    x.fillStyle='rgba(110,88,61,.16)';rr(x,170,206,940,300,60);x.fill();x.fillStyle='#fffcf1';rr(x,170,198,940,300,60);x.fill();
+    x.fillStyle=col;rr(x,470,174,340,52,26);x.fill();x.fillStyle='#fff';x.font='26px '+FONT;x.fillText('第 '+(film.i+1)+' 回合 · '+rd.eraName,640,200);
+    x.fillStyle='#6e583d';let fs=84;x.font=fs+'px '+FONT;while(x.measureText(rd.title).width>860&&fs>44){fs-=4;x.font=fs+'px '+FONT;}x.fillText(rd.title,640,330);
+    const e=ease(lt/0.8);x.fillStyle=col;rr(x,640-150*e,392,300*e,8,4);x.fill();
+    x.fillStyle='#a08a6b';x.font='32px '+FONT;x.fillText(rd.type==='coop'?'找到你的夥伴':rd.type==='invest'?'押上你的資本':'選擇你的說',640,448);x.restore();}
+  $('filmProg').style.width=Math.min(100,t/film.dur*100)+'%';
+  if(t>=film.dur)endFilm();
+}
+function playFilm(i){return new Promise(then=>{
+  uiBusy++;for(const k in K)K[k]=false;$('prompt').hidden=true;
+  const rd=ROUNDS[i];const lines=rd.trailer||chunkLines(rd.event);const per=lines.length>8?2.3:2.8;
+  film={i,then,t0:performance.now(),dur:1.8+lines.length*per+3.2,lines,per,last:null,video:false};
+  $('filmLabel').textContent='第 '+(i+1)+' 回合 · '+rd.title;$('filmProg').style.width='0%';
+  const v=$('filmV');
+  if(userVideos[i]){film.video=true;v.src=userVideos[i];v.hidden=false;$('filmC').hidden=true;try{v.currentTime=0;}catch(e){}v.play().catch(()=>{});}
+  else{v.hidden=true;$('filmC').hidden=false;}
+  $('film').hidden=false;boom(true);
+  setTimeout(()=>$('filmSkip').focus({preventScroll:true}),30);
+  const tick=now=>{if(!film)return;if(!film.video)drawFilm(now);requestAnimationFrame(tick);};requestAnimationFrame(tick);
+});}
+function endFilm(){if(!film)return;const f=film;film=null;try{$('filmV').pause();}catch(e){}$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});if(f.then)f.then();}
+$('filmSkip').addEventListener('click',endFilm);
+$('filmV').addEventListener('ended',endFilm);
+$('filmFile').addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f||!film)return;const url=URL.createObjectURL(f);userVideos[film.i]=url;film.video=true;
+  const v=$('filmV');v.src=url;v.hidden=false;$('filmC').hidden=true;v.play().catch(()=>{});e.target.value='';});
+
 /* ───────── 回合流程 ───────── */
 const myRisk=()=>ROUNDS[S.round].data[S.co];
 function taskHint(){const rd=ROUNDS[S.round];return rd.type==='risk'?'去廣場找頭上有「!」的說守護者，選一個說。':rd.type==='coop'?'走到其他公司家門口，邀請一家合作。':'回你自己的公司門口，跟兩位方案顧問談投資。';}
@@ -803,9 +932,9 @@ async function beginRound(){
   const r=S.round,rd=ROUNDS[r];S.phase='intro';S.cur={ch:[]};S.removed=[];S.inviting=null;S.skipWait=false;
   push({round:r});hud();refreshWorld();P.x=0;P.z=9.5;P.tx=null;P.ry=Math.PI;FX.focus={x:0,z:-3};
   banner(`第 ${r+1} 回合・${rd.eraName}`,rd.title,rCol(rd));blip(523,0.15,0.05,'sine');setTimeout(()=>blip(784,0.2,0.05,'sine'),160);
-  await sleep(1500);
-  const lines=[];for(let k=0;k<rd.trailer.length;k+=2)lines.push(rd.trailer.slice(k,k+2).join('\n'));
-  await talk('主持人 阿綠',rCol(rd),lines);
+  await sleep(1200);
+  await playFilm(r);
+  await dialog('主持人 阿綠',rCol(rd),`第 ${r+1} 回合「${rd.title}」開始了！事件卡在這裡，看完就出發吧。`);
   await eventCard();
   if(rd.type==='risk'&&S.co==='mfg'&&!S.advUsed){
     const i=await dialog('主持人 阿綠',HOSTC,'你有初始優勢「共用模組」：要我先刪掉兩個錯誤選項嗎？全場只能用 1 次。',['使用共用模組','留到之後再用']);
@@ -827,9 +956,10 @@ function eventCard(){const rd=ROUNDS[S.round],me=coOf(S.co);
 
 async function talkHost(){
   const rd=ROUNDS[S.round];
-  if(S.phase==='act'){const opts=['重看事件卡'];if(rd.type==='coop')opts.push('這回合不合作');if(rd.type==='invest')opts.push('這回合不投資');opts.push('沒事了');
+  if(S.phase==='act'){const opts=['重看事件卡','重播前導影片'];if(rd.type==='coop')opts.push('這回合不合作');if(rd.type==='invest')opts.push('這回合不投資');opts.push('沒事了');
     const i=await dialog('主持人 阿綠',HOSTC,taskHint(),opts);
     if(opts[i]==='重看事件卡')await eventCard();
+    if(opts[i]==='重播前導影片')await playFilm(S.round);
     if(opts[i]==='這回合不合作'){const j=await dialog('主持人 阿綠',HOSTC,'確定這回合不找夥伴嗎？資本和分數都維持原狀。',['確定不合作','再想想']);if(j===0)submit({kind:'coop',partner:null});}
     if(opts[i]==='這回合不投資'){const j=await dialog('主持人 阿綠',HOSTC,'確定這回合保留資本、不投資嗎？會得 0 分。',['確定不投資','再想想']);if(j===0)submit({kind:'invest',plan:-1});}
     return;}
@@ -1020,11 +1150,19 @@ function openApp(k){const b=$('phBody');$('phClose').textContent='返回';const 
 }
 
 /* ───────── 主迴圈 ───────── */
-buildIsland();buildNpcs();refreshWorld();
 const clock=new THREE.Clock();
 let promptNpc=null;
+/* 自動畫質：連續 2 秒低於 45 fps 就降一級（先降解析度、再關陰影），只降不升，避免畫面忽好忽壞 */
+const Q={lv:0,acc:0,n:0};
+function tuneQuality(raw){if(Q.lv>=3||document.hidden)return;Q.acc+=raw;Q.n++;if(Q.acc<2)return;const fps=Q.n/Q.acc;Q.acc=0;Q.n=0;if(fps>=45)return;Q.lv++;
+  if(Q.lv===1)renderer.setPixelRatio(1);
+  if(Q.lv===2){renderer.shadowMap.enabled=false;scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});}
+  if(Q.lv===3)renderer.setPixelRatio(0.75);
+  resize();}
 function loop(){
-  const dt=Math.min(0.05,clock.getDelta()),t=clock.elapsedTime;
+  requestAnimationFrame(loop);
+  const raw=clock.getDelta();if(film)return;
+  const dt=Math.min(0.05,raw),t=clock.elapsedTime;if(raw<0.5)tuneQuality(raw);
   const moving=stepPlayer(dt);
   if(meCh){meCh.root.position.set(P.x,0,P.z);meCh.root.rotation.y=P.ry;animChar(meCh,dt,moving,t);plumb.rotation.y=t*1.6;plumb.position.y=4.1+Math.sin(t*2.2)*0.12;}
   for(const id in remote){const r=remote[id];const dx=r.tx-r.x,dz=r.tz-r.z;const mv=Math.hypot(dx,dz)>0.05;r.x+=dx*Math.min(1,dt*8);r.z+=dz*Math.min(1,dt*8);if(mv)r.ry=Math.atan2(dx,dz);r.ch.root.position.set(r.x,0,r.z);r.ch.root.rotation.y=r.ry;animChar(r.ch,dt,mv,t);}
@@ -1036,11 +1174,12 @@ function loop(){
   if(S.phase!=='lobby'&&!uiBusy&&!overlayOpen()){const n=nearest();if(n!==promptNpc){promptNpc=n;$('prompt').hidden=!n;if(n){const act=activeNpc(n);
       $('promptTxt').textContent=n.kind==='house'?(n.co===S.co?'你的公司':act?`拜訪 ${n.name}（邀請合作）`:`看看 ${n.name}`):n.kind==='shuo'?`和 ${ROUNDS[S.round].data[S.co].opts[n.k].s}守護者 說話`:n.kind==='plan'?`聽 方案${'AB'[n.pk]} 的介紹`:'和 主持人 說話';}}}
   else if(promptNpc!==null){promptNpc=null;$('prompt').hidden=true;}
-  renderer.render(scene,camera);requestAnimationFrame(loop);
+  renderer.render(scene,camera);
 }
-setInterval(()=>{checkWait();checkIncoming();},1000);
-if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud};
-loop();
+setInterval(()=>{if(NPCS.length){checkWait();checkIncoming();}},1000);
+if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q};
+(async()=>{try{await Promise.race([Promise.all([document.fonts.load('44px Huninn'),document.fonts.load('600 20px Fredoka')]),sleep(3500)]);}catch(e){}
+  buildIsland();buildNpcs();refreshWorld();loop();})();
 (async()=>{renderLobby();await netInit();
   if(db){const last=lsGet('six-room');const q=(location.hash.match(/^#([A-Za-z0-9]{4})$/)||[])[1];const code=(q||last||'').toUpperCase();if(/^[A-Z0-9]{4}$/.test(code))joinRoom(code);}
   renderLobby();})();
