@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>新創競技場 3D</title>
+<title>新創競技場 故事版</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@700;900&family=Chakra+Petch:wght@600;700&display=swap">
@@ -45,6 +45,14 @@ body{background:#ffffff;color:var(--ink);font-family:var(--f-body);-webkit-user-
 #keys{left:max(12px,env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));font-size:12px;color:var(--muted);padding:7px 11px;line-height:1.75}
 #keys kbd{font-family:var(--f-num);background:rgba(29,34,51,.08);color:var(--ink);border-radius:5px;padding:0 5px;margin:0 2px}
 #cardBtn{pointer-events:auto;right:max(12px,env(safe-area-inset-right,0px));top:calc(64px + env(safe-area-inset-top,0px))}
+#viewBtn{pointer-events:auto;right:max(12px,env(safe-area-inset-right,0px));top:calc(108px + env(safe-area-inset-top,0px))}
+#rulesBtn{pointer-events:auto;right:max(12px,env(safe-area-inset-right,0px));top:calc(152px + env(safe-area-inset-top,0px))}
+.rtype{display:inline-block;font-size:12px;font-weight:900;padding:2px 9px;border-radius:999px;color:#fff;white-space:nowrap}
+.rnotes{display:flex;flex-direction:column;gap:6px}
+.rnotes p{font-size:14px;line-height:1.7}
+#netChip{font-size:12px;font-weight:700;color:var(--muted)}
+#netChip.on{color:var(--good)}
+#tView{right:max(24px,calc(env(safe-area-inset-right,0px) + 16px));bottom:calc(192px + env(safe-area-inset-bottom,0px));font-size:13px}
 #banner{left:50%;top:28%;transform:translateX(-50%);text-align:center;font-family:var(--f-head);color:var(--ink);text-shadow:0 0 18px #fff,0 0 4px #fff;opacity:0;transition:opacity .8s}
 #banner.show{opacity:1}
 #banner small{display:block;font-size:15px;letter-spacing:.3em;font-family:var(--f-body);font-weight:700;color:var(--muted)}
@@ -137,6 +145,9 @@ tr.mine td{box-shadow:inset 0 -2px 0 var(--bad)}
 .msg.them{align-self:flex-start;background:#fff;border:1px solid var(--line)}
 .co .taken{color:var(--bad);font-weight:700}
 .co:disabled{cursor:not-allowed}
+.shuo9{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.btn.s9{border:2px solid var(--sc);color:var(--sc);font-size:15px;padding:10px 6px}
+.btn.s9:hover{background:var(--sc);color:#fff}
 #err{position:fixed;inset:0;display:grid;place-items:center;font-weight:900;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));text-align:center}
 </style>
 
@@ -150,19 +161,23 @@ tr.mine td{box-shadow:inset 0 -2px 0 var(--bad)}
     <div class="meter" id="mCap">資本<b>6</b></div>
     <div class="meter" id="mSc">策略分<b>0 / 10</b></div>
   </div>
+  <div id="netChip">連線中…</div>
 </div>
 <div class="hud glass" id="progress" hidden></div>
 <button class="hud btn small ghost glass" id="cardBtn" hidden>事件卡 (Q)</button>
+<button class="hud btn small ghost glass" id="viewBtn" hidden>第三人稱 (V)</button>
+<button class="hud btn small ghost glass" id="rulesBtn" hidden>遊戲規則 (R)</button>
 <div class="hud" id="crosshair" hidden></div>
 <div class="hud glass" id="prompt" hidden></div>
 <div class="hud glass" id="tip" hidden></div>
 <div class="hud" id="banner"><small id="bnTop"></small><b id="bnBig"></b><span></span></div>
-<div class="hud glass" id="keys" hidden><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動 · 滑鼠 轉視角 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳<br><kbd>E</kbd> 或左鍵 與 NPC 互動 · <kbd>Q</kbd> 事件卡 · <kbd>Esc</kbd> 放開滑鼠</div>
+<div class="hud glass" id="keys" hidden><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 移動 · 滑鼠 轉視角 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳<br><kbd>E</kbd> 或左鍵 與 NPC 互動 · <kbd>Q</kbd> 事件卡 · <kbd>V</kbd> 切換視角 · <kbd>R</kbd> 規則 · <kbd>Esc</kbd> 放開滑鼠</div>
 
 <div id="touch" hidden>
   <div id="joy"><div id="knob"></div></div>
   <button class="tbtn" id="tAct">互動</button>
   <button class="tbtn" id="tJump">跳</button>
+  <button class="tbtn" id="tView">視角</button>
 </div>
 
 <div id="film" hidden><div class="film-box"><canvas id="filmC" width="1280" height="720"></canvas><video id="filmV" playsinline hidden></video><div class="film-bar"><span id="filmLabel"></span><div class="film-prog"><i id="filmProg"></i></div><label class="btn small ghost">換成自己的影片<input type="file" id="filmFile" accept="video/*" hidden></label><button class="btn small" id="filmSkip">略過影片</button></div></div></div>
@@ -176,7 +191,7 @@ const SANS='"Noto Sans TC","PingFang TC","Microsoft JhengHei","Heiti TC",sans-se
 const SERIF='"Noto Serif TC","Songti TC","PMingLiU",serif';
 const rnd=(a,b)=>a+Math.random()*(b-a);
 
-/* ───────── 遊戲資料：八回合試玩草案 ───────── */
+/* ───────── 遊戲資料：故事版（規則說明書 11/22） ───────── */
 const COMP=[
  {id:'chip',  name:'AI 晶片',       short:'晶片',  color:'#3d6cf0', core:'晶片設計、運算技術', need:'硬體整合、實際應用'},
  {id:'green', name:'綠色能源',      short:'綠能',  color:'#27a854', core:'綠電、能源管理',     need:'高耗能產業、節能應用'},
@@ -187,90 +202,183 @@ const COMP=[
 ];
 const CI={};COMP.forEach((c,i)=>CI[c.id]=i);
 const SHUO=['效率說','資源說','競局說','風險說','生態說'];
+const SHUO9=['效率說','資源說','競局說','風險說','生態說','互賴說','結構說','統治說','價值說'];
 const TH={
- '效率說':{color:'#12a3bd',desc:'用更少的投入換到更多產出：把流程、設計、排程做得更省、更快。'},
- '資源說':{color:'#d99a12',desc:'掌握別人難以取得的資源、資料或知識，並把它用在刀口上。'},
- '競局說':{color:'#86a826',desc:'看清對手與同業的動作，決定怎麼搶、怎麼守，或一起訂遊戲規則。'},
- '風險說':{color:'#4f6fd1',desc:'面對不確定，先布好備援與應變，讓關鍵營運不中斷。'},
- '生態說':{color:'#2ea866',desc:'把上下游、社區和夥伴拉進來，一起把整個生態系做大。'},
- '互賴說':{color:'#a454c6',desc:'彼此依存：找到能補足自己的夥伴，一起投入、一起分享成果。'}
+ '效率說':{color:'#12a3bd',desc:'把做過的東西模組化、重複使用，用更少投入做更多事（自造共享）。'},
+ '資源說':{color:'#d99a12',desc:'累積別人難以取得的資料、知識與人才（場域知識、集體智慧）。'},
+ '競局說':{color:'#86a826',desc:'和對手競合：一起訂標準、做大市場，再各憑本事競爭（共榮發展）。'},
+ '風險說':{color:'#4f6fd1',desc:'先小規模試、留備援，讓系統在衝擊後變得更強（反脆弱）。'},
+ '生態說':{color:'#2ea866',desc:'把上下游和社區串成能長期運作的網絡（生命共同體）。'},
+ '互賴說':{color:'#a454c6',desc:'找能力互補的夥伴，長期一起投入、一起分享成果（價值共同體）。'},
+ '結構說':{color:'#8a6d3b',desc:'佔住關鍵位置：專利、標準介面、准入條件，讓別人需要你（正當性）。'},
+ '統治說':{color:'#3f7f8f',desc:'訂規則、建平台，讓多方共同決策、誘因對得上（多中心治理）。'},
+ '價值說':{color:'#c25b93',desc:'從使用者需求出發，和使用者一起共創價值（人本需求）。'}
 };
 const HAIRS=['#2a2f45','#6b4a2e','#1c1c22','#c9ced8','#7a4a30','#3d2a1d'];
 const SKINS=['#f2cba5','#e8b98f','#f5d3b3','#dba57c','#f0c49c','#e3ad84'];
 const RCOL={'3.0':'#2b6fb0','4.0':'#2e8a5a',coop:'#a454c6',invest:'#c7922a'};
-// a：五說行動（效率、資源、競局、風險、生態）；best：主持人答案；why：理由
+const mk=(ctx,rows,best,why)=>({ctx,opts:rows.map(r=>({s:r[0],a:r[1],n:r[2]||''})),best,why:why||rows[best][2]});
+const mk5=(a,notes,best,why)=>mk(null,a.map((x,j)=>[SHUO[j],x,notes?notes[j]:'']),best,why);
+
+/* 第 1 回合：AI 開源革命（彤） */
 const R1={
- chip:{ctx:'封裝測試排隊',a:['共用已驗證的測試流程','研發下一代晶片架構','降價換更大的訂單','預留第二家尚未認證的封裝廠','發起跨廠介面標準工作組'],best:0,why:'共用已經驗證的測試流程，可減少重複設定與排隊。'},
- green:{ctx:'新案場未併網，既有電廠出力不穩',a:['改善電廠巡檢排程','培養新的發電預測團隊','轉租既有接網容量','用兩座已併網電廠交叉備援','邀工業用戶一起投資新電網'],best:3,why:'兩座既有電廠能在併網限制下互相補位。'},
- server:{ctx:'客戶只收已認證零件',a:['重排組裝班次','自行開發替換零件','和同業互換不同型號零件','預留客戶尚未認證的備品','和認證供應商共用庫存及交期資料'],best:4,why:'從合格供應網調度原規格零件，可照原流程驗收。'},
- cloud:{ctx:'尖峰租戶同時搶容量',a:['提高離峰設備使用率','採購要八週才到的新設備','推出尖峰保留容量合約','增加各租戶備援額度','招募外部應用進駐平台'],best:2,why:'按可交付的尖峰容量接單，優先守住關鍵訂單。'},
- med:{ctx:'模型未通過院內驗證',a:['加快現有模型推論速度','用院方已授權的資料修正模型','降價換醫院試用','先部署人工覆核備援','擴增診所轉介通路'],best:1,why:'院內資料能用來修正模型，使它通過該院的驗證。'},
- mfg:{ctx:'多規格要一起交付，換線耗時',a:['把成熟產品集中在同一線','建立下一代製程資料庫','跟同業交換訂單','安排第二條線待命','與設備商共用已驗證的模組化工裝'],best:4,why:'設備商的已驗證工裝能縮短換線校正，仍可維持混線交付。'}
+ chip:mk('自行研發 AI 晶片，但公司規模小，很難與大廠競爭。',[
+  ['效率說','改善晶片設計流程，降低研發成本','成本降低了，但客戶仍習慣使用大廠的晶片。'],
+  ['資源說','招募更多工程師，提升晶片效能','晶片變得更快，但支援的軟體太少，客戶仍不願更換。'],
+  ['結構說','提供開發工具，吸引軟體開發者','越來越多軟體支援自家晶片，吸引更多客戶使用，形成競爭優勢。'],
+  ['競局說','與其他晶片公司合作研發','研發成本降低，但雙方對技術分享與利益分配產生分歧。'],
+  ['風險說','先推出少量晶片，測試市場反應','減少產品失敗的損失，但仍缺少軟體支援。']],2,'晶片再厲害，如果沒有軟體支援，也很難吸引客戶。讓更多開發者願意使用自家晶片，才能建立長期優勢。'),
+ green:mk('提供 AI 用電預測服務，但競爭對手也開始使用相同技術。',[
+  ['效率說','使用免費 AI 工具，降低預測成本','成本降低，但其他公司也能使用，沒有明顯優勢。'],
+  ['資源說','結合自家用電數據與能源專家經驗','更了解不同客戶的用電情況，預測更準確，競爭者難以模仿。'],
+  ['互賴說','與設備商合作，取得更多用電資料','資料增加，但還沒有辦法充分利用，預測效果有限。'],
+  ['生態說','與其他能源公司合作，擴大服務','能提供更多服務，但原本的預測功能仍缺乏特色。'],
+  ['風險說','先測試新 AI 模型，再決定是否使用','避免投入錯誤技術，但沒有解決服務太相似的問題。']],1,'當大家都能使用 AI，擁有別人沒有的資料和專業經驗，就能做出更好的服務。'),
+ server:mk('負責組裝 AI 伺服器，但新 AI 技術不斷改變硬體需求。',[
+  ['效率說','簡化伺服器設計，降低生產成本','生產更有效率，但仍跟不上新技術需求。'],
+  ['資源說','招募工程師，自行研發新零件','研發能力提升，但成本太高，開發速度也較慢。'],
+  ['競局說','與競爭公司合作制定產品規格','產品規格更一致，但沒有解決零件搭配的問題。'],
+  ['互賴說','與晶片、散熱公司共同開發產品','各家公司提供擅長的技術，更快推出符合市場需求的伺服器。'],
+  ['風險說','先測試少量新產品，再決定量產','降低大量生產的風險，但開發速度仍然受限。']],3,'一台 AI 伺服器需要很多不同技術。與擅長不同領域的公司合作，比所有零件都自己研發更有效。'),
+ cloud:mk('提供 AI 算力租賃，但有些設備閒置，有些客戶卻租不到算力。',[
+  ['效率說','使用 AI 自動分配自家算力','自家設備使用率提高，但其他供應商與客戶仍難以配對。'],
+  ['資源說','分析客戶需求，預測算力使用量','更了解客戶需要多少算力，但仍缺少有效的租賃方式。'],
+  ['結構說','開發專屬系統，留住現有客戶','現有客戶比較不容易離開，但閒置算力問題仍存在。'],
+  ['統治說','建立算力租賃平台，制定交易規則','讓需要算力的客戶找到供應商，減少設備閒置，吸引更多人加入。'],
+  ['風險說','分批增加設備，避免投資過多','降低設備投資風險，但沒有解決目前的供需問題。']],3,'公司不一定需要買更多設備，而是可以建立平台、制定租賃與交易規則，讓有算力的人與需要算力的人更容易配對。'),
+ med:mk('開發 AI 診斷軟體，但還不確定哪種醫療用途最受醫院需要。',[
+  ['效率說','使用開源 AI，降低研發成本','開發成本降低，但仍不知道醫院是否願意使用。'],
+  ['資源說','增加醫療數據，提高診斷準確率','AI 判斷更準確，但不代表產品一定符合醫院需求。'],
+  ['價值說','與醫師合作，改善診斷操作流程','使用方式更方便，但還需要確認實際使用效果。'],
+  ['統治說','建立醫療 AI 平台，制定使用規則','管理方式更完善，但尚未確認產品是否適合推廣。'],
+  ['風險說','先與一家醫院試用，再逐步推廣','在符合醫療安全規範下，先確認實際效果，再決定是否投入更多資源。']],4,'還不確定市場需求時，不需要一開始就投入大量資金。先小規模測試，根據結果再決定下一步，能避免浪費資源。'),
+ mfg:mk('提供工廠 AI 管理系統，但每接一間新工廠，都要重新開發。',[
+  ['效率說','將 AI 系統拆成模組，重複使用','同一套功能能用在不同工廠，減少重複開發，加快接案速度。'],
+  ['資源說','增聘工程師，提高客製化能力','能服務更多不同需求，但人力成本持續增加。'],
+  ['競局說','與競爭者合作，制定共同規格','不同系統更容易連接，但仍需重新開發各工廠功能。'],
+  ['互賴說','與設備商合作，推出整合服務','服務項目增加，但每間工廠仍需要大量客製。'],
+  ['風險說','先接少量訂單，確認效果再擴張','降低接案風險，但無法改善開發速度慢的問題。']],0,'以前每接一個客戶都要重新製作，現在把常用功能做成模組，就能重複使用，服務更多客戶。')
 };
+/* 第 3 回合：關鍵人才流動（喬） */
 const R3={
- chip:{ctx:'特殊工作負載的延遲超標',a:['縮短標準產品測試時間','用客戶工作負載調校韌體','降價換一年獨家約','維持舊版並準備快速回退','辦軟體開發者工作坊'],best:1,why:'用實際工作負載調校，才能驗證特殊負載的延遲改善。'},
- green:{ctx:'客戶各廠負載時段不同',a:['精簡既有月報','自行重建通用預測模型','推出各廠適用的單一電價','備妥第二條供電來源','與各廠能源管理商整合負載資料'],best:4,why:'各廠能源管理商掌握不同負載，串起資料才可按廠驗收。'},
- server:{ctx:'機櫃尺寸不同，交期相同',a:['用已驗證模組重新組合機型','重新設計專用主機板','以標準機降價換訂單','準備備用機櫃','開放第三方推出擴充零件'],best:0,why:'重組現有已驗證模組，可兼顧尺寸差異與交期。'},
- cloud:{ctx:'轉換期間不可丟失交易',a:['加快一次搬完資料的速度','招募專家重寫資料庫','以折扣爭取客戶同意停機','先雙軌運行並演練回退','邀軟體商上架更多工具'],best:3,why:'雙軌與回退可在轉換過程保全交易。'},
- med:{ctx:'各院工作流程及介面不同',a:['縮短單一醫院的處理時間','研究更精準的通用模型','談多院共同折扣','把新功能切成分批發布','聯合院方與病歷系統商試接流程'],best:4,why:'醫院提供流程，系統商提供介面，需要三方一起試接。'},
- mfg:{ctx:'每個客戶都要小量多規格',a:['讓產線使用可快速切換的共用模組','投入下一代感測器開發','以更高起訂量換低價','準備更多庫存成品','邀零售商建立銷售聯盟'],best:0,why:'共用模組能縮短規格切換時間，適合小批量交付。'}
+ chip:mk(null,[
+  ['效率說','將標準驗證腳本模組化，讓不同晶片專案重複調用測試','模組重用能加快標準測試，但無法承接複雜異常的情境判斷。'],
+  ['資源說','建立跨團隊除錯覆盤與經驗轉譯機制，將調校邏輯沉澱為組織知識庫','把少數專家的隱性判斷組織化，轉為可持續更新的智慧資本。'],
+  ['競局說','與同業晶片設計商簽訂人才交流與前競爭期標準合作協議','前競爭期合作有助對齊標準，卻無法留住自家核心除錯知識。'],
+  ['風險說','採雙軌技術路徑並行探索，並依階段里程碑決定資源配置','實質選擇權保留了路線彈性，但沒有知識轉譯，仍會卡在缺人調校。'],
+  ['結構說','將核心韌體介面申請專利，並開放標準開發介面給外部應用','智財專佔能防外部抄襲，但內部新團隊仍不知道如何調校晶片。']],1),
+ green:mk(null,[
+  ['效率說','建立雲端標準化調度模組，讓不同案場可重複套用預測參數','模組擴散能提升標準作業速度，但難以應對各地微氣候與設備差異。'],
+  ['資源說','成立內部跨區站長工作坊，將調度判斷轉化為內部作業規範','內部整合能沉澱舊經驗，但單靠自家人力不足以應付跨品牌未知異常。'],
+  ['互賴說','與設備商及學研機構共建診斷網絡，在跨組織協作中吸收調度知識','建構跨組織創新網絡，與外部夥伴互補學習並內化調度知識。'],
+  ['風險說','將新案場調度拆分為小規模試點，依準確率決定是否擴張','分段試探能控制試錯損失，卻未解決經驗無法跨案場傳承的問題。'],
+  ['統治說','建置跨案場知識平台，設計上傳評價與授權分潤規則','平台誘因能鼓勵上傳，但缺乏外部知識互補仍容易老化。']],2),
+ server:mk(null,[
+  ['效率說','將散熱測試數據與裝機參數模組化，重複套用於各客製機型','模組多用能加快既有規格交付，但遇上新世代架構仍得從頭設計。'],
+  ['資源說','培養跨熱流與機構的整合型人才，強化團隊動態重組能力','培養跨領域動態能力週期過長，緩不濟急，且仍面臨被挖角風險。'],
+  ['結構說','將核心散熱架構申請專利並鎖定標準介面，讓零件商依附自家規格','透過智財專佔與關鍵介面卡位，把競爭力鎖在架構節點，而不是少數人的手感。'],
+  ['競局說','與散熱零組件廠共組研發聯盟，共同制定新世代機櫃規格標準','共訂標準能做大市場，但未先鎖定專利邊界，反而容易知識外溢。'],
+  ['風險說','以小批量多規格原型並行測試，依市場驗證結果決定量產規模','多點試探能降低規格風險，但組裝仍靠少數技師，會在原型階段卡關。']],2),
+ cloud:mk(null,[
+  ['效率說','導入自動化監控與標準排錯腳本，讓一般工程師重複調用常見解法','重複調用能解常見問題，但專家因誘因衝突，不願把核心邏輯寫進腳本。'],
+  ['資源說','透過專家輪調與跨組情境覆盤，將資深人員的判斷力轉化為團隊能力','專家覆盤有助經驗傳承，但「教會徒弟餓死師傅」的誘因矛盾未解。'],
+  ['競局說','與同業共建基礎維運標準，同時封閉保護自家核心跨雲調度演算法','劃清競合邊界能防知識外溢給對手，但未解決內部知識囤積問題。'],
+  ['風險說','針對高難度跨雲架構採分階段沙盒試點，保留多種技術切換選項','分階段試點能控管搬遷風險，但無法消除專家離職的排錯斷層。'],
+  ['統治說','建置內外部專家共享的維運知識平台，設計貢獻評價與分潤規則','透過平台治理與評價分潤誘因，協調多方專家主動釋出內隱知識。']],4),
+ med:mk(null,[
+  ['效率說','將過去導入醫院的標準流程模組化，加快新團隊部署系統的速度','流程模組化能加快軟體安裝，但無法彌補新團隊對臨床情境的理解落差。'],
+  ['資源說','整合內部跨科別專家知識與動態學習機制，加速新進工程師理解臨床','內部閉門學習若脫離醫院實際使用情境，系統仍容易被臨床退件。'],
+  ['價值說','建立與醫院臨床團隊共同覆盤迭代機制，讓經驗留在實際使用情境中','透過服務主導邏輯與體驗共創，讓知識在醫護互動學習中持續生成。'],
+  ['結構說','將臨床工作流介面設計申請專利保護，防止競爭者模仿產品體驗','智財保護能防範對手模仿，卻無法幫助新團隊理解臨床真實需求。'],
+  ['互賴說','與醫學中心及醫材夥伴共組跨組織知識網絡，持續吸收第一線醫學知識','外部網絡能取得醫學新知，但產品價值仍須在醫師日常使用互動中生成。']],2),
+ mfg:mk(null,[
+  ['效率說','將資深技師調機參數與異常特徵轉化為數位模組，跨廠重複套用','運用數位知識低複製成本的特性，以模組化放大投入並實現跨廠複製。'],
+  ['資源說','設立內部專家知識庫與情境演練機制，培養新進工程師現場判斷力','培養專家週期過長，無法解決多廠同時擴張的交付瓶頸。'],
+  ['結構說','針對獨家製程優化演算法與感測器介面申請專利，建立技術授權門檻','專利能卡住對手抄襲，但現場調機仍受限於技師人數，無法快速交付。'],
+  ['互賴說','與上游設備商建立跨組織技術協作網絡，共同研究與整合產線參數知識','外部協作能取得新機台知識，但進駐新廠若仍需人工調校，依舊卡關。'],
+  ['生態說','串聯感測器商、設備商與顧問建立互補生態系，分工交付產線方案','協調生態互補能擴大服務，但核心調校未先數位模組化，仍難確保品質。']],0)
 };
+/* 第 4 回合：AI 電力危機（宥） */
 const R4={
- chip:{a:['開放低功耗設計框架，讓客戶一起優化','和大學合辦低碳半導體人才培育','趁缺貨漲價，先供貨給出價最高的大廠','自購燃氣機組，限電期間照常出貨','發起綠色算力聯盟，邀上下游一起減碳'],best:0,why:'把節能設計推向多家客戶，讓下游設備也能降低用電。'},
- green:{a:['開放能源管理軟體，讓用戶自己調度用電','擴建綠電場址，逐一爭取地方同意','綠電憑證高價賣給 AI 大廠，社區只好改用火力電','囤積儲能設備自己用','號召社區共建微電網，自己當樞紐'],best:4,why:'把地方用戶納入供電安排，讓社區有能力共同應付限電。'},
- server:{a:['三班制滿載出貨，衝高產能','囤積關鍵零組件等漲價','和同業共訂能效標準，不達標就不出貨','推出模組化液冷機櫃，限電時可以分區運作','加入綠色算力聯盟當一般會員'],best:2,why:'由同業一起提高產品能效門檻，避免低能效設備靠價格搶單。'},
- cloud:{a:['把運算排程移到離峰時段','和在地社區共管水電、公開用電數據，換取營運許可','砸錢搶下最後一塊電網容量','自建柴油發電機，保證客戶不斷線並加價','把閒置算力開放給學校和偏鄉醫院'],best:1,why:'把地方水電和社區知識納入營運安排，直接回應居民的疑慮。'},
- med:{a:['把 AI 模型縮小，降低用電','簽長約鎖定大量算力，獨占醫院資料合作','用「醫療優先」遊說豁免限電，排擠其他用戶','和社區醫院共建停電應變網絡，一起承擔斷電風險','開發偏鄉遠距醫療，開拓還沒人服務的市場'],best:3,why:'醫院一起安排停電應變，能維持必要的照護服務。'},
- mfg:{a:['導入智慧排程，避開尖峰用電','和工業區共建循環水與廢熱回收','號召供應鏈共訂減碳公約，共享訂單和產能','自備燃煤汽電共生機組，限電照樣滿載','把高耗能產線移到法規寬鬆的地區'],best:2,why:'用供應鏈的共同減碳承諾和產能調度，兼顧交付與用電壓力。'}
+ chip:mk5(['開放低功耗設計框架，讓客戶一起優化','和大學合辦低碳半導體人才培育','趁缺貨漲價，先供貨給出價最高的大廠','自購燃氣機組，限電期間照常出貨','發起綠色算力聯盟，邀上下游一起減碳'],
+  ['把節能設計推向多家客戶，下游設備的用電一起降下來，直接回應限電和碳費。','人才培育要好幾年才見效，解決不了這個夏天的用電壓力。','有限賽局的搶單思維；限電下大廠拿到晶片也沒電可用，還會失去社會信任。','只顧自家營運，碳排和碳費都更高，社區更反對。','方向對，但聯盟剛發起，本回合拿不出具體的減碳成果。'],0),
+ green:mk5(['開放能源管理軟體，讓用戶自己調度用電','擴建綠電場址，逐一爭取地方同意','綠電憑證高價賣給 AI 大廠，社區只好改用火力電','囤積儲能設備自己用','號召社區共建微電網，自己當樞紐'],
+  ['軟體只能幫已經有電的用戶調度，限電時社區還是缺電源。','社區正在抗議，一處一處談來不及。','整體排碳沒有減少，還失去地方支持。','只保住自家，社區斷電的問題沒有解決。','社區變成供電夥伴，限電時可以一起調度，也贏得地方支持。'],4),
+ server:mk5(['三班制滿載出貨，衝高產能','囤積關鍵零組件等漲價','和同業共訂能效標準，不達標就不出貨','推出模組化液冷機櫃，限電時可以分區運作','加入綠色算力聯盟當一般會員'],
+  ['用電更吃緊，碳費也更重。','「擁有資源」的舊思維，得不到社會支持。','同業一起提高門檻，低能效設備不能再靠低價搶單，整個市場的用電一起下降。','只保住自家客戶，改變不了業界的低能效競爭。','只是跟隨，沒有主導訂出能效規範，影響力不夠。'],2),
+ cloud:mk5(['把運算排程移到離峰時段','和在地社區共管水電、公開用電數據，換取營運許可','砸錢搶下最後一塊電網容量','自建柴油發電機，保證客戶不斷線並加價','把閒置算力開放給學校和偏鄉醫院'],
+  ['能省一點電，但沒有回應社區對水電的疑慮，營運許可還是卡關。','把社區當成共同維護水電的夥伴，才能被允許繼續營運。','排擠其他用戶，抗議只會更激烈。','柴油發電增加碳排和空污，社區更反對。','是好事，但沒有解決用水用電的爭議。'],1),
+ med:mk5(['把 AI 模型縮小，降低用電','簽長約鎖定大量算力，獨占醫院資料合作','用「醫療優先」遊說豁免限電，排擠其他用戶','和社區醫院共建停電應變網絡，一起承擔斷電風險','開發偏鄉遠距醫療，開拓還沒人服務的市場'],
+  ['省下的電有限，一停電照護服務還是會中斷。','擁有和控制的思維；限電時鎖到的算力也用不了。','把風險轉嫁給別人，失去社會信任。','和醫院共同承擔停電風險，必要的照護不會中斷。','新市場很好，但遠距醫療本身也要靠穩定供電。'],3),
+ mfg:mk5(['導入智慧排程，避開尖峰用電','和工業區共建循環水與廢熱回收','號召供應鏈共訂減碳公約，共享訂單和產能','自備燃煤汽電共生機組，限電照樣滿載','把高耗能產線移到法規寬鬆的地區'],
+  ['只靠一家工廠調度不夠，限電時還是交不出貨。','建置要時間，解決不了這一季的用電和交期。','一家限電時別家可以補位，交期和減碳都能顧到。','燃煤排碳高、碳費重，和減碳要求相反。','只是把排碳搬到別處，客戶和社會都不會接受。'],2)
 };
+/* 第 6 回合：AI 供應鏈信任危機（沈） */
 const R6={
- chip:{a:['趁審查還沒查到自己，跳過碳盤查、產線全速衝量出貨','建立晶片碳足跡資料庫，先從自家產線開始盤查','放消息說對手的綠電來源有問題，趁亂搶單','委託第三方查核綠電來源，取得國際認證','帶上下游一起公開產品碳足跡，建立供應鏈共同揭露平台'],best:4,why:'把上下游的碳足跡資料串起來，讓客戶能查驗整條供應鏈。'},
- green:{a:['導入綠電溯源系統，每一度電的來源都查得到','趁大家急著補綠電，把來源不明的憑證打包高價轉賣','降價搶客戶，對外拍胸脯「保證通過審查」','主動請國際機構稽核所有電廠，公開每座電廠的發電紀錄','辦說明會向客戶解釋綠電來源'],best:3,why:'第三方查核搭配各電廠的原始紀錄，能回應對綠電來源的質疑。'},
- server:{a:['重新設計產品，內建能耗與碳排即時揭露，出貨就附數據','把審查成本轉嫁給下游零件商，要他們自己吸收','和晶片廠共推產品碳標籤，讓客戶一眼比較','把有疑慮的零件改從審查較鬆的國家進口，換個產地照樣出貨','發表聲明支持供應鏈透明化'],best:0,why:'產品在交付時就附可查的數據，客戶可直接核對設備能耗。'},
- cloud:{a:['導入自動化用電與碳排監測，即時回報給客戶','把資安與碳排報告外包給顧問公司處理','和同業共訂資料安全與能耗揭露標準，一起接受查核','把敏感資料緊急搬到海外機房，避開審查','買便宜碳權抵銷，對外宣稱「100% 碳中和」，照常擴建機房'],best:2,why:'同業以共同標準接受查核，客戶可同時檢查資料安全和能耗。'},
- med:{a:['精簡 AI 模型，降低用電成本','改用可溯源的綠電機房，並公開病患資料保護流程','趁對手被審查，低價搶走醫院合約、運算量爆增，資料保護先省掉','主動通報資安漏洞，協助合作醫院修補','砸錢拍公益形象廣告，實際流程沒改'],best:1,why:'採用可溯源機房並揭露資料保護流程，有憑據回應兩項疑慮。'},
- mfg:{a:['為了趕在審查前交貨，暫停節能排程、產線滿載','導入原物料溯源與廢料回收，每批產品附碳排資訊','切割出事的合作夥伴，接收他們的訂單、產能全開','準備替代供應商名單，降低被牽連的風險','和供應商共建碳足跡與資安查核平台，整條供應鏈一起通過審查'],best:4,why:'與供應商共用查核平台，讓上游資料也能一併接受審查。'}
+ chip:mk5(['趁審查還沒查到自己，跳過碳盤查、產線全速衝量出貨','建立晶片碳足跡資料庫，先從自家產線開始盤查','放消息說對手的綠電來源有問題，趁亂搶單','委託第三方查核綠電來源，取得國際認證','帶上下游一起公開產品碳足跡，建立供應鏈共同揭露平台'],null,4,'把上下游的碳足跡資料串起來，讓客戶能查驗整條供應鏈。'),
+ green:mk5(['導入綠電溯源系統，每一度電的來源都查得到','趁大家急著補綠電，把來源不明的憑證打包高價轉賣','降價搶客戶，對外拍胸脯「保證通過審查」','主動請國際機構稽核所有電廠，公開每座電廠的發電紀錄','辦說明會向客戶解釋綠電來源'],null,3,'第三方查核搭配各電廠的原始紀錄，能回應對綠電來源的質疑。'),
+ server:mk5(['重新設計產品，內建能耗與碳排即時揭露，出貨就附數據','把審查成本轉嫁給下游零件商，要他們自己吸收','和晶片廠共推產品碳標籤，讓客戶一眼比較','把有疑慮的零件改從審查較鬆的國家進口，換個產地照樣出貨','發表聲明支持供應鏈透明化'],null,0,'產品在交付時就附可查的數據，客戶可直接核對設備能耗。'),
+ cloud:mk5(['導入自動化用電與碳排監測，即時回報給客戶','把資安與碳排報告外包給顧問公司處理','和同業共訂資料安全與能耗揭露標準，一起接受查核','把敏感資料緊急搬到海外機房，避開審查','買便宜碳權抵銷，對外宣稱「100% 碳中和」，照常擴建機房'],null,2,'同業以共同標準接受查核，客戶可同時檢查資料安全和能耗。'),
+ med:mk5(['精簡 AI 模型，降低用電成本','改用可溯源的綠電機房，並公開病患資料保護流程','趁對手被審查，低價搶走醫院合約、運算量爆增，資料保護先省掉','主動通報資安漏洞，協助合作醫院修補','砸錢拍公益形象廣告，實際流程沒改'],null,1,'採用可溯源機房並揭露資料保護流程，有憑據回應兩項疑慮。'),
+ mfg:mk5(['為了趕在審查前交貨，暫停節能排程、產線滿載','導入原物料溯源與廢料回收，每批產品附碳排資訊','切割出事的合作夥伴，接收他們的訂單、產能全開','準備替代供應商名單，降低被牽連的風險','和供應商共建碳足跡與資安查核平台，整條供應鏈一起通過審查'],null,4,'與供應商共用查核平台，讓上游資料也能一併接受審查。')
 };
-const GRADE2={'chip|server':'S','cloud|med':'S','cloud|server':'A','chip|cloud':'A','green|mfg':'A','cloud|mfg':'A','med|mfg':'A','chip|med':'B','chip|mfg':'B','green|server':'B','cloud|green':'B','mfg|server':'B','chip|green':'C','green|med':'C','med|server':'C'};
-const DESC2={'chip|server':'整機：晶片與伺服器整合，六週內交出能驗收的整機','cloud|med':'院端部署：資料平台結合醫療專業，直接在醫院上線','cloud|server':'硬體與雲端需求整合','chip|cloud':'優化 AI 運算架構','green|mfg':'改善工廠能源管理','cloud|mfg':'整合生產數據，發展智慧工廠','med|mfg':'開發智慧醫療設備','chip|med':'開發醫療 AI 晶片與診斷技術','chip|mfg':'晶片技術應用於工業自動化','green|server':'為伺服器提供綠電','cloud|green':'改善資料中心能源供應','mfg|server':'自動化生產，提高製造效率','chip|green':'開發能源控制晶片','green|med':'改善醫療設施能源使用','med|server':'提供醫療 AI 運算硬體'};
+/* 永續投資：每家兩個方案（5 / 8 資本），付費後判斷屬於哪一說 */
+const pl=(cost,short,text,ans,why)=>({cost,short,text,ans,why:why||'',pts:cost>=8?2:1,refund:cost>=8?4:2});
+const P5={
+ chip:[pl(5,'舊電腦節能升級','開放相容的低功耗模組，讓兩間社區教室共用升級套件，延長舊電腦的使用時間。','效率說','同一套低功耗模組可以在不同教室重複使用。'),pl(8,'在地維修知識庫','與維修技師、館員一起整理常見故障和現場修法，把經驗做成可更新的診斷手冊，持續培訓各據點的維修人員。','資源說','累積的是在地維修人員共同掌握的知識，長期投入效益更大。')],
+ green:[pl(5,'診所備援演練','提供一季的備援用電測試，把每次演練發現的問題納入下一次調度，再把做法分享給其他診所。','風險說','每次演練暴露的問題都讓下一次調度更穩。'),pl(8,'社區微電網','和居民、診所與電力業者共同規劃三年供電方案，一起決定誰出資、誰維護，以及尖峰時哪些服務優先用電。','統治說','多方一起訂規則、分責任，長期投入效益更大。')],
+ server:[pl(5,'AI 專題算力試辦','與大專院校合作，提供一學期的共用算力，讓缺乏設備的學生團隊也能完成 AI 專題。','價值說','從缺乏設備的學生需求出發。'),pl(8,'共建 AI 實作環境','與大專院校合作三年，由企業提供共用算力與維運，校方將設備導入專題課程。師生每學期回饋實作中遇到的問題，企業據此改善系統，再由下一屆學生試用。','互賴說','企業與學校能力互補、長期共同投入，長期投入效益更大。')],
+ cloud:[pl(5,'在地多語查詢','邀館員、新住民和長者共同設計查詢服務，把不同語言和實際使用習慣放進系統。','資源說','把在地人的語言與使用經驗變成系統的知識。'),pl(8,'跨雲服務共通規格','邀競爭的雲端業者共訂三年資料移轉規格，讓社區據點能帶著資料換服務商，各家靠價格、維護與服務品質競爭。','競局說','同業先合作訂公平規則，再各憑服務競爭，長期投入效益更大。')],
+ med:[pl(5,'照護中斷演練','模擬網路中斷或診所臨時停診，找出最容易漏接的病患，再依演練結果改善追蹤與轉介流程。','風險說','用演練找出弱點，讓流程在衝擊後更強。'),pl(8,'社區慢性病照護網','由診所、社區據點、交通單位和居民代表共同規劃三年追蹤服務，把看診、接送和後續照護接起來。','價值說','從病患實際需要出發設計服務，長期投入效益更大。')],
+ mfg:[pl(5,'同業共用維修規格','邀同業把公共設備最常壞的一款零件做成可互換規格，讓據點可以向多家廠商買備件。','競局說','同業共訂規格，讓據點有更多選擇。'),pl(8,'在地備件再製網','與維修店、回收商簽三年協議。維修店回報缺件，回收商提供可用材料，製造商負責再製與品質檢驗，各方共同維持備件供應。','互賴說','三方能力互補、長期共同維持供應，長期投入效益更大。')]
+};
+const P8={
+ chip:[pl(5,'社區水表維修套件','開放感測模組的替換設計，提供共用測試工具，讓各區維修站能自行修復故障水表，及早找出漏水點。','效率說','自造共享：同一套工具與設計可由多個據點重複使用，維修能力也留在當地。'),pl(8,'在地漏水判讀資料庫','邀居民、師傅與工程師核對警報，把「哪些巷弄在晚餐時間本來就會降壓」等經驗納入模型，並讓社區持續修正紀錄。','資源說','場域知識、集體智慧：投資累積的是在地人和工程師共同掌握的判讀能力。')],
+ green:[pl(5,'場站清洗時段試辦','在一處太陽能場站，由居民、供水單位與業者共同決定清洗時段；住戶回報降壓時，三方依約重排。','統治說','多中心治理：居民有訂定及修改規則的權利。'),pl(8,'再生水長期供應','和水處理廠、鄰近場站簽訂長約，約定誰把關水質、誰負責運送、旱季如何分配及分攤維護費。','互賴說','價值共同體：各方以互補能力與長期承諾，共同維持替代水源。')],
+ server:[pl(5,'共用驗機回收設備','開放液冷測試線的回收裝置設計，讓園區小型組裝廠能自行建置與維修，減少每台驗機需要的新水。','效率說','自造共享：多家小廠能運用同一設計，自行改善測試用水。'),pl(8,'開放節水驗機標準','邀同業共訂客戶認可的用水測試規格，讓小廠也能使用共用設備取得驗證，通過後各自競標。','競局說','共榮發展：同業合作建立公平的參賽條件，再憑產品與服務競爭。')],
+ cloud:[pl(5,'限水減載演練','和診所試行機房減載，追查哪些急件被錯排到延後時段，修改分流規則後再測一次，核對錯排數是否下降。','風險說','反脆弱：第一次演練暴露弱點，第二次驗證系統是否因此變強。'),pl(8,'機房用水共決','由居民、供水單位與機房各派代表，共訂取水上限、民生優先時段與降載門檻。任一方都能提案調整，決定與執行紀錄對外公開。','統治說','多中心治理：三方共享決策權，也有明確的修正程序。')],
+ med:[pl(5,'限水日個別照護安排','護理師與病患逐一確認誰能改為遠距、誰需要接送，再追蹤高齡及行動不便者是否完成就診。','價值說','人本需求：成效取決於不同處境的病患能否實際取得照護。'),pl(8,'旱季社區照護網','由居民指出最容易中斷就醫的地區，串接診所、醫院、交通與社區據點，共同試辦轉介接送，並安排後續經費與維護窗口。','生態說','生命共同體：從地方需求出發，把原本分散的服務組成能長期運作的照護網。')],
+ mfg:[pl(5,'找出工廠與住戶搶水的時段','操作員、住戶與水務人員一起核對清洗紀錄和低水壓時間，整理成可更新的地方用水圖，再據此調整排程。','資源說','場域知識、集體智慧：把三方各自知道的事情接起來，找出單看廠內水表無法辨識的原因。'),pl(8,'用可查驗的承諾取得續營資格','審查會已把取水上限列為續營條件。工廠投資獨立水表及超額自動降載設備，接受外部查核，以履約紀錄取得下一期營運資格。','結構說','正當性：企業能否繼續在當地營運，取決於它能否滿足地方認可的准入條件。')]
+};
+/* 合作回合配對表 */
+const GRADE2={'green|mfg':'S','cloud|green':'S','chip|server':'A','chip|cloud':'A','chip|mfg':'A','green|server':'A','cloud|server':'A','med|server':'A','mfg|server':'A','cloud|med':'A','cloud|mfg':'A','chip|green':'B','chip|med':'B','med|mfg':'B','green|med':'C'};
+const DESC2={'green|mfg':'綠能提供場站的運轉限制，智慧製造將既有備援規則接進支援本地操作的控制器。斷線時，場站能依本地規則繼續運轉。','cloud|green':'綠能提供本地場站資料與排程規則，資料中心在園區內算出當日排程，場站人員能照表操作，完成每日調度。','chip|server':'讓影像辨識模型在本地伺服器上運行，能輸出辨識結果，還要接回產線的檢查流程。','chip|cloud':'讓常用模型改在本地晶片上處理單筆任務，跨據點的工作分派仍待恢復。','chip|mfg':'在機台旁恢復一種常見瑕疵的辨識，其餘瑕疵仍要人工檢查。','green|server':'用本地伺服器接回場站感測資料，讓人員看得到即時異常，排程仍得另外處理。','cloud|server':'用園區內的伺服器和暫存資料恢復查詢，外部資料更新仍要等連線恢復。','med|server':'用院內設備恢復影像初篩，醫護人員可以查看初篩結果，仍要手動帶回原有判讀流程。','mfg|server':'恢復產線感測資料的收集和基本告警，原本由遠端系統負責的異常分析仍未恢復。','cloud|med':'把影像分析搬到院內，醫師能查看分析結果，送件與覆核紀錄仍需接回院內系統。','cloud|mfg':'恢復單廠的品質分析，仍無法比對其他廠區的資料來追查共同異常。','chip|green':'測出低功耗模組能讀取場站資料，還需要接入現場控制器才能用於調度。','chip|med':'驗證模型能在本地晶片上跑，還缺院內部署與醫師可操作的介面。','med|mfg':'做出符合醫護流程的離線操作介面樣品，院內分析系統尚未接上。','green|med':'雙方各有場站調度和醫療判讀的專長，這次還找不到能靠兩家一起恢復的工作。'};
 const GRADE7={'green|mfg':'S','chip|server':'S','cloud|med':'S','cloud|green':'A','cloud|mfg':'A','green|server':'A','med|server':'A','med|mfg':'A','chip|green':'B','chip|med':'B','chip|mfg':'B','cloud|server':'B','mfg|server':'B','chip|cloud':'C','green|med':'C'};
-const DESC7={'green|mfg':'製程用電：用分時電表與同產量的排放基準比較減量','chip|server':'整機能效：晶片和伺服器一起把每瓦效能拉上來','cloud|med':'模型耗電與服務品質：核對每次合格推論的耗電量和服務水準','cloud|green':'綠色資料中心，降低能源與環境負擔','cloud|mfg':'透過數據優化能源與資源使用','green|server':'綠色運算、節能硬體','med|server':'提供醫療服務所需的運算能力','med|mfg':'發展更符合使用者需求的醫療設備','chip|green':'智慧電網與能源管理技術','chip|med':'提升醫療科技的可及性','chip|mfg':'智慧節能製程','cloud|server':'提高運算資源使用效率','mfg|server':'降低製造過程的資源浪費','chip|cloud':'透過運算優化降低能耗','green|med':'綠色醫療設施與能源韌性'};
+const DESC7={'green|mfg':'綠能提供分時供電與排放資料，製造廠核對相同合格產量下的排放，並用班表確認節電是否增加員工的夜班負擔。','chip|server':'將新晶片裝進整機，執行同一批客戶任務，把主機與散熱耗電一起量測。在相同供電條件下比較排放，並確認任務仍準時完成。','cloud|med':'雲端以作業編號將機房能耗對回每件合格判讀，醫療端核對急件等候時間與開診紀錄，能確認減量後病患仍照常獲得服務。','cloud|green':'將可延後的運算移到低碳供電時段，能核對機房減量；服務延後對使用者的影響，仍需租戶確認。','cloud|mfg':'共同調整廠內與雲端的運算排程，能比對同批訂單的總用電與交期；換算排放仍需補齊各時段的供電資料。','green|server':'調整驗機時段，對照供電來源與整機用電，能算出每台合格設備的測試排放。證據涵蓋出廠測試，客戶使用階段仍待追蹤。','med|server':'在診所實測每件合格判讀的設備用電，並核對病患等候時間；換算排放仍需確認院端的電力排放係數。','med|mfg':'合作翻修診所設備，由製造廠記錄更換零件、診所確認設備仍能支援看診。要估算延長使用年限省下多少排放，仍需同型新品的製造排放資料。','chip|green':'能估算晶片測試階段的排放，但缺少整機耗電與實際服務量，無法判斷每次服務減少多少排放。','chip|med':'能比對晶片功耗與判讀品質，但缺少院端主機與散熱用電，無法核對整套系統的減量。','chip|mfg':'能測出辨識晶片的節電效果，但檢測工序與其他設備共用電表，無法核對整道工序的用電變化。','cloud|server':'能量出設備與機房用電下降，但兩家都缺一般租戶的實際工作量，無法排除當月訂單減少的影響。','mfg|server':'能量出廠內伺服器的節電量，但設備同時支援多條產線，現有紀錄無法將減量歸到指定產品。','chip|cloud':'新晶片尚未部署到該機房。晶片測試報告與既有機房電表量的是不同設備，無法證明雙方已完成共同減量。','green|med':'綠能有供電紀錄，診所有看診人次，但診所使用共用機房，兩家無法將該段供電對回指定醫療服務。'};
+const HAND7={chip:'你有新晶片執行相同任務的功耗紀錄。新晶片已裝進伺服器公司的測試機，也能在製造廠的檢測機台試跑，但還沒部署到園區的雲端機房。',green:'你有園區每個時段的供電來源與排放資料，可以配合企業調整供電。工廠和機房各有電表，使用共用機房的個別診所沒有獨立電表。',server:'你有整機測試設備，能把晶片、主機和散熱的耗電一起量出來。你也能把設備帶進診所實測，但看不到雲端租戶各自完成了哪些工作。',cloud:'你有機房的分時電表及工作排程。醫療影像服務留有可對照的作業編號；一般租戶的電表紀錄只到機房層級。',med:'你知道各診所完成多少件合格判讀、急件等了多久，也知道哪些據點曾停診。你拿得到院端設備紀錄，無法單獨拆出共用機房的用電。',mfg:'你有產線電表、合格產量、班表與維修紀錄，能比較調班前後的差異。廠內有些設備跨產線共用，只有部分工序能獨立計量。'};
 const EXTRA={S:[1,1,1,2,2,2,2,3,3,3,4],A:[1,1,1,1,2,2,2,2,3,3,3],B:[0,0,1,1,1,1,1,1,1,1,2],C:[0,0,0,0,0,0,0,0,0,0,0]};
 const GCOL={S:'#2b6fb0',A:'#12a3bd',B:'#86a826',C:'#98a0ad'};
 const pairKey=(a,b)=>[a,b].sort().join('|');
-const P5=[
- {cost:5,short:'一季綠電＋園區儲能',text:'簽一季綠電供應合約，租用園區儲能把白天的綠電留到晚間尖峰，再優先供給關鍵設備。',pts:1,why:'守住本季服務，臨時合約到期後要重新安排。'},
- {cost:9,short:'三年綠電長約＋共用儲能',text:'簽三年綠電長約，契約約定尖峰可交付電量，並和園區共用儲能。逐時記錄供電來源及實際用量。',pts:2,why:'靠現有儲能渡過本季，也有可查證的多年供電安排。'},
- {cost:5,short:'綠電憑證＋碳盤查',text:'購買與本季用電量相當的綠電憑證，先提交碳盤查報告，尖峰仍依賴現有電網。',pts:0,why:'憑證有助於揭露來源，現場仍缺尖峰供電。'},
- {cost:9,short:'屋頂太陽能',text:'建置屋頂太陽能，估計全年發電量可達客戶要求。設備不含儲能，晚間仍由電網供電。',pts:0,why:'全年發電量有改善，晚間限電時仍無法維持服務。'}
-];
-const P8=[
- {cost:9,short:'再生水＋循環水系統',text:'先租模組化設備接用再生水，同時建置循環水系統。把處理後的水再用於冷卻或清洗，以分區水表驗證淡水取用。',pts:2,why:'能先維持營運，系統上線後也能持續降低取水。'},
- {cost:5,short:'用水盤查與節水承諾',text:'盤查各場址的用水量，公開每月用水報告和逐年節水承諾，現場維持原有取水方式。',pts:0,why:'可掌握用水，但下月限水時仍超過限額。'},
- {cost:9,short:'三年水車合約',text:'簽三年水車合約，改向園區外的業者購水。業者的取水點仍在同一缺水流域。',pts:0,why:'供水方式改變，但仍取用同流域淡水，超過續證限額。'},
- {cost:5,short:'一季再生水＋臨時管線',text:'簽一季再生水供應合約，租臨時管線替代部分清洗或冷卻用水，將有限的淡水留給關鍵環節。',pts:1,why:'過渡期間符合限額且能營運，合約到期後仍要找水源。'}
-];
+/* 八回合故事線：每回合的事件都接著上一回合 */
 const ROUNDS=[
- {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'算力需求暴增',ctxLabel:'你的交付瓶頸',data:R1,scene:0,
-  event:'國際客戶要求六週內交付首批產品或服務。客戶已鎖定驗收規格，逾期就把首批訂單轉給別家。每家公司先看到自己的交付瓶頸，再選擇要怎麼用手上的技術和知識應對。'},
- {type:'coop',era:'3.0',eraName:'3.0 知識經濟',title:'六週整合方案',grades:GRADE2,desc:DESC2,scene:1,
-  event:'採購方開放設備整合、院端部署、能源管理與製造等標案，要求六週內展示原型。各隊要把可直接使用的技術、設備或產業知識接起來，並說明客戶要驗收的成果。'},
- {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'客戶要求客製',ctxLabel:'你的驗收要求',data:R3,scene:2,
-  event:'第一批標準產品上線後，客戶要求八週內試出客製版本，才決定是否續約。各家公司拿到的退件或回饋不同。玩家要在期限內拿出客戶能現場驗證的改進。'},
- {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 電力危機',data:R4,scene:3,trailer:['AI 算力擴張讓用電暴增','夏季備轉容量告急～～～Hot Hot><','政府宣布碳費上路','大用電戶都要提出減碳計畫（蛤？？？可惡）','社區也開始抗議新建資料中心','到了 4.0，問題不再是「賺不賺錢」','而是「你還能不能被允許繼續營運」'],
-  event:'AI 算力擴張使夏季用電暴增，備轉容量告急。政府宣布碳費上路，大用電戶須提出減碳計畫，社區也開始抗議新建資料中心。企業要決定如何因應供電壓力，維持營運並取得利害關係人的支持。'},
- {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'限電下的供電危機',plans:P5,scene:6,
-  event:'延續第 4 回合的電力危機。園區下月起在晚間尖峰限電，六家企業的關鍵營運據點或代工廠都受影響。客戶願給企業一季緩衝，但續約要求關鍵服務不中斷，並能按時段查證尖峰供電來源與減碳成效。園區已有可用的共用儲能，能在下月限電前投入調度。'},
- {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 供應鏈信任危機',data:R6,scene:5,trailer:['近期，一份國際調查報告揭露','部分企業的永續承諾與實際營運存在落差','綠電來源不明、產品碳排資訊不透明','還有資料安全與產品責任問題（蛤？？？說好的永續呢）','消息曝光後，國際客戶宣布重新審查整條 AI 供應鏈','六家企業就算沒有直接違規','也可能因為合作夥伴被牽連','面臨訂單流失與社會信任下降～～～','這是最後一回合','被懷疑的時候，你要拿什麼證明自己？','該如何採取行動呢？'],
-  event:'國際調查揭露部分企業的永續承諾與實際營運有落差，問題包含綠電來源不明、碳排資訊不透明、資料安全及產品責任。國際客戶重新審查整條 AI 供應鏈。即使公司本身沒有違規，也可能受到合作夥伴牽連。企業要決定用什麼證據向客戶交代。'},
- {type:'coop',era:'4.0',eraName:'4.0 人文永續',title:'供應鏈共同減碳',grades:GRADE7,desc:DESC7,scene:4,
-  event:'客戶要求共同提出減碳方案。各隊須說清楚在哪個環節減量、雙方怎麼分工，以及用哪份紀錄證明成效。'},
- {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'旱季限水與營運許可',plans:P8,scene:7,
-  event:'連續乾旱後，園區下月開始限制淡水取用。六家公司各有一處關鍵營運據點或供應商受影響。地方政府准許一季過渡，之後續發營運許可時，要求關鍵服務持續，且每年淡水取用都低於限額。園區有可立即接用的再生水，也有可先租後建的模組化處理設備。'}
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'AI 開源革命',ctxLabel:'你的處境',data:R1,scene:0,
+  event:'全球科技巨頭公開最新 AI 模型與開發工具，讓其他公司也能低成本使用先進 AI 技術。短短三個月內，市場出現大量相似產品，競爭越來越激烈。當大家都能使用相同的 AI 技術，你的公司該如何保持競爭力？',
+  trailer:['台北，一座正在長大的 AI 園區','六家新創，在同一條街上起跑','這一天，全球科技巨頭公開了最新 AI 模型與開發工具','先進 AI，人人都能低成本取得','短短三個月，市場湧進大量相似產品','當大家都用得到同一套 AI','你的公司，要靠什麼留下來？']},
+ {type:'coop',era:'3.0',eraName:'3.0 知識經濟',title:'園區對外連線中斷',grades:GRADE2,desc:DESC2,scene:1,
+  event:'上一回合，AI 訂單突然暴增，園區裡的工廠加開產線，資料中心增加運算班次，綠能場站也要更頻繁地更新供電排程。就在大家忙著擴充營運時，園區的對外網路反覆中斷。工廠收不到遠端的瑕疵判讀結果，綠能場站等不到調度指令，醫療系統也連不上外部的影像分析服務。園區內部網路和現有設備仍然能用。六家公司有機會把各自的技術和現場經驗接起來，先讓一項關鍵工作在本地繼續。做得成的方案，也能留下來，應付下一次業務量暴增。',
+  trailer:['前情提要：開源浪潮過後，AI 訂單突然暴增','工廠加開產線，資料中心加開運算班次','就在大家忙著擴充的時候','園區的對外網路，反覆中斷','工廠收不到瑕疵判讀，場站等不到調度指令','醫院也連不上外部的影像分析','園區內部的網路和設備，還能用','找一個夥伴，讓一項關鍵工作在本地繼續']},
+ {type:'risk',era:'3.0',eraName:'3.0 知識經濟',title:'關鍵人才流動',data:R3,scene:2,
+  event:'AI 產業人才競爭升溫，部分關鍵工程師收到競爭對手的高薪邀約。公司發現部分製程、系統調校與客戶經驗只掌握在少數資深員工手中。公司該如何避免人才流動造成核心知識流失？',
+  trailer:['前情提要：園區撐過了斷線，訂單還在湧入','AI 人才的爭奪戰跟著升溫','關鍵工程師，陸續收到對手的高薪邀約','公司這才發現','製程、系統調校、客戶經驗','只掌握在少數資深員工的腦袋裡','人會走，知識要怎麼留下來？']},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 電力危機',data:R4,scene:3,
+  event:'AI 算力擴張讓用電暴增，夏季備轉容量告急。政府宣布碳費上路，大用電戶都要提出減碳計畫，社區也開始抗議新建資料中心。到了 4.0，問題不再是「賺不賺錢」，而是「你還能不能被允許繼續營運」。',
+  trailer:['前情提要：知識留住了，算力卻越擴越大','AI 算力擴張讓用電暴增','夏季備轉容量告急～～～Hot Hot><','政府宣布碳費上路','大用電戶都要提出減碳計畫（蛤？？？可惡）','社區也開始抗議新建資料中心','到了 4.0，問題不再是「賺不賺錢」','而是「你還能不能被允許繼續營運」']},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'社區三年公共服務計畫',plans:P5,scene:6,
+  event:'AI 園區擴張滿一年，企業接到更多訂單，也帶來了新的工作機會。上回合的電力危機過後，地方政府召開了一場檢討會，邀請園區企業、居民、診所和學校一起談園區擴張對地方的影響。會議上，一位館員提到，圖書館的電腦常常一壞就停用好幾週，想上網辦事的居民只能等。附近診所也說，他們試辦過遠距追蹤，但補助一到期，就沒有足夠人力繼續服務。居民代表問：「園區就在旁邊，有這麼多懂設備、能源和數位服務的公司，我們能不能一起做一些地方真的用得到、幾年後也還在的服務？」會後，地方政府和社區據點共同提出一項三年公共服務改善計畫，邀請企業自願投入。每家公司可以先做一季試辦，也可以承擔更長期的維護、培訓或服務。',
+  trailer:['前情提要：電力危機過後，園區擴張滿一年','地方政府召開檢討會','企業、居民、診所和學校，第一次坐在同一張桌子','館員說：圖書館的電腦，一壞就停用好幾週','診所說：遠距追蹤試辦過，補助一到期就沒人力','居民代表問：','「園區有這麼多懂技術的公司」','「能不能一起做幾年後還在的服務？」','三年公共服務計畫，邀你投入']},
+ {type:'risk',era:'4.0',eraName:'4.0 人文永續',title:'AI 供應鏈信任危機',data:R6,scene:5,
+  event:'公共服務計畫進行到第二年，園區企業的永續報告書一份比一份漂亮。直到一份國際調查報告出爐，揭露部分企業的永續承諾與實際營運存在落差：綠電來源不明、產品碳排資訊不透明，還有資料安全與產品責任問題。調查員也到地方走了一圈：圖書館館員說，有些公司說好要來修電腦，試辦一季後就沒再出現；診所的遠距追蹤系統，病患資料存在哪、誰看得到，沒人說得清楚；居民代表只問了一句：「去年在檢討會上答應我們的事，還算數嗎？」消息曝光後，國際客戶宣布重新審查整條 AI 供應鏈。就算沒有直接違規，也可能因為合作夥伴被牽連。被懷疑的時候，你要拿什麼證明自己？',
+  trailer:['前情提要：公共服務計畫，進行到第二年','永續報告書，一份比一份漂亮','直到一份國際調查報告出爐','綠電來源不明、碳排不透明（蛤？？？說好的永續呢）','館員說：有些公司修了一季電腦，就沒再出現','診所的病患資料存在哪、誰看得到，沒人說得清楚','居民代表只問一句：','「去年答應我們的事，還算數嗎？」','被懷疑的時候，你要拿什麼證明自己？']},
+ {type:'coop',era:'4.0',eraName:'4.0 人文永續',title:'少用的電，還是少做的服務？',grades:GRADE7,desc:DESC7,hand:HAND7,scene:4,
+  event:'上回合的供應鏈調查結束後，國際買方要求園區企業提出共同減碳成果。說明會上，一家企業拿出機房電表：「上季的用電降了。」參與公共服務計畫的診所主任卻問：「可是我們有兩天沒開診。少看了病人，也會少用電。你們怎麼知道是哪一種？」買方因此要求各組選定一項產品或服務，比較改善前後的排放，並找實際使用的人確認：完成同樣的工作，排放有沒有下降？原本需要這項服務的人，還能不能照常使用？請找一家夥伴，決定雙方各自投入多少資本。',
+  trailer:['前情提要：審查結束，國際買方要看共同減碳成果','說明會上，企業拿出機房電表','「上季的用電，降了。」','診所主任舉手：「我們有兩天沒開診。」','「少看了病人，也會少用電。你們怎麼知道是哪一種？」','完成同樣的工作，排放有沒有下降？','需要這項服務的人，還能不能照常使用？','找一個夥伴，拿出雙方都能核對的成果']},
+ {type:'invest',era:'4.0',eraName:'4.0 人文永續',title:'園區要用的水，誰來決定？',plans:P8,scene:7,
+  event:'旱季進入第三個月，地方政府宣布下個月將減少園區供水，並召開營運許可審查會。上回合一起核對減碳成果的居民帶來兩份紀錄：工廠的月用水量確實下降了，但工廠改在傍晚清洗設備後，附近住戶煮晚餐時，水龍頭連續幾天只剩細細一條水。居民代表問：「你們的總表看得見省了多少水，看得見我們什麼時候沒水用嗎？如果下個月再減供，誰可以要求你們改？」審查會請各家公司提出一項投資，說清楚會改善哪個用水環節、誰能從中受益，以及地方如何確認承諾有做到。這是最後一輪，你可以投資，也可以保留資本。',
+  trailer:['前情提要：減碳成果，居民一起幫忙核對了','旱季進入第三個月','下個月，園區供水還要再減','工廠的月用水量，確實下降了','但改在傍晚清洗後，住戶煮晚餐只剩細細一條水','「你們的總表，看得見我們什麼時候沒水用嗎？」','「如果再減供，誰可以要求你們改？」','這是最後一輪','你的最後一筆資本，要投在哪裡？']}
 ];
 const N=ROUNDS.length;
 const rCol=st=>st.type==='coop'?RCOL.coop:st.type==='invest'?RCOL.invest:RCOL[st.era];
-const TYPENAME={risk:'事件＋五說',coop:'合作回合',invest:'永續投資'};
+const TYPENAME={risk:'事件＋說',coop:'合作回合',invest:'永續投資'};
 
 /* ───────── 狀態 ───────── */
 let me=-1, started=false, paused=true, ended=false;
@@ -319,8 +427,9 @@ function signTex(title,color,ctxText,main,dim){
   if(ctxText){x.font='700 30px '+SANS;x.fillStyle='#5d6579';for(const l of wrap(x,ctxText,576).slice(0,2)){x.fillText(l,32,y);y+=40;}y+=10;}
   let fs=48;x.font='900 '+fs+'px '+SANS;let ls=wrap(x,main,580);
   if(ls.length*62>512-y){fs=40;x.font='900 '+fs+'px '+SANS;ls=wrap(x,main,580);}
+  if(ls.length*fs*1.28>512-y){fs=33;x.font='900 '+fs+'px '+SANS;ls=wrap(x,main,580);}
   x.fillStyle=dim?'#98a0ad':'#1d2233';y+=6;
-  for(const l of ls.slice(0,5)){x.fillText(l,30,y);y+=fs*1.28;}
+  for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.28;}
   return tex(c);
 }
 function clothTex(top,big,color,w=768,h=420){
@@ -383,7 +492,7 @@ function makeChar(color,label,k){
   g.scale.setScalar(0.9);
   const root=new THREE.Group();root.add(g);
   const sh=new THREE.Mesh(new THREE.CircleGeometry(0.6,20),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:0.12,depthWrite:false}));sh.rotation.x=-Math.PI/2;sh.position.y=0.04;root.add(sh);
-  return {root,body:g,armL,armR};
+  return {root,body:g,armL,armR,legL:legL.p,legR:legR.p};
 }
 
 /* ───────── 世界：台北林蔭大道，盡頭是台北 101 ───────── */
@@ -528,7 +637,7 @@ function buildWorld(){
   const st=new THREE.Mesh(new THREE.BoxGeometry(8.6,4.4,0.6),toon('#d9dde2'));st.position.set(-5.3,2.8,-3.4);st.rotation.y=0.55;edges(st);scene.add(st);
   const stf=plane(8.2,4,steleTex('八回合之路','每回合一張事件卡，走到守護者面前做選擇。終點在台北 101 下。','#2b6fb0'));
   stf.position.set(-5.3+Math.sin(0.55)*0.31,2.8,-3.4+Math.cos(0.55)*0.31);stf.rotation.y=0.55;scene.add(stf);
-  tree(6,3,1);tree(6.5,-4,0.9);
+  buildRuleWall();
   ROUNDS.forEach((rd,i)=>{
     const cz=CZ(i),col=rCol(rd);
     paved(R,cz);
@@ -539,7 +648,8 @@ function buildWorld(){
     const cloth=plane(5,2.73,clothTex('第 '+(i+1)+' 回合 · '+rd.eraName,rd.type==='coop'?'合作':rd.type==='invest'?'投資':'五說',col));cloth.position.set(0,4.75,cz+R-0.3);scene.add(cloth);
     const sl=new THREE.Mesh(new THREE.BoxGeometry(10.4,5.2,0.7),toon('#d9dde2'));sl.position.set(0,3.6,cz-12);edges(sl);scene.add(sl);
     const base=new THREE.Mesh(new THREE.BoxGeometry(11.4,1,1.6),toon('#9aa3ad'));base.position.set(0,0.5,cz-12);edges(base);scene.add(base);
-    const face=plane(10,4.9,steleTex(rd.title,rd.type==='coop'?'合作回合：只有互賴說，挑一家公司配對。':rd.type==='invest'?'永續投資：四張方案卡，付費買一張或不投資。':'事件＋五說：五位說的守護者舉著你的行動，選一個說。',col));face.position.set(0,3.6,cz-11.63);scene.add(face);
+    steles[i]=[sl,base];
+    const face=plane(10,4.9,steleTex(rd.title,rd.type==='coop'?'合作回合：只有互賴說，挑一家公司配對。':rd.type==='invest'?'永續投資：買一個方案，再判斷它屬於哪一說。':'事件＋說：五位說的守護者舉著你的行動，選一個說。',col));face.position.set(0,3.6,cz-11.63);scene.add(face);steles[i].push(face);
     const wz=WZ(i);hedge(-HALF-1.5,-3.6,wz);hedge(3.6,HALF+1.5,wz);
     [-3.4,3.4].forEach(x=>{const p=new THREE.Mesh(new THREE.BoxGeometry(0.6,4.6,0.6),PILLAR);p.position.set(x,2.3,wz);edges(p);scene.add(p);});
     const lt=new THREE.Mesh(new THREE.BoxGeometry(7.4,0.4,0.6),toon(col));lt.position.set(0,4.7,wz);scene.add(lt);
@@ -558,9 +668,9 @@ function buildWorld(){
 
 function specsFor(i){
   const rd=ROUNDS[i],my=COMP[me];
-  if(rd.type==='risk'){const d=rd.data[my.id];return SHUO.map((sh,k)=>({kind:'shuo',k,label:sh.slice(0,2),color:TH[sh].color,head:sh,ctx:rd.ctxLabel?rd.ctxLabel+'：'+d.ctx:'你的公司：'+my.name,main:d.a[k],name:sh+'的守護者'}));}
+  if(rd.type==='risk'){const d=rd.data[my.id];return d.opts.map((o,k)=>({kind:'shuo',k,label:o.s.slice(0,2),color:TH[o.s].color,head:o.s,ctx:d.ctx?'你的處境：'+d.ctx:'你的公司：'+my.name,main:o.a,name:o.s+'的守護者'}));}
   if(rd.type==='coop')return [{kind:'coop',k:0,label:'互賴',color:TH['互賴說'].color,head:'互賴說',ctx:'你的公司：'+my.name,main:'挑一家公司配對，各自投入 1～6 資本',name:'互賴說的守護者'}];
-  return rd.plans.map((p,j)=>({kind:'plan',k:j,label:'ABCD'[j],color:RCOL.invest,head:'方案 '+'ABCD'[j]+' · '+p.cost+' 資本',ctx:p.short,main:p.text,name:'方案 '+'ABCD'[j]+' 顧問'}));
+  return rd.plans[my.id].map((p,j)=>({kind:'plan',k:j,label:'AB'[j],color:RCOL.invest,head:'方案 '+'AB'[j]+' · '+p.cost+' 資本',ctx:p.short,main:p.text,name:'方案 '+'AB'[j]+' 顧問'}));
 }
 function populate(){
   ROUNDS.forEach((rd,i)=>{
@@ -577,7 +687,7 @@ function populate(){
       scene.add(sg);
       const hb=new THREE.Mesh(new THREE.BoxGeometry(1.3,2.3,1.1),new THREE.MeshBasicMaterial());hb.material.visible=false;hb.position.set(x,1.15,z);scene.add(hb);
       const o={...ch,...sp,stage:i,x,z,face,sg,phase:Math.random()*6,cheer:0,wave:0,sad:0};
-      hb.userData.npc=o;board.userData.npc=o;hitList.push(hb,board);npcs.push(o);
+      o.hb=hb;hb.userData.npc=o;board.userData.npc=o;hitList.push(hb,board);npcs.push(o);
     });
   });
 }
@@ -588,9 +698,9 @@ function inCircle(x,z,cz,r){return x*x+(z-cz)*(z-cz)<=r*r;}
 function walkable(x,z){
   if(z>12||z<FZ-10||Math.abs(x)>HALF)return false;
   for(let i=0;i<N;i++){const wz=WZ(i);
-    if(!solved[i]&&z<wz+0.9)return false;
+    if(!barriers[i].opening&&z<wz+0.9)return false;
     if(Math.abs(z-wz)<1.3&&Math.abs(x)>3.0)return false;
-    const cz=CZ(i);if(Math.abs(x)<5.8&&z<cz-11&&z>cz-13.2)return false;}
+    const cz=CZ(i);if(!barriers[i].opening&&Math.abs(x)<5.8&&z<cz-11&&z>cz-13.2)return false;}
   return true;
 }
 function arenaAt(x,z){for(let i=0;i<N;i++)if(inCircle(x,z,CZ(i),R))return i;return -1;}
@@ -606,7 +716,9 @@ window.addEventListener('keydown',e=>{
   if(!overlayEl.hidden)return;K[e.code]=true;
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();
   if(e.code==='KeyE'&&started)interact();
-  if(e.code==='KeyQ'&&started&&stageIdx<N)showEventCard(stageIdx);
+  if(e.code==='KeyV'&&started)toggleView();
+  if(e.code==='KeyR'&&started)showRules(false);
+  if(e.code==='KeyQ'&&started){if(pending)showWait();else if(stageIdx<N)showEventCard(stageIdx);}
 });
 window.addEventListener('keyup',e=>{K[e.code]=false;});
 window.addEventListener('blur',()=>{for(const k in K)K[k]=false;});
@@ -618,16 +730,16 @@ document.addEventListener('mousemove',e=>{if(locked&&!paused){P.yaw-=e.movementX
 let drag=null;
 canvas.addEventListener('mousedown',e=>{if(!started||paused)return;if(locked){interact();return;}drag={x:e.clientX,y:e.clientY,moved:0};});
 window.addEventListener('mousemove',e=>{if(!drag||locked||paused)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;P.yaw-=dx*0.005;P.pitch-=dy*0.005;clampPitch();});
-window.addEventListener('mouseup',()=>{if(!drag)return;const click=drag.moved<6;drag=null;if(click){if(target)interact();else lockMouse();}});
+window.addEventListener('mouseup',()=>{if(!drag)return;const click=drag.moved<6;drag=null;if(click){if(target||ruleTarget)interact();else lockMouse();}});
 const joyEl=$('joy'),knob=$('knob');let joyId=null,lookId=null,lookLast=null;
 joyEl.addEventListener('touchstart',e=>{const t=e.changedTouches[0];joyId=t.identifier;moveJoy(t);e.preventDefault();},{passive:false});
 function moveJoy(t){const r=joyEl.getBoundingClientRect();let dx=t.clientX-(r.left+r.width/2),dy=t.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy),m=46;if(d>m){dx*=m/d;dy*=m/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;joy.x=dx/m;joy.y=-dy/m;}
 canvas.addEventListener('touchstart',e=>{if(paused)return;for(const t of e.changedTouches){if(lookId===null){lookId=t.identifier;lookLast={x:t.clientX,y:t.clientY,moved:0};}}e.preventDefault();},{passive:false});
 window.addEventListener('touchmove',e=>{for(const t of e.changedTouches){if(t.identifier===joyId)moveJoy(t);else if(t.identifier===lookId&&lookLast){const dx=t.clientX-lookLast.x,dy=t.clientY-lookLast.y;lookLast.moved+=Math.abs(dx)+Math.abs(dy);lookLast.x=t.clientX;lookLast.y=t.clientY;P.yaw-=dx*0.006;P.pitch-=dy*0.006;clampPitch();}}},{passive:false});
-window.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===joyId){joyId=null;joy.x=joy.y=0;knob.style.transform='';}if(t.identifier===lookId){if(lookLast&&lookLast.moved<8&&target)interact();lookId=null;lookLast=null;}}});
+window.addEventListener('touchend',e=>{for(const t of e.changedTouches){if(t.identifier===joyId){joyId=null;joy.x=joy.y=0;knob.style.transform='';}if(t.identifier===lookId){if(lookLast&&lookLast.moved<8&&(target||ruleTarget))interact();lookId=null;lookLast=null;}}});
 $('tAct').addEventListener('touchstart',e=>{e.preventDefault();interact();},{passive:false});
 $('tJump').addEventListener('touchstart',e=>{e.preventDefault();K.Space=true;setTimeout(()=>K.Space=false,120);},{passive:false});
-$('cardBtn').addEventListener('click',()=>{if(auto||film||!overlayEl.hidden||stageIdx>=N)return;showEventCard(stageIdx);});
+$('cardBtn').addEventListener('click',()=>{if(auto||film||!overlayEl.hidden)return;if(pending){showWait();return;}if(stageIdx>=N)return;showEventCard(stageIdx);});
 
 /* ───────── 音效 ───────── */
 let actx=null;
@@ -636,13 +748,13 @@ function beep(freqs,dur=0.12,type='triangle',vol=0.07){try{if(!actx)actx=new (wi
 
 /* ───────── 介面 ───────── */
 function openPanel(html,stageColor){
-  paused=true;unlockMouse();for(const k in K)K[k]=false;
+  waitOpen=false;paused=true;unlockMouse();for(const k in K)K[k]=false;
   panel.style.setProperty('--stage',stageColor||'#2b6fb0');
   panel.innerHTML=html;overlayEl.hidden=false;panel.scrollTop=0;
   const f=panel.querySelector('[data-focus]')||panel.querySelector('button');if(f)setTimeout(()=>f.focus({preventScroll:true}),30);
   $('prompt').hidden=true;
 }
-function closePanel(){overlayEl.hidden=true;paused=false;canvas.focus({preventScroll:true});lockMouse();updateTip();}
+function closePanel(){waitOpen=false;overlayEl.hidden=true;paused=false;canvas.focus({preventScroll:true});lockMouse();updateTip();}
 panel.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b||b.disabled)return;const a=b.dataset.act;if(handlers[a])handlers[a](b);});
 const handlers={};
 function updateTip(){const t=$('tip');if(!started||paused||ended){t.hidden=true;return;}
@@ -658,16 +770,17 @@ function hud(){
 const fmt=v=>(v>0?'+':'')+String(v).replace('-','−');
 function addRes(d){if(d.cap){res.cap+=d.cap;bump('mCap');}if(d.sc){res.sc+=d.sc;bump('mSc');}hud();}
 function chips(d){const a=[];if(d.sc)a.push(`<span class="d up">策略分 +${d.sc}</span>`);if(d.cap)a.push(`<span class="d ${d.cap>0?'up':'down'}">資本 ${fmt(d.cap)}</span>`);return a.length?`<div class="deltas">${a.join('')}</div>`:'<p class="muted">這回合沒有得分。</p>';}
-const nextBtn=i=>`<div class="row"><button class="btn stage" data-act="advance" data-focus>${i<N-1?'開門前往第 '+(i+2)+' 回合':'開門前往終點'}</button></div>`;
+const nextBtn=i=>`<div class="row"><button class="btn stage" data-act="advance" data-focus>${i<N-1?'打開大門，前往第 '+(i+2)+' 回合':'打開大門，前往終點'}</button></div>`;
 
 /* 開始畫面：先選公司 */
 let chosen=-1;
 function showStart(){
   openPanel(`
-   <div class="kicker">策略思維與永續發展 · 第五組 · 八回合試玩版</div>
+   <div class="kicker">策略思維與永續發展 · 第五組 · 故事試做版</div>
    <h1>永續價值進化：新創競技場</h1>
    <p>你們的公司要在台北街頭闖過八回合。先選你的小組代表哪一家公司，每家都從 <b>6 資本、0 策略分</b>開局。每回合開始先播一段快訊影片，再發一張事件卡：</p>
-   <div class="box"><p><b>事件＋五說（第 1、3、4、6 回合）</b>：五位說的守護者舉著你的公司在這回合可以採取的行動，選一個說，答中主持人答案得 1 分。<br><b>合作（第 2、7 回合）</b>：只有互賴說，挑一家公司配對、投入資本，S、A 級得 1 分。<br><b>永續投資（第 5、8 回合）</b>：四位方案顧問各拿一張方案卡，付費買一張可得 0～2 分，也可以不投資。</p></div>
+   <div class="box"><p><b>事件＋說（第 1、3、4、6 回合）</b>：五位說的守護者舉著你的公司在這回合可以採取的行動，選一個說，答中主持人答案得 1 分。<br><b>合作（第 2、7 回合）</b>：只有互賴說，挑一家公司配對、投入資本，S、A 級得 1 分。<br><b>永續投資（第 5、8 回合）</b>：從你公司的兩個方案（5 或 8 資本）買一個，再判斷它屬於九說中的哪一說，答對得 1～2 分，也可以不投資。</p></div>
+   <div class="box task"><p><b>同步試驗版</b>：同一房間的所有組別遇到同一張風險卡，各自用自己公司的策略選擇。每回合要等所有組別都選完，才會同時亮牌，再一起開門進入下一回合。</p></div>
    <h3>你的組別與房間</h3>
    <div class="row"><input id="nickIn" class="txt" maxlength="12" placeholder="組名，例如：第五組"><input id="roomIn" class="txt" maxlength="20" placeholder="房間代碼" value="${esc(roomCode)}"><button class="btn ghost" data-act="joinRoom">換房間</button></div>
    <p id="netInfo" class="muted" style="font-size:14px">連線中…</p>
@@ -684,19 +797,20 @@ handlers.start=()=>{
   pub({nick:myNick,co:c.id,st:0,sc:0,cap:6,pk:myPk,x:0,z:6,yaw:0});
   COMP.forEach((o,i)=>{if(i!==me)sim[o.id]={cap:6,sc:0};});
   $('meDot').style.background=c.color;$('meName').textContent=c.name+' · '+myNick;
-  ['stats','progress','crosshair','cardBtn'].forEach(id=>$(id).hidden=false);
+  ['stats','progress','crosshair','cardBtn','viewBtn','rulesBtn'].forEach(id=>$(id).hidden=false);myAv=makeAvatar(c.id,myNick);myAv.root.visible=false;
   if(isTouch)$('touch').hidden=false;else $('keys').hidden=false;
-  populate();enableShadows();P.x=0;P.z=6;P.yaw=0;P.pitch=-0.02;hud();beep([523,659,784,1047],0.1);closePanel();
-  showBanner('台北市',c.name+' 出發');
+  populate();enableShadows();P.x=0;P.z=6;P.yaw=0;P.pitch=-0.02;hud();beep([523,659,784,1047],0.1);showRules(true);
 };
 
 /* 事件卡 */
 function showEventCard(i){
   const rd=ROUNDS[i];if(!rd)return;const col=rCol(rd);const my=COMP[me];
-  const ctx=rd.type==='risk'&&rd.ctxLabel?`<div class="box"><p><b>${rd.ctxLabel}：</b>${rd.data[my.id].ctx}</p></div>`:'';
-  const task=rd.type==='coop'?`這回合只有<b>互賴說</b>。去找互賴說的守護者，從另外五家公司挑一家配對，各自投入 1～6 資本。主持人公布等級後，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。如果你選的是真人組別，對方會收到邀請，你們可以先在對話框聊聊，再由對方選擇同意或拒絕。`
-    :rd.type==='invest'?`四位方案顧問各拿著一張方案卡，成本 5 或 9 資本。走到想買的方案面前付費，也可以保留資本不投資。亮牌後公布答案，每張方案值 0、1 或 2 分。你目前有 <b>${res.cap}</b> 資本。`
-    :`五位說的守護者舉著<b>${my.name}</b>在這回合可以採取的行動。暗選一個說：走到它面前互動並選定，<b>每回合只能選一個說</b>。答中主持人答案得 1 策略分。`;
+  let ctx='';
+  if(rd.type==='risk'&&rd.data[my.id].ctx)ctx=`<div class="box"><p><b>你的處境：</b>${rd.data[my.id].ctx}</p></div>`;
+  if(rd.hand)ctx=`<div class="box"><p><b>你的手卡：</b>${rd.hand[my.id]}</p></div>`;
+  const task=rd.type==='coop'?`這回合只有<b>互賴說</b>。去找互賴說的守護者，從另外五家公司挑一家配對，各自投入 1～6 資本。鎖定後才公布配對等級，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。選真人組別時，對方會收到邀請，可以先在對話框聊聊再決定。`
+    :rd.type==='invest'?`兩位方案顧問各拿著<b>${my.name}</b>的一張方案卡（5 或 8 資本）。付費買一張，再判斷這個方案屬於<b>九說</b>中的哪一說：答對時 5 資本方案得 1 分、8 資本方案得 2 分；答錯不得分，退回 2 或 4 資本。也可以保留資本不投資。你目前有 <b>${res.cap}</b> 資本。`
+    :`五位說的守護者舉著<b>${my.name}</b>在這回合可以採取的行動（每家公司拿到的五個說不一定一樣）。走到你要用的說面前互動並選定，<b>每回合只能選一次</b>。答中主持人答案得 1 策略分。`;
   const go=rd.type==='coop'?'去找互賴說':rd.type==='invest'?'去看方案':'去找說的守護者';
   openPanel(`
    <div class="eyebrow"><span class="tag th">第 ${i+1} 回合 · ${TYPENAME[rd.type]}</span><span class="tag">${rd.eraName}</span><span class="tag">${my.name}</span></div>
@@ -708,83 +822,99 @@ function showEventCard(i){
 }
 handlers.close=()=>closePanel();
 handlers.replay=b=>{const i=+b.dataset.i;overlayEl.hidden=true;playFilm(i,()=>showEventCard(i));};
-handlers.advance=()=>{overlayEl.hidden=true;startAuto(stageIdx-1);};
+handlers.advance=()=>{closePanel();openPath(stageIdx-1);};
 function startIntro(i){introShown[i]=true;showBanner('第 '+(i+1)+' 回合',ROUNDS[i].title);playFilm(i,()=>showEventCard(i));}
 
 /* NPC 互動 */
 let target=null;const ray=new THREE.Raycaster();const center=new THREE.Vector2(0,0);
-function interact(){if(!started||paused||!target)return;openNpcCard(target);}
+function interact(){if(!started||paused)return;if(ruleTarget){showRules();return;}if(!target)return;openNpcCard(target);}
 function openNpcCard(n){
   const rd=ROUNDS[n.stage],col=n.color;const active=n.stage===stageIdx&&!solved[n.stage];
   n.wave=1.5;beep([587],0.07,'sine',0.05);
   const tagline=`<span class="tag">第 ${n.stage+1} 回合 · ${rd.title}</span>`;
-  if(n.kind==='shuo'){const d=rd.data[COMP[me].id];
+  const hidden=pending&&pending.i===n.stage;
+  if(n.kind==='shuo'){const d=rd.data[COMP[me].id];const o=d.opts[n.k];
     openPanel(`<div class="eyebrow"><span class="tag th">${n.head}</span>${tagline}</div><h2 style="color:${col}">${n.name}</h2><p class="muted">${TH[n.head].desc}</p>
-     <div class="box"><p class="muted" style="font-size:13px">${COMP[me].name}用${n.head}會這樣做</p><p class="big-act">${d.a[n.k]}</p></div>
+     <div class="box"><p class="muted" style="font-size:13px">${COMP[me].name}用${n.head}會這樣做</p><p class="big-act">${o.a}</p></div>
      ${n.chosen?'<p><b>這是你這回合選定的說。</b></p>':''}
      ${active?`<p>確定這回合要用<b>${n.head}</b>嗎？選定後這回合就不能再換。</p><div class="row"><button class="btn stage" data-act="choose" data-k="${n.k}" data-focus>選定${n.head}</button><button class="btn ghost" data-act="close">再看看</button></div>`
-       :`<p class="muted">這回合主持人的答案是「${SHUO[d.best]}」。</p><div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);return;}
+       :`${hidden?'<p class="muted">等所有組別都選完，才會同時亮牌。</p>':(n.stage<stageIdx?'<p class="muted">主持人答案：'+d.opts[d.best].s+'。'+(o.n?'這個選項：'+o.n:'')+'</p>':'')}<div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);return;}
   if(n.kind==='coop'){
     openPanel(`<div class="eyebrow"><span class="tag th">互賴說</span>${tagline}</div><h2 style="color:${col}">${n.name}</h2><p class="muted">${TH['互賴說'].desc}</p>
-     <div class="box"><p>從另外五家公司挑一家配對，雙方各自投入 1～6 資本（以手上資本為限）。主持人公布等級後，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。<b>選定夥伴之後就不能更換。</b></p></div>
+     <div class="box"><p>從另外五家公司挑一家配對，雙方各自投入 1～6 資本（以手上資本為限）。鎖定後才公布等級，S、A 級各得 1 策略分；雙方拿回本金，再各拿配對綜效。<b>選定夥伴之後就不能更換。</b></p></div>
      ${n.chosen?'<p><b>這回合你已經完成配對。</b></p>':''}
      <div class="row">${active?`<button class="btn stage" data-act="coopStart" data-focus>開始挑夥伴</button>`:''}<button class="btn ghost" data-act="close">${active?'再看看':'關閉'}</button></div>`,col);return;}
-  const p=rd.plans[n.k];const can=res.cap>=p.cost;
-  openPanel(`<div class="eyebrow"><span class="tag th">方案 ${n.label}</span>${tagline}</div>
+  const p=rd.plans[COMP[me].id][n.k];const can=res.cap>=p.cost;
+  openPanel(`<div class="eyebrow"><span class="tag th">方案 ${'AB'[n.k]} · ${p.cost} 資本</span>${tagline}</div>
    <h2>${p.short}</h2><div class="box"><p class="big-act" style="font-size:18px">${p.text}</p></div>
-   <p>成本 <b>${p.cost} 資本</b>，你目前有 ${res.cap} 資本。${n.chosen?'<b>這是你這回合買下的方案。</b>':''}</p>
+   <p>成本 <b>${p.cost} 資本</b>，你目前有 ${res.cap} 資本。付費後要判斷這個方案屬於哪一說。${n.chosen?'<b>這是你這回合買下的方案。</b>':''}</p>
    ${active?`<div class="row">${can?`<button class="btn stage" data-act="plan" data-k="${n.k}" data-focus>付 ${p.cost} 資本買這個方案</button>`:'<button class="btn ghost" disabled>資本不足</button>'}<button class="btn ghost" data-act="skipInvest">這回合不投資</button><button class="btn ghost" data-act="close">再看看</button></div>`
-     :(n.stage<stageIdx?`<p class="muted">主持人答案：${p.pts} 分。${p.why}</p>`:'')+`<div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);
+     :(n.stage<stageIdx&&!hidden?`<p class="muted">主持人答案：${p.ans}。${p.why}</p>`:'')+`<div class="row"><button class="btn ghost" data-act="close" data-focus>關閉</button></div>`}`,col);
 }
 function solveStage(i){solved[i]=true;stageIdx=i+1;hud();}
 const others=()=>COMP.filter((c,j)=>j!==me);
 
-/* 事件＋五說 */
+/* 事件＋說 */
 function simRisk(i){const rd=ROUNDS[i];return npcCos().map(c=>{const d=rd.data[c.id];const ok=Math.random()<0.45;
-  const k=ok?d.best:[0,1,2,3,4].filter(x=>x!==d.best)[Math.floor(Math.random()*4)];if(ok)sim[c.id].sc+=1;return {c,k,ok};});}
+  const alt=d.opts.map((o,j)=>j).filter(j=>j!==d.best);const k=ok?d.best:alt[Math.floor(Math.random()*alt.length)];if(ok)sim[c.id].sc+=1;return {c,k,ok,s:d.opts[k].s};});}
 handlers.choose=b=>{
-  const i=stageIdx,rd=ROUNDS[i],k=+b.dataset.k,my=COMP[me],d=rd.data[my.id],ok=k===d.best;
-  const delta={sc:ok?1:0};addRes(delta);picks[i]={k,ok};myPk[i]=k;solveStage(i);
+  const i=stageIdx,rd=ROUNDS[i],k=+b.dataset.k,my=COMP[me],d=rd.data[my.id],ok=k===d.best,o=d.opts[k];
+  const delta={sc:ok?1:0};picks[i]={k,ok,s:o.s};myPk[i]=k;solveStage(i);
   const rev=simRisk(i);
-  const cn=npcs.find(n=>n.stage===i&&n.k===k);if(cn){markChosen(cn);ok?cn.cheer=3:cn.sad=2;}
+  const cn=npcs.find(n=>n.stage===i&&n.k===k);if(cn)markChosen(cn);
+  deferReveal(i,'你選了 '+o.s,delta,()=>{if(cn){ok?cn.cheer=3:cn.sad=2;}
   if(!ok){const bn=npcs.find(n=>n.stage===i&&n.k===d.best);if(bn)bn.cheer=3;}
   ok?beep([659,784,1047,1319],0.11):beep([330,247],0.18);
+  const hasNotes=d.opts.some((x,j)=>x.n&&j!==d.best);
   openPanel(`
-   <div class="verdict"><span class="mark" style="background:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</span><div><h2>${ok?'答中主持人答案！':'不是主持人的答案'}</h2><p class="muted">第 ${i+1} 回合 · 你選了 ${SHUO[k]}</p></div></div>
+   <div class="verdict"><span class="mark" style="background:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</span><div><h2>${ok?'答中主持人答案！':'不是主持人的答案'}</h2><p class="muted">第 ${i+1} 回合 · 你選了 ${o.s}</p></div></div>
    ${chips(delta)}
-   <div class="box"><p>主持人答案：${my.name}｜<b>${SHUO[d.best]}</b>。${d.why}</p></div>
+   <div class="box"><p>主持人答案：${my.name}｜<b>${d.opts[d.best].s}</b>。${d.why}</p></div>
+   ${!ok&&o.n?`<p>你選的${o.s}：${o.n}</p>`:''}
    <h3>你的五個選項</h3>
-   <div class="tbl-wrap"><table style="min-width:420px"><thead><tr><th>說</th><th>行動</th></tr></thead><tbody>
-    ${d.a.map((a,j)=>`<tr class="${j===d.best?'ans':''} ${j===k?'mine':''}"><td>${SHUO[j]}${j===d.best?' ★':''}</td><td>${a}</td></tr>`).join('')}
+   <div class="tbl-wrap"><table style="min-width:${hasNotes?560:420}px"><thead><tr><th>說</th><th>行動</th>${hasNotes?'<th>主持人說明</th>':''}</tr></thead><tbody>
+    ${d.opts.map((x,j)=>`<tr class="${j===d.best?'ans':''} ${j===k?'mine':''}"><td style="white-space:nowrap">${x.s}${j===d.best?' ★':''}</td><td>${x.a}</td>${hasNotes?`<td>${x.n||'—'}</td>`:''}</tr>`).join('')}
    </tbody></table></div>
    <h3>其他公司同時亮牌</h3>
-   <div class="revgrid">${rev.map(o=>`<div><span>${o.c.short}</span><span>${SHUO[o.k]} <i style="color:${o.ok?'var(--good)':'var(--bad)'}">${o.ok?'✓':'✗'}</i></span></div>`).join('')}${humanRev(i)}</div>
-   ${nextBtn(i)}`,rCol(rd));
+   <div class="revgrid">${rev.map(o2=>`<div><span>${o2.c.short}</span><span>${o2.s} <i style="color:${o2.ok?'var(--good)':'var(--bad)'}">${o2.ok?'✓':'✗'}</i></span></div>`).join('')}${humanRev(i)}</div>
+   ${nextBtn(i)}`,rCol(rd));});
 };
 
-/* 永續投資 */
-function simInvest(i){const rd=ROUNDS[i];return npcCos().map(c=>{const s=sim[c.id];let k=-1;
-  if(Math.random()>0.2){const opts=rd.plans.map((q,j)=>j).filter(j=>rd.plans[j].cost<=s.cap);if(opts.length){const top=opts.filter(j=>rd.plans[j].pts===2);k=(top.length&&Math.random()<0.4)?top[0]:opts[Math.floor(Math.random()*opts.length)];}}
-  if(k>=0){s.cap-=rd.plans[k].cost;s.sc+=rd.plans[k].pts;}return {c,k,pts:k>=0?rd.plans[k].pts:0};});}
-handlers.plan=b=>finishInvest(+b.dataset.k);
-handlers.skipInvest=()=>finishInvest(-1);
-function finishInvest(k){
-  const i=stageIdx,rd=ROUNDS[i];const p=k>=0?rd.plans[k]:null;
-  const delta=p?{cap:-p.cost,sc:p.pts}:{};addRes(delta);picks[i]={k,pts:p?p.pts:0};myPk[i]=k;solveStage(i);
+/* 永續投資：買方案，再判斷屬於哪一說 */
+let invK=-1;
+function simInvest(i){const rd=ROUNDS[i];return npcCos().map(c=>{const s=sim[c.id];const ps=rd.plans[c.id];let k=-1,ok=false;
+  if(Math.random()>0.2){const opts=ps.map((q,j)=>j).filter(j=>ps[j].cost<=s.cap);if(opts.length)k=opts[Math.floor(Math.random()*opts.length)];}
+  if(k>=0){const p=ps[k];ok=Math.random()<0.5;s.cap-=p.cost;if(ok)s.sc+=p.pts;else s.cap+=p.refund;}
+  return {c,k,ok,pts:k>=0&&ok?ps[k].pts:0,cost:k>=0?ps[k].cost:0};});}
+handlers.plan=b=>{invK=+b.dataset.k;const p=ROUNDS[stageIdx].plans[COMP[me].id][invK];
+  openPanel(`<div class="eyebrow"><span class="tag th">方案 ${'AB'[invK]} · ${p.cost} 資本</span><span class="tag">第 ${stageIdx+1} 回合</span></div>
+   <h2>${p.short}</h2><p class="muted">${p.text}</p>
+   <h3>這個方案屬於哪一說？</h3>
+   <p class="muted" style="font-size:14px">看它<b>靠什麼產生效果</b>。答對得 ${p.pts} 分；答錯不得分，退回 ${p.refund} 資本。選定後就不能改。</p>
+   <div class="shuo9">${SHUO9.map(s=>`<button class="btn ghost s9" data-act="planShuo" data-s="${s}" style="--sc:${TH[s].color}">${s}</button>`).join('')}</div>
+   <div class="row"><button class="btn ghost small" data-act="planBack">回去換方案</button></div>`,RCOL.invest);};
+handlers.planBack=()=>{invK=-1;closePanel();};
+handlers.planShuo=b=>{if(invK<0)return;finishInvest(invK,b.dataset.s);};
+handlers.skipInvest=()=>finishInvest(-1,null);
+function finishInvest(k,s){
+  const i=stageIdx,rd=ROUNDS[i],my=COMP[me],ps=rd.plans[my.id];const p=k>=0?ps[k]:null;const ok=!!p&&s===p.ans;invK=-1;
+  const delta=p?(ok?{cap:-p.cost,sc:p.pts}:{cap:-p.cost+p.refund}):{};
+  picks[i]={k,s,ok,pts:ok?p.pts:0};myPk[i]=k<0?-1:{p:k,s};solveStage(i);
   const rev=simInvest(i);
-  if(p){const cn=npcs.find(n=>n.stage===i&&n.k===k);if(cn){markChosen(cn);p.pts>0?cn.cheer=3:cn.sad=2;}}
-  const bestJ=rd.plans.reduce((b2,q,j)=>q.pts>rd.plans[b2].pts?j:b2,0);const bn=npcs.find(n=>n.stage===i&&n.k===bestJ);if(bn&&bestJ!==k)bn.cheer=3;
-  const good=p&&p.pts>0;good?beep([659,784,1047,1319],0.11):beep([330,247],0.18);
+  const cn=p?npcs.find(n=>n.stage===i&&n.k===k):null;if(cn)markChosen(cn);
+  deferReveal(i,p?`你買了方案 ${'AB'[k]}（${p.cost} 資本），判斷它屬於${s}`:'你選擇這回合不投資',delta,()=>{if(cn){ok?cn.cheer=3:cn.sad=2;}
+  if(ok)beep([659,784,1047,1319],0.11);else if(p)beep([330,247],0.18);
   openPanel(`
-   <div class="verdict"><span class="mark" style="background:${good?'var(--good)':'var(--bad)'}">${p?(p.pts===2?'✓':p.pts===1?'△':'✗'):'—'}</span><div><h2>${p?'方案 '+'ABCD'[k]+'：'+p.pts+' 分':'這回合不投資'}</h2><p class="muted">第 ${i+1} 回合 · ${rd.title}</p></div></div>
+   <div class="verdict"><span class="mark" style="background:${ok?'var(--good)':p?'var(--bad)':'var(--muted)'}">${ok?'✓':p?'✗':'—'}</span><div><h2>${p?(ok?'判斷正確！得 '+p.pts+' 分':'判斷錯誤，退回 '+p.refund+' 資本'):'這回合不投資'}</h2><p class="muted">第 ${i+1} 回合 · ${rd.title}</p></div></div>
    ${chips(delta)}
-   <h3>亮牌：四張方案的主持人答案</h3>
-   <div class="tbl-wrap"><table><thead><tr><th>方案</th><th class="n">成本</th><th>內容</th><th class="n">分數</th><th>理由</th></tr></thead><tbody>
-    ${rd.plans.map((q,j)=>`<tr class="${j===bestJ?'ans':''} ${j===k?'mine':''}"><td>${'ABCD'[j]}</td><td class="n">${q.cost}</td><td>${q.short}</td><td class="n">${q.pts}</td><td>${q.why}</td></tr>`).join('')}
+   ${p?`<div class="box"><p>方案 ${'AB'[k]}「${p.short}」的答案是 <b>${p.ans}</b>。${p.why}${!ok?'<br>你選的是'+s+'。':''}</p></div>`:''}
+   <h3>你的兩個方案</h3>
+   <div class="tbl-wrap"><table style="min-width:460px"><thead><tr><th>方案</th><th class="n">成本</th><th>內容</th><th>答案</th><th class="n">答對得分</th></tr></thead><tbody>
+    ${ps.map((q,j)=>`<tr class="${j===k?'mine':''}"><td>${'AB'[j]}</td><td class="n">${q.cost}</td><td>${q.short}</td><td style="white-space:nowrap">${q.ans}</td><td class="n">${q.pts}</td></tr>`).join('')}
    </tbody></table></div>
    <h3>其他公司同時亮牌</h3>
-   <div class="revgrid">${rev.map(o=>`<div><span>${o.c.short}</span><span>${o.k>=0?'方案 '+'ABCD'[o.k]:'不投資'} <i>${o.pts} 分</i></span></div>`).join('')}${humanRev(i)}</div>
-   ${nextBtn(i)}`,RCOL.invest);
+   <div class="revgrid">${rev.map(o=>`<div><span>${o.c.short}</span><span>${o.k>=0?o.cost+' 資本方案':'不投資'} <i>${o.pts} 分</i></span></div>`).join('')}${humanRev(i)}</div>
+   ${nextBtn(i)}`,RCOL.invest);});
 }
 
 /* 合作（互賴說） */
@@ -794,8 +924,8 @@ handlers.coopStart=()=>{
   openPanel(`
    <div class="eyebrow"><span class="tag th">互賴說</span><span class="tag">步驟 1 / 2</span></div>
    <h2>挑一家公司配對</h2>
-   <p class="muted">${my.name}的核心能力：${my.core}；最需要：${my.need}。選定之後就不能更換。</p>
-   <div class="cogrid">${COMP.map((c,i)=>i===me?'':`<button class="co" data-act="partner" data-ci="${i}"><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>核心：${c.core}<br>需要：${c.need}<br>${H[c.id]?'<b>真人：'+esc(H[c.id].nick)+'・第 '+(H[c.id].st+1)+' 回合</b>':'電腦代打・資本 '+sim[c.id].cap}</small></button>`).join('')}</div>`,TH['互賴說'].color);
+   <p class="muted">${ROUNDS[stageIdx].hand?'你的手卡：'+ROUNDS[stageIdx].hand[my.id]:my.name+'的核心能力：'+my.core+'；最需要：'+my.need}。選定之後就不能更換。</p>
+   <div class="cogrid">${COMP.map((c,i)=>i===me?'':`<button class="co" data-act="partner" data-ci="${i}"><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>${ROUNDS[stageIdx].hand?'手卡：'+ROUNDS[stageIdx].hand[c.id]:'核心：'+c.core+'<br>需要：'+c.need}<br>${H[c.id]?'<b>真人：'+esc(H[c.id].nick)+'・第 '+(H[c.id].st+1)+' 回合</b>':'電腦代打・資本 '+sim[c.id].cap}</small></button>`).join('')}</div>`,TH['互賴說'].color);
 };
 handlers.partner=b=>{
   const ci=+b.dataset.ci;coop={ci};const c=COMP[ci],col=TH['互賴說'].color;const max=Math.min(6,res.cap);
@@ -813,17 +943,18 @@ function simCoop(i,partnerId){const rd=ROUNDS[i];const rest=npcCos().map(c=>c.id
     [a,b].forEach(id=>{sim[id].cap+=ex;sim[id].sc+=pt;});out.push({a,b,g});}
   if(rest.length%2)out.push({a:rest[rest.length-1],b:null,g:'—'});
   return out;}
-handlers.coopNone=()=>{const i=stageIdx;picks[i]={partner:null};const rev=simCoop(i,null);solveStage(i);
-  openPanel(`<h2>這回合沒有配對</h2><p class="muted">維持原資本與分數。</p>${coopRev(rev)}${nextBtn(i)}`,TH['互賴說'].color);};
+handlers.coopNone=()=>{const i=stageIdx;picks[i]={partner:null};myPk[i]='none';const rev=simCoop(i,null);solveStage(i);
+  deferReveal(i,'這回合你沒有配對',{},()=>openPanel(`<h2>這回合沒有配對</h2><p class="muted">維持原資本與分數。</p>${coopRev(rev)}${nextBtn(i)}`,TH['互賴說'].color));};
 function coopRev(rev){return `<h3>其他公司的配對</h3><div class="revgrid">${rev.map(o=>`<div><span>${COMP[CI[o.a]].short}${o.b?' × '+COMP[CI[o.b]].short:'（未配對）'}</span><i>${o.g}</i></div>`).join('')}${humanRev(stageIdx-1)}</div>`;}
 handlers.invest=b=>{
   const i=stageIdx,rd=ROUNDS[i];const inv=+b.dataset.v;const c=COMP[coop.ci];const ps=sim[c.id];
   const pinv=Math.min(ps.cap,Math.ceil(rnd(0.01,6)));const total=inv+pinv;
   const key=pairKey(COMP[me].id,c.id);const g=rd.grades[key];const extra=total>=2?EXTRA[g][Math.min(12,total)-2]:0;const pt=(g==='S'||g==='A')?1:0;
-  addRes({cap:extra,sc:pt});ps.cap+=extra;ps.sc+=pt;
+  ps.cap+=extra;ps.sc+=pt;
   picks[i]={partner:c.id,g,inv,pinv,extra,pt};myPk[i]=c.id;
   const rev=simCoop(i,c.id);solveStage(i);
-  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn){markChosen(hn);pt?hn.cheer=3:hn.sad=2;}
+  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn)markChosen(hn);
+  deferReveal(i,'你和'+c.name+'配對，投入 '+inv+' 資本',{cap:extra,sc:pt},()=>{if(hn){pt?hn.cheer=3:hn.sad=2;}
   pt?beep([659,784,1047,1319],0.11):beep([392,330],0.15);
   const best=COMP.filter(x=>x.id!==COMP[me].id&&rd.grades[pairKey(COMP[me].id,x.id)]==='S').map(x=>x.name).join('、');
   openPanel(`
@@ -832,7 +963,7 @@ handlers.invest=b=>{
    <div class="box"><p>你投入 ${inv}，${c.short}投入 ${pinv}，投入總額 ${total}。雙方各自拿回本金，每家再拿 <b>${extra}</b> 資本的配對綜效。${pt?'S、A 級配對得 1 策略分。':'B、C 級配對不得分。'}</p></div>
    ${g!=='S'?`<p class="muted">這回合對${COMP[me].name}來說，${best?'S 級夥伴是'+best+'。':'沒有 S 級組合，A 級就是最好的選擇。'}</p>`:''}
    ${coopRev(rev)}
-   ${nextBtn(i)}`,TH['互賴說'].color);
+   ${nextBtn(i)}`,TH['互賴說'].color);});
 };
 
 /* 結局 */
@@ -843,14 +974,15 @@ function showEnding(){
   const mine=rows.find(r=>r.me);const tied=rows.filter(r=>r.sc===mine.sc).length>1;
   beep(mine.pos===1?[523,659,784,1047,1319]:[523,659,523],0.13);
   const recap=ROUNDS.map((r,i)=>{const p=picks[i];if(!p)return '';let what,got;
-    if(r.type==='risk'){const d=r.data[COMP[me].id];what=SHUO[p.k];got=p.ok?'+1':'0（答案：'+SHUO[d.best]+'）';}
+    if(r.type==='risk'){const d=r.data[COMP[me].id];what=p.s;got=p.ok?'+1':'0（答案：'+d.opts[d.best].s+'）';}
     else if(r.type==='coop'){what=p.partner?'和'+COMP[CI[p.partner]].short+'配對（'+p.g+' 級）':'未配對';got=p.partner?'+'+p.pt:'0';}
-    else{what=p.k>=0?'方案 '+'ABCD'[p.k]:'不投資';got='+'+p.pts;}
+    else{const ps=r.plans[COMP[me].id];what=p.k>=0?ps[p.k].cost+' 資本方案 · '+p.s:'不投資';got=p.k>=0?(p.ok?'+'+p.pts:'0（答案：'+ps[p.k].ans+'）'):'0';}
     return `<tr><td>${i+1}</td><td>${r.title}</td><td>${what}</td><td class="n">${got}</td></tr>`;}).join('');
   openPanel(`
    <div class="kicker">八回合結束</div>
    <h1>${mine.pos===1?(tied?'並列第一！':'冠軍！策略分最高'):'你是第 '+mine.pos+' 名'+(tied?'（並列）':'')}</h1>
    <div class="rank">${rows.map(r=>`<div class="${r.me?'me':''}"><span class="pos">${r.pos}</span><span class="sw" style="background:${r.c.color}"></span><span>${r.c.name}${r.me?'（你）':r.human!=null?'（'+esc(r.human)+'）':'（電腦）'}</span><span class="sub">資本 ${r.cap}</span><span class="sc">${r.sc} 分</span></div>`).join('')}</div>
+   <div class="box"><p>從開源浪潮、園區斷線、人才流動，到限電、社區計畫、信任危機、共同減碳和旱季用水，你的每個選擇都留在這座城市裡。</p></div>
    <h3>你的八回合紀錄</h3>
    <div class="tbl-wrap"><table style="min-width:420px"><thead><tr><th>回</th><th>事件</th><th>你的選擇</th><th class="n">策略分</th></tr></thead><tbody>${recap}</tbody></table></div>
    <p class="muted" style="font-size:13px">滿分 10 分，同分並列。電腦代打的公司是模擬的；真人組別顯示的是他們目前的分數。</p>
@@ -859,7 +991,7 @@ function showEnding(){
 handlers.again=()=>{location.reload();};
 
 /* ───────── 選定標記、開門與自動前進 ───────── */
-function markChosen(n){n.chosen=true;const r=new THREE.Mesh(new THREE.RingGeometry(0.75,1.0,40),new THREE.MeshBasicMaterial({color:'#2b6fb0',side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(n.x,0.17,n.z);scene.add(r);}
+function markChosen(n){n.chosen=true;const r=new THREE.Mesh(new THREE.RingGeometry(0.75,1.0,40),new THREE.MeshBasicMaterial({color:'#2b6fb0',side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;r.position.set(n.x,0.17,n.z);scene.add(r);n.ring=r;}
 function startAuto(i){
   paused=true;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;$('tip').hidden=true;
   const cz=CZ(i),sd=P.x<0?-1:1,wz=WZ(i);
@@ -1002,9 +1134,11 @@ const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 function pub(patch){if(net)net.presence(patch).catch(()=>{});}
 function humansByCo(){const m={};for(const [peer,r] of remote){const pr=(r.p&&r.p.presence)||{};if(typeof pr.co==='string'&&CI[pr.co]!=null)m[pr.co]={peer,nick:String(pr.nick||'').slice(0,12)||COMP[CI[pr.co]].short+'組',st:pr.st|0,sc:pr.sc|0,cap:pr.cap==null?6:pr.cap|0,pk:Array.isArray(pr.pk)?pr.pk:[]};}return m;}
 const npcCos=()=>COMP.filter((c,j)=>j!==me&&!humansByCo()[c.id]);
-function netLabel(){if(netState==='off')return '目前無法連線，這次會以單人模式進行，其他公司由電腦代打。';if(netState!=='on')return '連線中…';
-  const n=remote.size;return `已連線到房間「${roomCode}」，目前另有 ${n} 組在線上。同一個房間代碼的組別會出現在同一個空間。`;}
-function setNet(st){netState=st;const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();}
+function netLabel(){if(netState==='off')return '目前無法連線，這次是單人模式（其他公司由電腦代打）。要多人連線，請確認：用的是 claude.ai 上這個連結、已登入 claude.ai，而且這個頁面有從分享選單邀請你。';if(netState!=='on')return '連線中…';
+  const n=remote.size;const names=[...remote.values()].map(r=>{const pr=(r.p&&r.p.presence)||{};const nk=String(pr.nick||'').slice(0,12);return (nk||'某位玩家')+(typeof pr.co==='string'&&CI[pr.co]!=null?'（'+COMP[CI[pr.co]].short+'）':'（還在選公司）');});
+  return `已連線到房間「${roomCode}」。${n?'線上的其他玩家：'+names.join('、'):'目前只有你一個人在這個房間，請另一位玩家打開同一個連結、輸入同一個房間代碼。'}`;}
+function netChip(){const el=$('netChip');if(!el)return;if(netState==='on'){el.className='on';el.textContent='● 已連線 · 房間 '+roomCode+' · 線上另有 '+remote.size+' 人';}else{el.className='';el.textContent=netState==='off'?'○ 單人模式（未連線）':'連線中…';}}
+function setNet(st){netState=st;const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();netChip();}
 async function initRoom(){
   try{room=(window.claude&&window.claude.use)?await window.claude.use('room'):null;}catch(e){room=null;}
   if(!room){setNet('off');return;}
@@ -1044,7 +1178,7 @@ function onPeersChange(ch){
     handleMsgs(p);}
   for(const [peer,r] of remote){if(!seen.has(peer)){if(r.av)scene.remove(r.av.root);remote.delete(peer);
     if(sess&&sess.other===peer&&sess.status!=='done')sessEnd('對方已經離開遊戲。',sess.role==='host');}}
-  const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();
+  const el=$('netInfo');if(el)el.textContent=netLabel();refreshTaken();netChip();syncCheck(false);
 }
 function handleMsgs(p){const pr=p.presence||{};
   const inv=pr.inv;
@@ -1107,24 +1241,120 @@ function sessEnd(msg,toList){sess=null;setTimeout(()=>pub({inv:null,bet:null}),4
 function tryFinish(){if(!sess||sess.myBet==null||sess.theirBet==null||sess.status==='done')return;sess.status='done';
   const s2=sess;sess=null;const i=s2.round,rd=ROUNDS[i];const c=COMP[CI[s2.otherCo]];
   const key=pairKey(COMP[me].id,c.id);const g=rd.grades[key];const total=s2.myBet+s2.theirBet;const extra=EXTRA[g][Math.min(12,total)-2];const pt=(g==='S'||g==='A')?1:0;
-  addRes({cap:extra,sc:pt});picks[i]={partner:c.id,g,inv:s2.myBet,pinv:s2.theirBet,extra,pt,human:s2.otherNick};myPk[i]=c.id;
+  picks[i]={partner:c.id,g,inv:s2.myBet,pinv:s2.theirBet,extra,pt,human:s2.otherNick};myPk[i]=c.id;
   const rev=simCoop(i,c.id);solveStage(i);
-  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn){markChosen(hn);pt?hn.cheer=3:hn.sad=2;}
-  pt?beep([659,784,1047,1319],0.11):beep([392,330],0.15);
+  const hn=npcs.find(n=>n.stage===i&&n.kind==='coop');if(hn)markChosen(hn);
   setTimeout(()=>pub({inv:null,rep:null,bet:null}),8000);
+  deferReveal(i,'你和'+esc(s2.otherNick)+'（'+c.name+'）完成配對，投入 '+s2.myBet+' 資本',{cap:extra,sc:pt},()=>{if(hn){pt?hn.cheer=3:hn.sad=2;}
+  pt?beep([659,784,1047,1319],0.11):beep([392,330],0.15);
   openPanel(`
    <div class="verdict"><span class="grade" style="background:${GCOL[g]}">${g}</span><div><h2>${COMP[me].short} × ${c.short}：${g} 級</h2><p class="muted">${rd.desc[key]}</p></div></div>
    ${chips({sc:pt,cap:extra})}
    <div class="box"><p>你投入 ${s2.myBet}，${esc(s2.otherNick)}投入 ${s2.theirBet}，投入總額 ${total}。雙方各自拿回本金，每家再拿 <b>${extra}</b> 資本的配對綜效。${pt?'S、A 級配對得 1 策略分。':'B、C 級配對不得分。'}</p></div>
    ${coopRev(rev)}
-   ${nextBtn(i)}`,TH['互賴說'].color);
+   ${nextBtn(i)}`,TH['互賴說'].color);});
 }
 function humanRev(i){const H=humansByCo();const rd=ROUNDS[i];
+  const mk2=ok=>` <i style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</i>`;
   return Object.keys(H).filter(co=>co!==COMP[me].id).map(co=>{const h=H[co];const v=h.pk[i];let t='還沒選',mark='';
-    if(v!=null){if(rd.type==='risk'&&typeof v==='number'){t=SHUO[v]||'—';const ok=v===rd.data[co].best;mark=` <i style="color:${ok?'var(--good)':'var(--bad)'}">${ok?'✓':'✗'}</i>`;}
-      else if(rd.type==='invest'&&typeof v==='number')t=v<0?'不投資':'方案 '+'ABCD'[v];
-      else if(typeof v==='string'&&CI[v]!=null)t='和'+COMP[CI[v]].short;}
+    if(v!=null){
+      if(rd.type==='risk'&&typeof v==='number'){const d=rd.data[co];t=(d.opts[v]||{}).s||'—';mark=mk2(v===d.best);}
+      else if(rd.type==='invest'){if(v===-1)t='不投資';else if(v&&typeof v==='object'){const p=(rd.plans[co]||[])[v.p];if(p){t=p.cost+' 資本 · '+esc(String(v.s||''));mark=mk2(v.s===p.ans);}}}
+      else if(typeof v==='string'&&CI[v]!=null)t='和'+COMP[CI[v]].short;else if(v==='none')t='未配對';}
     return `<div><span>${COMP[CI[co]].short} <small class="muted">${esc(h.nick)}</small></span><span>${t}${mark}</span></div>`;}).join('');}
+
+/* ───────── 同步回合：所有組別選完才同時亮牌、一起開門 ───────── */
+let pending=null,waitTimer=null,waitOpen=false;const skipped=new Set();
+function deferReveal(i,label,delta,show){pending={i,label,delta,show,t0:Date.now()};skipped.clear();clearInterval(waitTimer);waitTimer=setInterval(waitTick,1000);syncCheck(true);}
+function syncGroups(i){
+  const rows=[{nick:myNick,co:COMP[me].id,me:true,done:true}];
+  for(const [peer,r] of remote){const pr=(r.p&&r.p.presence)||{};if(typeof pr.co!=='string'||CI[pr.co]==null)continue;const pk=Array.isArray(pr.pk)?pr.pk:[];
+    rows.push({peer,nick:String(pr.nick||'').slice(0,12)||COMP[CI[pr.co]].short+'組',co:pr.co,done:pk[i]!=null||skipped.has(peer),skip:skipped.has(peer)&&pk[i]==null,st:pr.st|0});}
+  return rows;}
+function waitHTML(){const i=pending.i;const rows=syncGroups(i);const d=rows.filter(r=>r.done).length;
+  return `<div class="rank">${rows.map(r=>`<div class="${r.me?'me':''}"><span class="pos" style="color:${r.done?'var(--good)':'var(--muted)'}">${r.done?'✓':'…'}</span><span class="sw" style="background:${COMP[CI[r.co]].color}"></span><span>${COMP[CI[r.co]].name}（${esc(r.nick)}${r.me?'，你':''}）</span><span class="sub"></span><span class="sc" style="font-size:14px">${r.skip?'電腦代打':r.done?'已選定':(r.st<i?'還在第 '+(r.st+1)+' 回合':'選擇中')}</span></div>`).join('')}</div>
+   <p class="muted" style="font-size:14px">已完成 ${d} / ${rows.length} 組。沒有真人選的公司由電腦代打，不用等。</p>`;}
+function showWait(){if(!pending)return;const i=pending.i;
+  openPanel(`<div class="eyebrow"><span class="tag th">第 ${i+1} 回合 · 同步中</span><span class="tag">${ROUNDS[i].title}</span></div>
+   <h2>已選定，等待其他組</h2>
+   <p>${pending.label}。同一房間的所有組別都選完後，才會<b>同時亮牌</b>，再一起開門進入下一回合。</p>
+   <div id="waitList">${waitHTML()}</div>
+   <div class="row"><button class="btn ghost" data-act="waitWalk">先在廣場等</button><button class="btn ghost" id="skipBtn" data-act="waitSkip" disabled>不等了（<span id="skipCd">60</span> 秒後可按）</button></div>`,rCol(ROUNDS[i]));
+  waitOpen=true;waitTick();}
+function syncCheck(first){if(!pending)return;const rows=syncGroups(pending.i);const d=rows.filter(r=>r.done).length;
+  $('cardBtn').textContent=`等待其他組 ${d}/${rows.length}`;
+  if(d===rows.length){if(film||auto||sess)return;if(!first&&!overlayEl.hidden&&!waitOpen)return;doReveal();return;}
+  if(first){showWait();return;}
+  if(waitOpen){const wl=$('waitList');if(wl)wl.innerHTML=waitHTML();}}
+function doReveal(){const p=pending;pending=null;clearInterval(waitTimer);waitOpen=false;$('cardBtn').textContent='事件卡 (Q)';
+  addRes(p.delta);showBanner('第 '+(p.i+1)+' 回合','同時亮牌');p.show();}
+function waitTick(){if(!pending)return;const left=Math.max(0,60-Math.floor((Date.now()-pending.t0)/1000));const b=$('skipBtn');
+  if(b){b.disabled=left>0;const cd=$('skipCd');if(left>0){if(cd)cd.textContent=left;}else if(cd)b.textContent='不等了，還沒選的組改由電腦代打';}
+  syncCheck(false);}
+handlers.waitWalk=()=>closePanel();
+handlers.waitSkip=()=>{if(!pending)return;syncGroups(pending.i).forEach(r=>{if(!r.done&&r.peer)skipped.add(r.peer);});syncCheck(false);};
+
+/* ───────── 視角切換 ───────── */
+let view3=false,myAv=null;
+function toggleView(){view3=!view3;$('viewBtn').textContent=view3?'第一人稱 (V)':'第三人稱 (V)';$('crosshair').style.opacity=view3?0.55:1;showBanner('視角',view3?'第三人稱':'第一人稱');}
+$('viewBtn').addEventListener('click',()=>{if(!started)return;toggleView();canvas.focus({preventScroll:true});});
+$('tView').addEventListener('touchstart',e=>{e.preventDefault();if(started)toggleView();},{passive:false});
+
+/* ───────── 大廳規則牆 ───────── */
+const RULE_ROWS=[['3.0','事件＋說','AI 開源革命',1.5],['3.0','合作','園區對外連線中斷',3],['3.0','事件＋說','關鍵人才流動',1.5],['4.0','事件＋說','AI 電力危機',1.5],['4.0','永續投資','社區三年公共服務計畫',1.5],['4.0','事件＋說','AI 供應鏈信任危機',1.5],['4.0','合作','少用的電，還是少做的服務？',3],['4.0','永續投資','園區要用的水，誰來決定？',1.5]];
+const RULE_WIN='六家企業，每家 6 資本、0 策略分開局。第 8 回合後策略分最高者獲勝（滿分 10，同分並列）。';
+const RULE_KEY='每回合根據事件，選定最符合九說的解決方法。';
+const RULE_NOTES=[['事件','暗選一說後同時亮牌，答中主持人答案 +1 分，資本不變。'],['合作','挑一家公司配對，各投入 1～6 資本，S、A 級各 +1 分，雙方拿回本金並分享綜效。'],['投資','付 5 或 8 資本買一個方案，再判斷它屬於哪一說：答對得 1／2 分，答錯不得分並退回 2／4 資本。'],['資本','第 2 回合合作收益可用於第 5 回合投資或第 7 回合合作；第 7 回合收益可用於第 8 回合投資。'],['時間','規則講解 3 分鐘 · 全程約 18 分鐘']];
+const ruleCol=t=>t==='合作'?RCOL.coop:t==='永續投資'?RCOL.invest:'#2b6fb0';
+function rulesTex(){const W=2048,H=1280;const [c,x]=mkCanvas(W,H);
+  x.fillStyle='#ffffff';x.fillRect(0,0,W,H);x.fillStyle='#2b6fb0';x.fillRect(0,0,W,18);
+  x.textBaseline='middle';x.textAlign='left';
+  x.fillStyle='#98a0ad';x.font='700 38px '+SANS;x.fillText('遊戲規則',96,100);
+  x.fillStyle='#1d2233';x.font='900 108px '+SERIF;x.fillText('永續價值進化：新創競技場',88,192);
+  let y=294;x.fillStyle='#5d6579';x.font='700 44px '+SANS;for(const l of wrap(x,RULE_WIN,1860)){x.fillText(l,92,y);y+=60;}
+  y+=44;x.fillStyle='#2b6fb0';x.fillRect(90,y-44,12,88);x.font='900 64px '+SANS;x.fillText(RULE_KEY,128,y);
+  y+=104;x.fillStyle='#e3e7ec';x.fillRect(90,y-40,1868,3);y+=26;
+  RULE_NOTES.forEach(n=>{x.fillStyle='#2b6fb0';x.font='900 50px '+SANS;x.fillText(n[0],96,y);
+    x.fillStyle='#1d2233';x.font='700 46px '+SANS;const ls=wrap(x,n[1],1690);ls.forEach((l,j)=>x.fillText(l,270,y+j*62));y+=ls.length*62+30;});
+  return tex(c);}
+let ruleWall=null,ruleTarget=false;
+function buildRuleWall(){const g=new THREE.Group();g.position.set(5.9,0,-3.1);g.rotation.y=-0.55;
+  const back=new THREE.Mesh(new THREE.BoxGeometry(10.4,6.75,0.35),toon('#d9dde2'));back.position.y=3.85;g.add(back);
+  const face=plane(10,6.25,rulesTex());face.position.set(0,3.85,0.19);face.userData.rules=true;g.add(face);
+  [-4.6,4.6].forEach(px=>{const leg=new THREE.Mesh(new THREE.BoxGeometry(0.3,0.6,0.5),toon('#9aa3ad'));leg.position.set(px,0.3,0);g.add(leg);});
+  scene.add(g);ruleWall=face;hitList.push(face);}
+function showRules(first){openPanel(`
+   <div class="kicker">遊戲規則</div><h2>永續價值進化：新創競技場</h2>
+   <p class="muted">${RULE_WIN}</p>
+   <p style="font-size:17px;font-weight:900;border-left:4px solid var(--gold);padding-left:12px">${RULE_KEY}</p>
+   <div class="rnotes">${RULE_NOTES.map(n=>`<p><b style="color:var(--gold)">${n[0]}</b>　${n[1]}</p>`).join('')}</div>
+   <div class="row"><button class="btn" data-act="${first?'rulesGo':'close'}" data-focus>${first?'開始遊戲':'關閉'}</button></div>`);}
+handlers.rulesGo=()=>{closePanel();showBanner('台北市',COMP[me].name+' 出發');};
+$('rulesBtn').addEventListener('click',()=>{if(!started||auto||film||!overlayEl.hidden)return;showRules(false);});
+
+/* ───────── 開門：守護者讓路、石碑下降、走道亮起，玩家自己走過去 ───────── */
+const steles=[];const sinking=[];const growing=[];let turnTo=null;
+function openPath(i){
+  const b=barriers[i];if(!b||b.opening)return;b.opening=true;beep([392,494,587,784],0.16,'sine',0.06);
+  const p=picks[i]||{};const good=!!(p.ok||p.pt);const cz=CZ(i);
+  const gs=npcs.filter(n=>n.stage===i).sort((a,c)=>a.x-c.x);
+  const L=[[-3.8,cz-1],[-3.8,cz-4.5],[-3.8,cz-8]],Rt=[[3.8,cz-2.7],[3.8,cz-6.3],[3.8,cz-9.5]];
+  const half=Math.ceil(gs.length/2);let li=0,ri=0;
+  gs.forEach((n,j)=>{const t=j<half?L[li++]:Rt[ri++];n.mv={x:t[0],z:t[1],delay:0.15+j*0.12};
+    n.sg.traverse(o=>{const k=hitList.indexOf(o);if(k>=0)hitList.splice(k,1);});sinking.push({m:n.sg,n});});
+  (steles[i]||[]).forEach(m=>sinking.push({m}));
+  const pm=new THREE.Mesh(new THREE.PlaneGeometry(2.4,1),new THREE.MeshBasicMaterial({color:good?'#41d27a':'#e6ebf1',transparent:true,opacity:0.8,depthWrite:false}));
+  pm.rotation.x=-Math.PI/2;pm.position.set(0,0.18,cz+R);pm.scale.y=0.01;scene.add(pm);growing.push({m:pm,from:cz+R,to:WZ(i)-1,t:0});
+  if(good)gs.forEach(n=>n.cheer=2.4);
+  else{const ch=gs.find(n=>n.chosen);if(ch)ch.sad=2.2;const rd=ROUNDS[i];if(rd.type==='risk'){const bn=gs.find(n=>n.k===rd.data[COMP[me].id].best);if(bn)bn.wave=2.4;}}
+  turnTo={t:0.8};
+  showBanner(i<N-1?'大門已開':'通往終點','沿著走道往前走');
+}
+function stepOpen(dt){
+  for(let k=sinking.length-1;k>=0;k--){const s2=sinking[k];s2.m.position.y-=dt*3.2;if(s2.m.position.y<-7){s2.m.visible=false;if(s2.n)s2.n.sgGone=true;sinking.splice(k,1);}}
+  for(let k=growing.length-1;k>=0;k--){const g=growing[k];g.t=Math.min(1,g.t+dt/1.2);const len=(g.from-g.to)*ease(g.t);g.m.scale.y=Math.max(0.01,len);g.m.position.z=g.from-len/2;if(g.t>=1)growing.splice(k,1);}
+  if(turnTo){let d=0-P.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));P.yaw+=d*Math.min(1,dt*5);P.pitch+=(-0.04-P.pitch)*Math.min(1,dt*5);turnTo.t-=dt;if(turnTo.t<=0)turnTo=null;}
+}
 
 /* ───────── 主迴圈 ───────── */
 let last=performance.now(),T=0;
@@ -1146,37 +1376,48 @@ function loop(now){
     if(a>=0&&a===stageIdx&&!introShown[a]&&P.z<CZ(a)+R-1.5)startIntro(a);
     if(solved[N-1]&&!ended&&inCircle(P.x,P.z,FZ-2,3.4))showEnding();
   }else if(!started){P.yaw+=dt*0.1;P.pitch=-0.04;}
-  camera.position.set(P.x,P.y+EYEH,P.z);camera.rotation.x=P.pitch;camera.rotation.y=P.yaw;
+  if(view3&&started){const d=4.6,hx=P.x,hy=P.y+1.55,hz=P.z,cp=Math.cos(P.pitch),sp2=Math.sin(P.pitch);
+    camera.position.set(hx+Math.sin(P.yaw)*cp*d,Math.max(0.5,hy-sp2*d+0.4),hz+Math.cos(P.yaw)*cp*d);camera.lookAt(hx,hy,hz);}
+  else{camera.position.set(P.x,P.y+EYEH,P.z);camera.rotation.x=P.pitch;camera.rotation.y=P.yaw;}
+  if(myAv){myAv.root.visible=view3&&started;if(myAv.root.visible){const mv=Math.hypot(P.x-myAv.root.position.x,P.z-myAv.root.position.z);myAv.root.position.set(P.x,P.y,P.z);myAv.root.rotation.y=P.yaw+Math.PI;const walking=mv>0.005,ph=T*(mv>0.12?12:9),sw=walking?Math.sin(ph)*0.6:0;myAv.armL.rotation.x=sw;myAv.armR.rotation.x=-sw;myAv.legL.rotation.x=-sw*0.95;myAv.legR.rotation.x=sw*0.95;myAv.body.position.y=walking?Math.abs(Math.sin(ph))*0.06:0;}}
   if(sky)sky.position.copy(camera.position);
   target=null;
   if(started&&!paused){
-    ray.setFromCamera(center,camera);ray.far=7.5;
-    const hit=ray.intersectObjects(hitList,false).find(h=>h.object.userData.npc.root.visible);
-    if(hit)target=hit.object.userData.npc;
-    const pr=$('prompt');$('crosshair').classList.toggle('on',!!target);
-    if(target){const act=target.stage===stageIdx&&!solved[target.stage];
+    ray.setFromCamera(center,camera);ray.far=view3?12:7.5;
+    const hit=ray.intersectObjects(hitList,false).find(h=>h.object.userData.rules||h.object.userData.npc.root.visible);
+    ruleTarget=!!(hit&&hit.object.userData.rules);
+    if(hit&&!ruleTarget)target=hit.object.userData.npc;
+    const pr=$('prompt');$('crosshair').classList.toggle('on',!!target||ruleTarget);
+    if(ruleTarget){pr.innerHTML=`<kbd>${isTouch?'互動':'E'}</kbd>查看規則牆`;pr.hidden=false;}
+    else if(target){const act=target.stage===stageIdx&&!solved[target.stage];
       pr.innerHTML=`<kbd>${isTouch?'互動':'E'}</kbd>${act?'和 ':'看看 '}${target.name}${act?' 對話':''}`;pr.hidden=false;}
     else pr.hidden=true;
   }
   for(const n of npcs){
-    const vis=Math.abs(P.z-n.z)<95;n.root.visible=vis;n.sg.visible=vis;if(!vis)continue;
-    const t=T+n.phase;const near=Math.hypot(P.x-n.x,P.z-n.z)<6;
-    const want=near?Math.atan2(P.x-n.x,P.z-n.z):n.face;
+    const vis=Math.abs(P.z-n.z)<95;n.root.visible=vis;n.sg.visible=vis&&!n.sgGone;if(!vis)continue;
+    if(n.mv){if(n.mv.delay>0)n.mv.delay-=dt;else{const dx=n.mv.x-n.x,dz=n.mv.z-n.z,d=Math.hypot(dx,dz),st=3.2*dt;
+      if(d<=st){n.x=n.mv.x;n.z=n.mv.z;n.mv=null;n.face=n.x<0?Math.PI/2:-Math.PI/2;}else{n.x+=dx/d*st;n.z+=dz/d*st;n.walkDir=Math.atan2(dx,dz);}
+      n.root.position.set(n.x,0,n.z);if(n.hb)n.hb.position.set(n.x,1.15,n.z);if(n.ring)n.ring.position.set(n.x,0.17,n.z);}}
+    const walking=!!(n.mv&&n.mv.delay<=0);
+    const t=T+n.phase;const near=!walking&&Math.hypot(P.x-n.x,P.z-n.z)<6;
+    const want=walking?n.walkDir:near?Math.atan2(P.x-n.x,P.z-n.z):n.face;
     let diff=want-n.root.rotation.y;diff=Math.atan2(Math.sin(diff),Math.cos(diff));n.root.rotation.y+=diff*Math.min(1,dt*4);
     n.armL.rotation.set(Math.sin(t*1.5)*0.07,0,-0.08);n.armR.rotation.set(-Math.sin(t*1.5)*0.07,0,0.08);
     n.body.position.y=Math.sin(t*1.5)*0.02;n.body.rotation.x=0;
+    {const lw=walking?Math.sin(T*9+n.phase)*0.6:0;n.legL.rotation.x=-lw;n.legR.rotation.x=lw;if(walking){n.armL.rotation.x=lw;n.armR.rotation.x=-lw;n.body.position.y=Math.abs(lw)*0.08;}}
     if(n===target&&n.wave<=0)n.wave=0.6;
     if(n.wave>0){n.wave-=dt;n.armR.rotation.z=2.5+Math.sin(T*11)*0.35;}
     if(n.cheer>0){n.cheer-=dt;n.body.position.y=Math.abs(Math.sin(T*8))*0.8;n.armL.rotation.z=-2.6;n.armR.rotation.z=2.6;}
     if(n.sad>0){n.sad-=dt;n.body.rotation.x=0.2;n.armL.rotation.x=0.25;n.armR.rotation.x=0.25;}
   }
   for(const l of leaves){if(!l.got){l.m.rotation.y+=dt*2.2;l.m.position.y=1.05+Math.sin(T*2.5+l.z)*0.15;}}
+  stepOpen(dt);
   for(const b of barriers){if(b.opening&&b.open<1){b.open=Math.min(1,b.open+dt*0.75);const e=1-Math.pow(1-b.open,3);b.L.rotation.y=e*1.75;b.R.rotation.y=-e*1.75;}}
   sunL.position.set(P.x-60,55,P.z+20);sunL.target.position.set(P.x,0,P.z-20);
   for(const v of traffic){v.m.position.z+=v.dir*v.sp*dt;if(v.m.position.z<FZ-195)v.m.position.z=40;else if(v.m.position.z>40)v.m.position.z=FZ-195;}
   for(const r of remote.values()){if(!r.av||r.tx==null)continue;const a=r.av;const kk=Math.min(1,dt*8);const px=a.root.position.x,pz=a.root.position.z;
     a.root.position.x+=(r.tx-px)*kk;a.root.position.z+=(r.tz-pz)*kk;let dd=(r.tyaw+Math.PI)-a.root.rotation.y;dd=Math.atan2(Math.sin(dd),Math.cos(dd));a.root.rotation.y+=dd*kk;
-    const sw=Math.hypot(r.tx-px,r.tz-pz)>0.03?Math.sin(T*9)*0.6:0;a.armL.rotation.x=sw;a.armR.rotation.x=-sw;}
+    const moving=Math.hypot(r.tx-px,r.tz-pz)>0.03,sw=moving?Math.sin(T*9)*0.6:0;a.armL.rotation.x=sw;a.armR.rotation.x=-sw;a.legL.rotation.x=-sw*0.95;a.legR.rotation.x=sw*0.95;a.body.position.y=moving?Math.abs(Math.sin(T*9))*0.06:0;}
   if(started&&net){pubT+=dt;if(pubT>0.12){pubT=0;const nx=+P.x.toFixed(2),nz=+P.z.toFixed(2),ny=+P.yaw.toFixed(2);if(nx!==lastPos[0]||nz!==lastPos[1]||ny!==lastPos[2]){lastPos=[nx,nz,ny];pub({x:nx,z:nz,yaw:ny});}}}
   if(mrt){mrt.position.z-=dt*14;if(mrt.position.z<FZ-190)mrt.position.z=38;}
   if(trophy){trophy.position.y=3+Math.sin(T*2)*0.15;trophy.rotation.y+=dt;}
