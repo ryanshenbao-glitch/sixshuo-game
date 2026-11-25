@@ -697,8 +697,8 @@ function addNpc(o){const ch=chibi(o.color,o.k??0,o.opt||{});const y=H(o.x,o.z);c
   ch.root.traverse(m=>{m.userData.npc=o.id;});scene.add(ch.root);const col={x:o.x,z:o.z,r:0.8,npc:o.id};colliders.push(col);const n=Object.assign(o,{ch,lb,bang,col,pos:{x:o.x,z:o.z}});NPCS.push(n);return n;}
 function setLabel(n,text,bg,fg){n.ch.root.remove(n.lb);n.lb.material.map.dispose();n.lb=label(text,bg,fg,0.8);n.lb.position.y=3.9;n.ch.root.add(n.lb);}
 function buildNpcs(){
-  addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:-3.4,z:-10.8,fx:0,fz:0.5,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
-  addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:-8.8,z:-10.2,fx:0,fz:0.5,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
+  addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:-3.4,z:-11.6,fx:0,fz:0.5,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
+  addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:Math.sin(Math.atan2(-8.8,-10.7))*10.9,z:0.5+Math.cos(Math.atan2(-8.8,-10.7))*10.9,fx:0,fz:0.5,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
   /* 守護者圍成一圈、面向圓心（0,0.5）；入口在 +z 方向 */
   for(let k=0;k<5;k++){const a=(36+72*k)*Math.PI/180;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*GR.r,z:GR.cz+Math.cos(a)*GR.r,fx:0,fz:GR.cz});}
   for(let k=0;k<2;k++)addNpc({id:'a'+k,kind:'plan',k:k+3,pk:k,name:'方案顧問',color:'#ee8a6c',x:0,z:0,opt:{hat:'#ffffff'}});
@@ -1416,6 +1416,18 @@ function tuneQuality(raw){if(Q.lv>=3||document.hidden)return;Q.acc+=raw;Q.n++;if
   if(Q.lv===2){renderer.shadowMap.enabled=false;scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});}
   if(Q.lv===3)renderer.setPixelRatio(0.75);
   resize();}
+/* 思華老師在廣場外圈散步：沿著守護者圈外走一段、停下來看看，再換方向；玩家靠近或對話時停下 */
+const WAND={R:10.9,a:Math.atan2(-8.8,-10.2-GR.cz),to:null,wait:2,dir:1};
+function wanderProf(dt){const n=NPCS.find(n=>n.id==='prof');if(!n||!n.ch.root.visible)return;n.moving=false;
+  const near=Math.hypot(P.x-n.pos.x,P.z-n.pos.z)<3.2;if(near||n.ch.talk>0||uiBusy&&promptNpc===n)return;
+  if(WAND.wait>0){WAND.wait-=dt;return;}
+  if(WAND.to===null){const R=Math.random;WAND.dir=R()<0.5?-1:1;WAND.to=WAND.a+WAND.dir*(0.6+R()*1.4);}
+  const step=dt*1.25/WAND.R;let na=WAND.a+WAND.dir*step;if((WAND.to-na)*WAND.dir<=0){na=WAND.to;WAND.to=null;WAND.wait=3+Math.random()*4;}
+  const x=Math.sin(na)*WAND.R,z=GR.cz+Math.cos(na)*WAND.R;
+  if(colliders.some(c=>!c.npc&&Math.abs(c.x-x)<c.r+0.3&&Math.hypot(c.x-x,c.z-z)<c.r+0.3)&&!colliders.some(c=>!c.npc&&Math.hypot(c.x-n.pos.x,c.z-n.pos.z)<c.r+0.3)){WAND.dir*=-1;WAND.to=WAND.a+WAND.dir*(0.5+Math.random());return;}
+  WAND.a=na;n.pos.x=x;n.pos.z=z;n.col.x=x;n.col.z=z;n.moving=true;
+  n.ch.root.position.set(x,H(x,z),z);n.ch.root.rotation.y=Math.atan2(Math.cos(na)*WAND.dir,-Math.sin(na)*WAND.dir);
+  if(WAND.to===null)n.ch.root.rotation.y=Math.atan2(-x,GR.cz-z);}
 function loop(){
   requestAnimationFrame(loop);
   const raw=clock.getDelta();if(film)return;
@@ -1423,7 +1435,8 @@ function loop(){
   const moving=stepPlayer(dt);
   if(meCh){meCh.root.position.set(P.x,P.y,P.z);meCh.root.rotation.y=P.ry;animChar(meCh,dt,moving&&P.grounded,t,P.run);plumb.rotation.y=t*1.6;plumb.position.y=4.1+Math.sin(t*2.2)*0.12;}
   for(const id in remote){const r=remote[id];const dx=r.tx-r.x,dz=r.tz-r.z;const mv=Math.hypot(dx,dz)>0.05;r.x+=dx*Math.min(1,dt*8);r.z+=dz*Math.min(1,dt*8);if(mv)r.ry=Math.atan2(dx,dz);r.ch.root.position.set(r.x,H(r.x,r.z),r.z);r.ch.root.rotation.y=r.ry;animChar(r.ch,dt,mv,t);}
-  NPCS.forEach(n=>{if(n.ch&&n.ch.root.visible)animChar(n.ch,dt,false,t);if(n.bang&&n.bang.visible)n.bang.position.y=4.9+Math.abs(Math.sin(t*3+(n.k||0)))*0.35;});
+  wanderProf(dt);
+  NPCS.forEach(n=>{if(n.ch&&n.ch.root.visible)animChar(n.ch,dt,!!n.moving,t);if(n.bang&&n.bang.visible)n.bang.position.y=4.9+Math.abs(Math.sin(t*3+(n.k||0)))*0.35;});
   for(const k in FX.houseBang){const b=FX.houseBang[k];if(b.visible)b.position.y=9.6+Math.abs(Math.sin(t*3))*0.4;}
   ROTORS.forEach((r,i)=>{r.rotation.z=t*(1.1+i*0.07);});
   BEACONS.forEach(b=>{b.cr.rotation.y=t*1.2;b.cr.position.y=b.y+2.2+Math.sin(t*2)*0.2;b.ring.position.y=b.cr.position.y;b.ring.scale.setScalar(1+Math.sin(t*2)*0.06);});
