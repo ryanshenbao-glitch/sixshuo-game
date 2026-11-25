@@ -120,6 +120,43 @@ h3{margin:4px 0 0;font-size:17px;font-weight:400;color:var(--teal-d)}
 .row .dot{width:14px;height:14px;border-radius:50%}
 .row small{color:var(--ink2);display:block;font-size:13px;line-height:1.45}
 .row .pts{font-family:var(--fn);font-weight:700;font-size:16px;white-space:nowrap}
+.card.lobbyCard{max-width:1200px}
+.lobbyCard .card-b{padding:20px 24px 24px}
+.lob{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:18px;align-items:start}
+.lob h3{margin:0 0 12px;font-size:21px;font-weight:400;color:var(--ink);display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.lob h3 small{font-size:13.5px;color:var(--ink2)}
+.lob .pane{background:#fff;border-radius:26px;padding:18px;box-shadow:0 4px 0 var(--line);display:flex;flex-direction:column;gap:12px}
+.lob .col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.cogrid2{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cob2{border:3px solid transparent;background:#fbf5e6;border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:10px;text-align:left;cursor:pointer;font:inherit;color:var(--ink);box-shadow:0 4px 0 var(--line);min-width:0}
+.cob2:hover:not(:disabled){transform:translateY(-1px)}
+.cob2.sel{background:#fff;border-color:var(--cc);box-shadow:0 0 0 5px color-mix(in srgb,var(--cc) 20%,transparent),0 4px 0 var(--line)}
+.cob2:disabled{opacity:.5;cursor:not-allowed}
+.cob2 .hd{display:flex;gap:10px;align-items:center}
+.cob2 .bd{flex:none;width:46px;height:46px;border-radius:15px;background:var(--cc);color:#fff;display:grid;place-items:center;font-size:15px}
+.cob2 .nm{font-size:18px;line-height:1.2}
+.cob2 .st{font-size:12.5px;color:#b3412f}.cob2.sel .st{color:#16877c}
+.cob2 .info{font-size:13px;line-height:1.6}
+.cob2 .info i{font-style:normal;color:var(--ink2);margin-right:6px}
+.cob2 .adv{margin-top:auto;border-radius:14px;padding:8px 10px;background:color-mix(in srgb,var(--cc) 12%,#fff);color:color-mix(in srgb,var(--cc) 72%,#000);font-size:12.5px;line-height:1.5}
+.cob2 .adv .t{display:flex;justify-content:space-between;gap:8px;font-size:14px;margin-bottom:2px}
+.rtabs{display:flex;gap:6px;background:#f3e9d0;padding:5px;border-radius:999px}
+.rtabs button{flex:1;border:0;border-radius:999px;min-height:40px;font:inherit;font-size:15px;background:transparent;color:var(--ink);cursor:pointer}
+.rtabs button.on{background:var(--teal);color:#fff}
+.rpanel[hidden]{display:none!important}.rpanel{display:flex;flex-direction:column;gap:10px}
+.stat3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat3 div{border-radius:18px;padding:8px 6px;text-align:center;font-size:13px}
+.stat3 b{display:block;font-family:var(--fn);font-size:28px;font-weight:600;line-height:1.2}
+.rline{display:flex;gap:5px}.rline span{flex:1;border-radius:12px;padding:5px 0;text-align:center;color:#fff;font-size:11px;line-height:1.25}
+.rline span b{display:block;font-family:var(--fn);font-size:16px;font-weight:600}
+.rcard{border-radius:18px;padding:10px 14px}.rcard .t{display:flex;justify-content:space-between;gap:8px;font-size:15px}.rcard .t span{font-family:var(--fn)}
+.rcard p{margin:4px 0 0;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.rsteps{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px;font-size:14px;line-height:1.6}
+.rsteps li{display:flex;gap:10px;align-items:flex-start}.rsteps li b{flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;display:grid;place-items:center;font-family:var(--fn);font-weight:600;font-size:14px}
+.lob .lbl{font-size:13.5px;color:var(--ink2);margin-bottom:-6px}
+.lob .go{width:100%;font-size:19px;padding:15px 22px}
+.lob p.lead{margin:0;font-size:14px;line-height:1.7}
+@media (max-width:900px){.lob{grid-template-columns:minmax(0,1fr)}.cogrid2{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .cogrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .cob{border:3px solid transparent;background:#fff;border-radius:20px;padding:12px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:4px;box-shadow:0 3px 0 var(--line)}
 .cob b{font-size:16px;font-weight:400}
@@ -947,7 +984,7 @@ async function talk(name,color,lines){for(const l of lines){const v=await dialog
 
 let cardRes=null;
 const overlayOpen=()=>!$('cardWrap').hidden||!$('phone').hidden;
-function card(head,color,body,buttons){return new Promise(res=>{if(cardRes)cardRes(null);cardRes=res;uiBusy++;unlockMouse();
+function card(head,color,body,buttons){return new Promise(res=>{if(cardRes)cardRes(null);cardRes=res;uiBusy++;unlockMouse();$('card').classList.toggle('lobbyCard',!!head.lobby);
   $('card').style.setProperty('--cc',color||HOSTC);
   $('card').innerHTML=`<div class="card-h"><small>${head.top||''}</small><h2>${head.title}</h2></div><div class="card-b">${body}<div class="btns">${(buttons||[['好','ok']]).map(([t,v,cls],i)=>`<button class="btn ${cls||''}" data-v="${v}" ${i===0?'data-f':''}>${t}</button>`).join('')}</div></div>`;
   $('cardWrap').hidden=false;$('card').scrollTop=0;const f=$('card').querySelector('[data-f]');if(f)f.focus({preventScroll:true});});}
@@ -990,29 +1027,48 @@ let lastPub=0,pubPos=[0,0];
 function pubPos2(t){if(!meRef||S.phase==='lobby'||t-lastPub<0.2)return;if(Math.hypot(P.x-pubPos[0],P.z-pubPos[1])<0.08)return;lastPub=t;pubPos=[P.x,P.z];meRef.update({x:+P.x.toFixed(2),z:+P.z.toFixed(2),ry:+P.ry.toFixed(2)}).catch(()=>{});}
 
 /* ───────── 大廳 ───────── */
-let pickedCo=null;
+let pickedCo=null,lobbyTab='overview';
+function lobbyRules(){const RC={'3.0':RCOL['3.0'],'4.0':RCOL['4.0'],coop:RCOL.coop,invest:RCOL.invest};
+  const line=ROUNDS.map((rd,i)=>`<span style="background:${rCol(rd)}"><b>${i+1}</b>${rd.type==='coop'?'合作':rd.type==='invest'?'投資':'事件'}</span>`).join('');
+  const t=k=>`<button type="button" data-tab="${k}" class="${lobbyTab===k?'on':''}">${{overview:'總覽',rounds:'三種回合',score:'計分'}[k]}</button>`;
+  return `<div class="pane"><h3>② 遊戲規則<small>約 18 分鐘</small></h3>
+   <div class="rtabs" role="tablist">${t('overview')}${t('rounds')}${t('score')}</div>
+   <div class="rpanel" data-panel="overview" ${lobbyTab==='overview'?'':'hidden'}>
+    <div class="stat3"><div style="background:#fff3cf"><b style="color:#b98a12">6</b>起始資本</div><div style="background:#def4ef"><b style="color:#16877c">0</b>起始策略分</div><div style="background:#f1e4f7"><b style="color:#8a4fb0">10</b>策略分上限</div></div>
+    <div class="rline">${line}</div>
+    <p class="lead">六家新創在同一座 AI 園區闖八關：用九說判斷新策略、找夥伴合作、把資本投進永續方案。<b>第 8 回合結束時，策略分最高的公司獲勝。</b></p></div>
+   <div class="rpanel" data-panel="rounds" ${lobbyTab==='rounds'?'':'hidden'}>
+    <div class="rcard" style="background:#e6eef8"><div class="t" style="color:#2b5f99"><b>事件＋說・第 1、3、4、6 回合</b><span>${fmtSec(ROUND_SEC[0])}</span></div><p>看事件卡，到廣場找五位說的守護者，選一個最適合你公司的說。和主持人答案一樣 +1 策略分。</p></div>
+    <div class="rcard" style="background:#f1e6f6"><div class="t" style="color:#7d3fa3"><b>合作・第 2、7 回合</b><span>${fmtSec(ROUND_SEC[1])}</span></div><p>拜訪別家公司發出邀請，對方接受就成立。配對等級 S 或 A 各 +1 策略分，另有綜效加成。</p></div>
+    <div class="rcard" style="background:#f7eedb"><div class="t" style="color:#9a6c12"><b>永續投資・第 5、8 回合</b><span>${fmtSec(ROUND_SEC[4])}</span></div><p>花 5 或 8 資本買方案，再判斷它屬於哪一說。答對得 1 或 2 分；答錯退回 2 或 4 資本。</p></div></div>
+   <div class="rpanel" data-panel="score" ${lobbyTab==='score'?'':'hidden'}>
+    <ol class="rsteps"><li><b>1</b><span>策略分只會往上加，最高 10 分。</span></li><li><b>2</b><span>資本用來合作下注和永續投資，用完就不能買方案。</span></li><li><b>3</b><span>每家公司有一次初始優勢，時機到了主持人會問你要不要用。</span></li><li><b>4</b><span>時間到還沒選，這回合就不得分。所有組都選完才會一起進下一關。</span></li></ol></div>
+  </div>`;}
 function renderLobby(){
   const taken={};humans().forEach(([,p])=>taken[p.co]=p.nick||'另一組');
   const mine=players[uid];const resume=mine&&mine.co&&(mine.round||0)<ROUNDS.length&&mine.picks;
   const online=!!db;
-  const body=`
-   <p>六家 AI 新創在同一座園區小島上，要闖過八回合：用九說判斷策略、找夥伴合作、把資本投進永續方案。每家從 <b>6 資本、0 策略分</b>出發，第 8 回合結束時策略分最高的公司獲勝（滿分 10 分）。</p>
-   <h3>你的組名</h3>
-   <div class="inrow"><input class="txt" id="nickIn" maxlength="12" placeholder="例如：第五組" value="${esc(S.nick||lsGet('six-nick')||'')}"></div>
-   <h3>房間</h3>
-   ${online?`<div class="inrow"><input class="txt code" id="roomIn" maxlength="4" placeholder="房號" value="${esc(S.room)}" autocomplete="off"><button class="btn ghost" data-v="join">加入房間</button><button class="btn ghost" data-v="newroom">開新房間</button></div>
-   <p class="note">${roomRef?`你在房間 <b class="num">${esc(S.room)}</b>，目前線上 ${humans().length} 組。把房號告訴其他組，大家進同一間就會同時亮牌、可以互相合作。`:'同一班請進同一個房間。第一組按「開新房間」，再把 4 碼房號告訴其他組。'}</p>`
-   :netTried?'<p class="note">目前連不上連線服務，這次是單人模式：其他五家由電腦代打。</p>':'<p class="note">正在連線…</p>'}
-   ${resume?`<div class="note task">你上次在這個房間玩到 <b>第 ${(mine.round||0)+1} 回合</b>（${esc(coOf(mine.co).name)}，${mine.sc||0} 分）。<div class="btns" style="margin-top:8px"><button class="btn" data-v="resume">繼續上次進度</button></div></div>`:''}
-   <h3>選你的公司</h3>
-   <div class="cogrid">${COMP.map(c=>{const t=taken[c.id];const a=ADV[c.id];return `<button class="cob ${pickedCo===c.id?'sel':''}" data-v="co:${c.id}" ${t?'disabled':''}><span class="sw" style="background:${c.color}"></span><b>${c.name}</b><small>核心：${c.core}</small><small>初始優勢：${a.name}（${a.shuo}）</small>${t?`<small><b>${esc(t)} 已選</b></small>`:''}</button>`;}).join('')}</div>`;
-  const buttons=[[pickedCo?`以「${coOf(pickedCo).name}」出發`:'先選一家公司','start']];
+  const cos=COMP.map(c=>{const t=taken[c.id];const a=ADV[c.id];const sel=pickedCo===c.id;
+    return `<button type="button" class="cob2 ${sel?'sel':''}" style="--cc:${c.color}" data-v="co:${c.id}" ${t?'disabled':''}>
+      <div class="hd"><span class="bd" style="font-size:${c.short.length>2?13:16}px">${c.short}</span><div><div class="nm">${c.name}</div>${t?`<div class="st">已被 ${esc(t)} 選走</div>`:sel?'<div class="st">✓ 你選了這家</div>':''}</div></div>
+      <div class="info"><div><i>核心</i>${c.core}</div><div><i>需要</i>${c.need}</div></div>
+      <div class="adv"><div class="t"><b>★ ${a.name}</b><span>${a.shuo}</span></div>${a.text}</div></button>`;}).join('');
+  const entry=`<div class="pane">
+    <div class="lbl">組名</div><div class="inrow"><input class="txt" id="nickIn" maxlength="12" placeholder="例如：第五組" value="${esc(S.nick||lsGet('six-nick')||'')}"></div>
+    ${online?`<div class="lbl">房間</div><div class="inrow"><input class="txt code" id="roomIn" maxlength="4" placeholder="房號" value="${esc(S.room)}" autocomplete="off"><button class="btn ghost" data-v="join">加入</button><button class="btn ghost" data-v="newroom">開新房間</button></div>
+    <p class="note">${roomRef?`你在房間 <b class="num">${esc(S.room)}</b>，目前線上 ${humans().length} 組。把房號告訴其他組，大家進同一間就會同時亮牌、可以互相合作。`:'同一班請進同一個房間。第一組按「開新房間」，再把 4 碼房號告訴其他組。'}</p>`
+    :netTried?'<p class="note">目前連不上連線服務，這次是單人模式：其他五家由電腦代打。</p>':'<p class="note">正在連線…</p>'}
+    ${resume?`<div class="note task">你上次在這個房間玩到 <b>第 ${(mine.round||0)+1} 回合</b>（${esc(coOf(mine.co).name)}，${mine.sc||0} 分）。<div class="btns" style="margin-top:8px"><button class="btn" data-v="resume">繼續上次進度</button></div></div>`:''}
+    <button class="btn go" data-v="start" ${pickedCo?'':'disabled'}>${pickedCo?`以「${coOf(pickedCo).name}」進入園區 →`:'先選一家公司'}</button></div>`;
+  const body=`<div class="lob"><div class="col"><div class="pane"><h3>① 選擇你的企業<small>每家公司只能被一組選走</small></h3><div class="cogrid2">${cos}</div></div></div>
+    <div class="col">${lobbyRules()}${entry}</div></div>`;
   const keepNick=$('nickIn')?$('nickIn').value:null,keepRoom=$('roomIn')?$('roomIn').value:null;
-  if(!cardRes){card({top:'策略思維與永續發展・第五組',title:'永續價值進化：新創競技場'},HOSTC,body,buttons).then(onLobby);}
-  else{$('card').querySelector('.card-b').innerHTML=body+`<div class="btns"><button class="btn" data-v="start">${buttons[0][0]}</button></div>`;}
+  if(!cardRes){card({top:'策略思維與永續發展・第五組',title:'永續價值進化：新創競技場',lobby:true},HOSTC,body,[]).then(onLobby);}
+  else{$('card').querySelector('.card-b').innerHTML=body;}
   if(keepNick!=null&&$('nickIn'))$('nickIn').value=keepNick;if(keepRoom!=null&&$('roomIn'))$('roomIn').value=keepRoom;
-  const sb=$('card').querySelector('[data-v="start"]');if(sb)sb.disabled=!pickedCo;
 }
+$('card').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;lobbyTab=b.dataset.tab;
+  $('card').querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('on',x===b));$('card').querySelectorAll('[data-panel]').forEach(x=>x.hidden=x.dataset.panel!==lobbyTab);});
 async function onLobby(v){
   const nick=($('nickIn')&&$('nickIn').value.trim().slice(0,12))||S.nick;
   if(nick){S.nick=nick;lsSet('six-nick',nick);}
