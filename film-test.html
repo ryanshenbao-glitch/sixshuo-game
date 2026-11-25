@@ -717,20 +717,19 @@ function guardBoardTex(head,col,ctx,main,dim){
   rr(x,0,0,640,520,26);x.fillStyle='#d5dae0';x.fill();
   rr(x,10,10,620,500,20);x.fillStyle='#fffdf7';x.fill();
   rr(x,10,10,620,100,20);x.fillStyle=col;x.fill();x.fillRect(10,66,620,44);
-  x.fillStyle='#fff';x.font='900 58px '+SF;x.textBaseline='middle';x.textAlign='left';x.fillText(head,32,62);
-  let y=160;x.font='700 30px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=40;}y+=10;
-  let fs=48;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
-  if(ls.length*62>512-y){fs=40;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
-  if(ls.length*fs*1.28>512-y){fs=33;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
-  x.fillStyle=dim?'#a8a296':'#1d2233';y+=6;for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.28;}
+  x.fillStyle='#fff';x.font='900 64px '+SF;x.textBaseline='middle';x.textAlign='left';x.fillText(head,32,62);
+  let y=160;x.font='700 34px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=44;}y+=10;
+  let fs=62;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
+  for(const f of [56,50,44,38]){if(ls.length*fs*1.24<=512-y)break;fs=f;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
+  x.fillStyle=dim?'#a8a296':'#1d2233';y+=6;for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.24;}
   const t=new THREE.CanvasTexture(c);t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
 function buildGuardBoards(){NPCS.filter(n=>n.kind==='shuo').forEach(n=>{
   const a=Math.atan2(n.pos.x,n.pos.z-GR.cz),bx=Math.sin(a)*GR.br,bz=GR.cz+Math.cos(a)*GR.br;
   const g=new THREE.Group();g.position.set(bx,H(bx,bz),bz);g.rotation.y=Math.atan2(-bx,GR.cz-bz);
   const mat=new THREE.MeshBasicMaterial({map:guardBoardTex('守護者','#b9b2a1','','',true)});
-  const face=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.7625),mat);face.position.set(0,4.6,0.07);g.add(face);
-  const back=new THREE.Mesh(new THREE.BoxGeometry(3.56,2.9,0.1),M('#c9ccc8'));back.position.y=4.6;g.add(back);
-  [-1.68,1.68].forEach(px=>{const q=new THREE.Mesh(new THREE.BoxGeometry(0.12,6.05,0.12),M('#9aa3ad'));q.position.set(px,3.02,-0.02);g.add(q);});
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(4.4,3.575),mat);face.position.set(0,4.9,0.07);g.add(face);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(4.58,3.75,0.1),M('#c9ccc8'));back.position.y=4.9;g.add(back);
+  [-2.18,2.18].forEach(px=>{const q=new THREE.Mesh(new THREE.BoxGeometry(0.14,6.8,0.14),M('#9aa3ad'));q.position.set(px,3.4,-0.02);g.add(q);});
   g.visible=false;scene.add(g);const col={x:999,z:999,r:1.2};colliders.push(col);n.gb={g,mat,col,key:'',bx,bz};});}
 function refreshGuardBoards(rd){NPCS.filter(n=>n.kind==='shuo'&&n.gb).forEach(n=>{const v=n.ch.root.visible&&!!rd&&rd.type==='risk'&&!!S.co;
   n.gb.g.visible=v;n.gb.col.x=v?n.gb.bx:999;n.gb.col.z=v?n.gb.bz:999;if(!v)return;
