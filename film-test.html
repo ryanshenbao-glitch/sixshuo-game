@@ -693,11 +693,11 @@ function buildTaipei(){const g=new THREE.Group();scene.add(g);const labels=[];
   {const q=grp(5.5,16,Math.atan2(-5.5,-16));q.add(mesh(new THREE.CylinderGeometry(0.1,0.1,4,8),'#7a8592',0,2,0));sign(q,'園區路','#1f7a4a','#ffffff',2.6,0.8,1.1,3.7,0,0,60,'Yuanqu Rd.');sign(q,'科智街','#1f7a4a','#ffffff',2.6,0.8,0,3.0,-1.1,Math.PI/2,60,'Keji St.');colliders.push({x:5.5,z:16,r:0.5});}
   // 夜市（往幸福社區的路上）
   {const foods=[['珍珠奶茶','#c47a3a'],['大雞排','#e0582c'],['蚵仔煎','#d9a21b'],['臭豆腐','#7a5a3a'],['胡椒餅','#b8662a'],['滷肉飯','#8a3b2a'],['豆花','#e3b450'],['小籠包','#d0457a']];
-    const gate=grp(0,34,0);[-5.2,5.2].forEach(px=>gate.add(mesh(new THREE.BoxGeometry(0.6,6.4,0.6),'#c0392b',px,3.2,0)));gate.add(mesh(new THREE.BoxGeometry(12,1.6,0.5),'#c0392b',0,6.6,0));
+    const gate=grp(0,32,0);[-5.2,5.2].forEach(px=>gate.add(mesh(new THREE.BoxGeometry(0.6,6.4,0.6),'#c0392b',px,3.2,0)));gate.add(mesh(new THREE.BoxGeometry(12,1.6,0.5),'#c0392b',0,6.6,0));
     sign(gate,'園區夜市','#c0392b','#ffe08a',6,1.3,0,6.6,0.27,0,90);sign(gate,'園區夜市','#c0392b','#ffe08a',6,1.3,0,6.6,-0.27,Math.PI,90);
     for(let k=-2;k<=2;k++)if(k){const l=mesh(new THREE.SphereGeometry(0.42,12,10),'#e8392c',k*2.3,5.2,0.3);l.scale.y=1.2;gate.add(l);gate.add(mesh(new THREE.CylinderGeometry(0.2,0.2,0.18,10),'#f0bd2e',k*2.3,5.75,0.3));}
-    colliders.push({x:-5.2,z:34,r:0.7},{x:5.2,z:34,r:0.7});
-    foods.forEach(([n,c],i)=>{const side=i%2?1:-1,z=40+Math.floor(i/2)*9,x=side*7.8;const q=grp(x,z,side>0?-Math.PI/2:Math.PI/2);
+    colliders.push({x:-5.2,z:32,r:0.7},{x:5.2,z:32,r:0.7});
+    foods.forEach(([n,c],i)=>{const side=i%2?1:-1,z=37.5+Math.floor(i/2)*4.6,x=side*7.8;const q=grp(x,z,side>0?-Math.PI/2:Math.PI/2);
       q.add(mesh(new THREE.BoxGeometry(4.2,1.1,1.6),'#f4ead2',0,0.55,0.4),mesh(new THREE.BoxGeometry(4.2,0.15,1.8),'#8a6a48',0,1.15,0.4));
       [[-2,-0.4],[2,-0.4],[-2,1.2],[2,1.2]].forEach(([a,b])=>q.add(mesh(new THREE.BoxGeometry(0.14,2.9,0.14),'#7a5a3a',a,1.45,b)));
       for(let s2=0;s2<6;s2++)q.add(mesh(new THREE.BoxGeometry(0.72,0.14,2.4),s2%2?'#ffffff':c,-1.8+s2*0.72,2.95,0.5));
@@ -707,7 +707,7 @@ function buildTaipei(){const g=new THREE.Group();scene.add(g);const labels=[];
       colliders.push({x,z:z,r:2.1});});
     // 機車停一排
     const sc=['#e04a4a','#3d6cf0','#f0f0f0','#27a854','#f0bd2e','#8a4fd8','#222222'];
-    for(let i=0;i<10;i++){const side=i%2?1:-1,z=38+Math.floor(i/2)*8.5+3.5,x=side*4.7;const q=grp(x,z,Math.PI/2*side*0+(side>0?0.2:-0.2));const c=sc[i%sc.length];
+    for(let i=0;i<10;i++){const side=i%2?1:-1,z=35+Math.floor(i/2)*4,x=side*4.7;const q=grp(x,z,Math.PI/2*side*0+(side>0?0.2:-0.2));const c=sc[i%sc.length];
       [-0.6,0.6].forEach(dz=>{const w=new THREE.Mesh(new THREE.TorusGeometry(0.28,0.1,6,14),M('#222'));w.rotation.y=Math.PI/2;w.position.set(0,0.32,dz);q.add(w);});
       q.add(mesh(new THREE.BoxGeometry(0.5,0.4,1.4),c,0,0.55,0),mesh(new THREE.BoxGeometry(0.45,0.2,0.7),'#2a2a2a',0,0.85,0.25),mesh(new THREE.BoxGeometry(0.4,0.8,0.25),c,0,0.95,-0.55),mesh(new THREE.BoxGeometry(0.9,0.08,0.08),'#333',0,1.4,-0.6));
       colliders.push({x,z,r:0.7});}}
