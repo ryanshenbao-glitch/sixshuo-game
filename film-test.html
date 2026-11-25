@@ -48,6 +48,7 @@ button{font-family:var(--f);color:inherit}
 #netBub.on i{background:var(--leafc);box-shadow:0 0 0 3px rgba(121,198,82,.25)}
 #phoneBtn{border:0;cursor:pointer;width:64px;height:64px;border-radius:22px;background:var(--teal);box-shadow:var(--pop);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;gap:0;padding:6px 0 4px}
 #phoneBtn svg{width:28px;height:28px}
+#evBtn{border:0;cursor:pointer;width:64px;height:64px;border-radius:22px;background:#f0bd2e;box-shadow:var(--pop);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;padding:6px 0 4px;margin-top:10px}#evBtn svg{width:28px;height:28px}#evBtn:hover{transform:translateY(-1px)}
 #phoneBtn:hover{transform:translateY(-1px)}
 #dots{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);padding:8px 14px;gap:7px;pointer-events:none}
 #dots i{width:12px;height:12px;border-radius:50%;background:var(--line);display:block;transition:transform .3s}
@@ -172,7 +173,7 @@ th{color:var(--ink2);font-weight:400;font-size:13px}
   #hudL .ic{width:26px;height:26px;font-size:13px}
   #hudL{gap:6px}
   #hudL .bub b{font-size:18px}
-  #phoneBtn{width:56px;height:56px;border-radius:19px}
+  #phoneBtn,#evBtn{width:56px;height:56px;border-radius:19px}
   #toast{top:calc(196px + env(safe-area-inset-top,0px))}
   #waitBub{top:calc(248px + env(safe-area-inset-top,0px));font-size:13px}
   #prompt{bottom:calc(170px + env(safe-area-inset-bottom,0px));font-size:15px}
@@ -219,12 +220,13 @@ body.talk #jBtn,body.talk #vBtn{display:none!important}
     <div class="bub" id="netBub"><i></i><span id="netTxt">單人模式</span></div>
     <div class="bub" id="timerBub" hidden><span class="ic clock">⏱</span><small>本回合剩</small><b id="timerTxt" class="num">1:30</b></div>
     <button id="phoneBtn" aria-label="打開園區手機（Tab）"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="3.5"/><path d="M10.5 18.5h3"/></svg>手機</button>
+    <button id="evBtn" aria-label="看這回合的事件卡（C）"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>事件卡</button>
   </div>
   <div class="bub" id="waitBub" hidden><span id="waitTxt"></span><button id="skipWait">不等了</button></div>
   <div class="bub" id="toast" hidden></div>
   <div class="bub" id="prompt" hidden><span class="abtn">A</span><span id="promptTxt"></span></div>
   <div id="banner"><small id="bnTop"></small><b id="bnBig"></b></div>
-  <div class="bub" id="keys" hidden><kbd>WASD</kbd> 走 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳 · 滑鼠 轉視角 · <kbd>E</kbd> 對話 · <kbd>V</kbd> 視角 · <kbd>Tab</kbd> 手機 · <kbd>Esc</kbd> 放開滑鼠</div>
+  <div class="bub" id="keys" hidden><kbd>WASD</kbd> 走 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳 · 滑鼠 轉視角 · <kbd>E</kbd> 對話 · <kbd>V</kbd> 視角 · <kbd>Tab</kbd> 手機 · <kbd>C</kbd> 事件卡 · <kbd>Esc</kbd> 放開滑鼠</div>
   <div id="choices" hidden></div>
   <div id="dside" hidden></div><div id="dlg" hidden role="dialog" aria-live="polite"><div id="dlgName"></div><button id="dlgSkip" hidden>略過</button><div id="dlgText"></div><div id="dlgCaret" hidden></div></div>
   <div id="joy" hidden><div id="knob"></div></div>
@@ -758,6 +760,7 @@ function toggleView(){CAM.fp=!CAM.fp;if(meCh)meCh.root.visible=!CAM.fp;if(CAM.fp
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;K[e.code]=true;
   if(film){if(e.code==='Escape'){endFilm();}if(e.code==='KeyP'||e.code==='Space'){e.preventDefault();filmPause();}return;}
   if(e.code==='Tab'){if(S.phase==='lobby'||dlgActive()||!$('cardWrap').hidden)return;e.preventDefault();togglePhone();return;}
+  if(e.code==='KeyC'&&!e.repeat&&!/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||'')){if(S.phase!=='lobby'&&$('cardWrap').hidden){e.preventDefault();showEventCard();return;}}
   if(e.code==='Escape'){if(!$('phone').hidden)togglePhone(false);return;}
   if(dlgActive()){if(['KeyE','Space','Enter'].includes(e.code)){e.preventDefault();dlgAdvance();}
     if(/^Digit[1-9]$/.test(e.code)){const b=$('choices').querySelectorAll('.ch')[+e.code.slice(5)-1];if(b&&!b.disabled)b.click();}return;}
@@ -1390,7 +1393,14 @@ map:'<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z" fill="#fff"/><path d="M9 4v14M1
 const APPS=[['map','地圖','#5cb8e6'],['prof','思華老師','#4f5a7a'],['card','事件卡','#20b2a4'],['rank','排行','#f0bd2e'],['adv','我的優勢','#ee8a6c'],['shuo','九說小抄','#a454c6'],['rule','規則','#79c652'],['snd','音效','#7ab8e8']];
 function togglePhone(on){const el=$('phone');const show=on===undefined?el.hidden:on;if(show&&(uiBusy&&!cardRes))return;
   if(show){if(cardRes)return;unlockMouse();el.hidden=false;phoneHome();}else el.hidden=true;lookHint();}
-$('phoneBtn').addEventListener('click',()=>togglePhone());$('phClose').addEventListener('click',()=>{if($('phTitle').textContent!=='園區手機')phoneHome();else togglePhone(false);});
+$('phoneBtn').addEventListener('click',()=>togglePhone());
+function showEventCard(){if(S.phase==='lobby'||!S.co||!$('cardWrap').hidden)return;if(!$('phone').hidden)togglePhone(false);
+  const r=Math.min(S.round,ROUNDS.length-1),rd=ROUNDS[r];let extra='';
+  if(rd.type==='risk'&&rd.data[S.co]&&rd.data[S.co].ctx)extra+=`<div class="note"><b>你的處境：</b>${esc(rd.data[S.co].ctx)}</div>`;
+  if(rd.hand)extra+=`<div class="note"><b>你的手卡：</b>${esc(rd.hand[S.co])}</div>`;
+  const pk=S.picks&&S.picks[r];if(rd.type==='invest'&&pk&&pk.plan>=0){const p=rd.plans[S.co][pk.plan];extra+=`<div class="note"><b>你買的方案：${esc(p.short)}</b><br>${esc(p.text)}</div>`;}
+  card({top:`第 ${r+1} 回合・${TYPENAME[rd.type]}`,title:esc(rd.title)},rCol(rd),`<p style="font-size:17px;line-height:1.8">${esc(rd.event)}</p>${extra}<div class="note">${taskHint()}</div>`,[['知道了','ok']]);}
+$('evBtn').addEventListener('click',e=>{e.stopPropagation();showEventCard();});$('phClose').addEventListener('click',()=>{if($('phTitle').textContent!=='園區手機')phoneHome();else togglePhone(false);});
 $('phone').addEventListener('click',e=>{if(e.target.id==='phone')togglePhone(false);const tp=e.target.closest('[data-tp]');if(tp){togglePhone(false);teleport(tp.dataset.tp);return;}const a=e.target.closest('[data-app]');if(a)openApp(a.dataset.app);});
 function phoneHome(){$('phTitle').textContent='園區手機';$('phClose').textContent='關閉';$('phBody').innerHTML=`<div class="apps">${APPS.map(([k,t,c])=>`<button class="app" data-app="${k}"><i style="background:${c}"><svg viewBox="0 0 24 24">${ICONS[k]}</svg></i>${t}</button>`).join('')}</div>
   <div class="note" style="margin-top:22px">${S.co?`${esc(coOf(S.co).name)}・${esc(S.nick)}<br>第 ${Math.min(S.round+1,8)} / 8 回合・${S.sc} 分・${S.cap} 資本`:''}</div>`;}
