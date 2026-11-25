@@ -789,7 +789,7 @@ $('vBtn').addEventListener('click',()=>{if(!uiBusy)toggleView();});
 $('prompt').addEventListener('click',()=>{if(!uiBusy)interact();});
 
 function blocked(x,z){const d=Math.hypot(x,z);if(d>WORLD-2)return true;if(H(x,z)<-0.3&&d>40)return true;if(Math.hypot(x-LAKE.x,z-LAKE.z)<LAKE.r)return true;
-  for(const c of colliders){if(Math.abs(c.x-x)<c.r+0.5&&Math.abs(c.z-z)<c.r+0.5&&Math.hypot(c.x-x,c.z-z)<c.r+0.45)return true;}return false;}
+  for(const c of colliders){if(Math.abs(c.x-x)<c.r+0.5&&Math.abs(c.z-z)<c.r+0.5){const d2=Math.hypot(c.x-x,c.z-z);if(d2<c.r+0.45&&d2<=Math.hypot(c.x-P.x,c.z-P.z))return true;}}return false;}
 function stepPlayer(dt){
   if(!meCh)return false;
   let ix=0,iz=0;const free=!uiBusy&&!overlayOpen();
@@ -1182,7 +1182,7 @@ const myRisk=()=>ROUNDS[S.round].data[S.co];
 function taskHint(){const rd=ROUNDS[S.round];return rd.type==='risk'?'去廣場找頭上有「!」的說守護者，選一個說。':rd.type==='coop'?'走到其他公司家門口，邀請一家合作。':'回你自己的公司門口，跟兩位方案顧問談投資。';}
 async function beginRound(){
   const r=S.round,rd=ROUNDS[r];S.phase='intro';S.cur={ch:[]};S.removed=[];S.inviting=null;S.skipWait=false;
-  push({round:r});hud();refreshWorld();P.x=0;P.z=9.5;P.y=0;P.vy=0;P.tx=null;P.ry=Math.PI;CAM.yaw=0;S.deadline=0;FX.focus={x:0,z:-3};
+  push({round:r});hud();refreshWorld();P.x=0;P.z=13.5;P.y=0;P.vy=0;P.tx=null;P.ry=Math.PI;CAM.yaw=0;S.deadline=0;FX.focus={x:0,z:-3};
   banner(`第 ${r+1} 回合・${rd.eraName}`,rd.title,rCol(rd));blip(523,0.15,0.05,'sine');setTimeout(()=>blip(784,0.2,0.05,'sine'),160);
   await sleep(1200);
   await playFilm(r);
