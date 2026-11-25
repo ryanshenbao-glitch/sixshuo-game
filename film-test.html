@@ -1056,11 +1056,12 @@ function renderLobby(){
   const entry=`<div class="pane">
     <div class="lbl">組名</div><div class="inrow"><input class="txt" id="nickIn" maxlength="12" placeholder="例如：第五組" value="${esc(S.nick||lsGet('six-nick')||'')}"></div>
     ${online?`<div class="lbl">房間</div><div class="inrow"><input class="txt code" id="roomIn" maxlength="4" placeholder="房號" value="${esc(S.room)}" autocomplete="off"><button class="btn ghost" data-v="join">加入</button><button class="btn ghost" data-v="newroom">開新房間</button></div>
-    <p class="note">${roomRef?`你在房間 <b class="num">${esc(S.room)}</b>，目前線上 ${humans().length} 組。把房號告訴其他組，大家進同一間就會同時亮牌、可以互相合作。`:'同一班請進同一個房間。第一組按「開新房間」，再把 4 碼房號告訴其他組。'}</p>`
+    <p class="note" style="font-size:13.5px;padding:10px 14px">${roomRef?`你在房間 <b class="num">${esc(S.room)}</b>・線上 ${humans().length} 組。把房號告訴其他組，大家進同一間就能一起玩。`:'第一組按「開新房間」，再把 4 碼房號告訴其他組。'}</p>`
     :netTried?'<p class="note">目前連不上連線服務，這次是單人模式：其他五家由電腦代打。</p>':'<p class="note">正在連線…</p>'}
     ${resume?`<div class="note task">你上次在這個房間玩到 <b>第 ${(mine.round||0)+1} 回合</b>（${esc(coOf(mine.co).name)}，${mine.sc||0} 分）。<div class="btns" style="margin-top:8px"><button class="btn" data-v="resume">繼續上次進度</button></div></div>`:''}
-    <button class="btn go" data-v="start" ${pickedCo?'':'disabled'}>${pickedCo?`以「${coOf(pickedCo).name}」進入園區 →`:'先選一家公司'}</button></div>`;
-  const body=`<div class="lob"><div class="col"><div class="pane"><h3>① 選擇你的企業<small>每家公司只能被一組選走</small></h3><div class="cogrid2">${cos}</div></div></div>
+</div>`;
+  const go=`<button class="btn go" data-v="start" ${pickedCo?'':'disabled'}>${pickedCo?`以「${coOf(pickedCo).name}」進入園區 →`:'先選一家公司'}</button>`;
+  const body=`<div class="lob"><div class="col"><div class="pane"><h3>① 選擇你的企業<small>每家公司只能被一組選走</small></h3><div class="cogrid2">${cos}</div></div>${go}</div>
     <div class="col">${lobbyRules()}${entry}</div></div>`;
   const keepNick=$('nickIn')?$('nickIn').value:null,keepRoom=$('roomIn')?$('roomIn').value:null;
   if(!cardRes){card({top:'策略思維與永續發展・第五組',title:'永續價值進化：新創競技場',lobby:true},HOSTC,body,[]).then(onLobby);}
