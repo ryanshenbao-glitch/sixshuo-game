@@ -718,9 +718,9 @@ function guardBoardTex(head,col,ctx,main,dim){
   rr(x,10,10,620,500,20);x.fillStyle='#fffdf7';x.fill();
   rr(x,10,10,620,100,20);x.fillStyle=col;x.fill();x.fillRect(10,66,620,44);
   x.fillStyle='#fff';x.font='900 64px '+SF;x.textBaseline='middle';x.textAlign='left';x.fillText(head,32,62);
-  let y=160;x.font='700 34px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=44;}y+=10;
-  let fs=62;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
-  for(const f of [56,50,44,38]){if(ls.length*fs*1.24<=512-y)break;fs=f;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
+  let y=160;x.font='700 36px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=46;}y+=10;
+  let fs=80;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
+  for(const f of [72,64,56,48,40]){if(ls.length*fs*1.24<=512-y)break;fs=f;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
   x.fillStyle=dim?'#a8a296':'#1d2233';y+=6;for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.24;}
   const t=new THREE.CanvasTexture(c);t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
 function buildGuardBoards(){NPCS.filter(n=>n.kind==='shuo').forEach(n=>{
