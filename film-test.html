@@ -1091,17 +1091,148 @@ function drawFilm(t){
   $('filmProg').style.width=Math.min(100,t/film.dur*100)+'%';
   if(t>=film.dur)endFilm();
 }
+/* ───────── 第 1 回合電影預告（AI 開源革命）：五個鏡頭＋旁白＋配樂 ───────── */
+const FILM1=(()=>{const isMute=()=>!!S.mute;let MAIN=null,x=null;
+const SF='"Noto Serif TC","Songti TC",serif',NF='"Noto Sans TC","PingFang TC",sans-serif';
+const LINES=['台北，一座正在長大的 AI 園區','六家新創，在同一條街上起跑','這一天，全球科技巨頭開了一場發表會','「最新 AI 模型和開發工具，全部開放！」\n（蛤？？？免費的？）','先進 AI，人人都能低成本取得','短短三個月，市場湧進大量相似產品～～～','你有 AI 助理，他有 AI 助理\n連隔壁早餐店都有 AI 助理><','到了 3.0，問題不再是「會不會用 AI」','而是「大家都會用的時候，\n你憑什麼被選中？」'];
+const T0=1.6,PER=2.8,TEND=T0+LINES.length*PER,DUR=TEND+3.6;let t=0;
+const cl=v=>Math.max(0,Math.min(1,v)),ease=v=>{v=cl(v);return v*v*(3-2*v)};
+function rnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
+const R=rnd(7);
+// 預先產生資料
+const crowd=[...Array(70)].map(()=>({x:R()*1280,y:560+R()*120,s:0.7+R()*0.6,f:R()*20}));
+const nodes=[];{const r=rnd(11);while(nodes.length<70){const a=r()*Math.PI*2,d=Math.sqrt(r());const nx=640+Math.cos(a)*d*520,ny=360+Math.sin(a)*d*230;if(Math.hypot(nx-640,ny-360)>70)nodes.push({x:nx,y:ny,d:Math.hypot(nx-640,ny-360)})}nodes.sort((a,b)=>a.d-b.d)}
+const dots=[];{const r=rnd(3);for(let i=0;i<900;i++){const a=r()*Math.PI*2,d=Math.sqrt(r());dots.push([640+Math.cos(a)*d*600,360+Math.sin(a)*d*270])}}
+const boxes=[];{const r=rnd(5);for(let row=0;row<5;row++)for(let col=0;col<12;col++)boxes.push({col,row,t:r(),h:r()})}
+boxes.sort((a,b)=>a.t-b.t);
+// ---------- 音效 ----------
+let AC,master,drone;
+function audio(){if(AC)return;AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=isMute()?0:0.5;master.connect(AC.destination);}
+function startDrone(){audio();if(drone)drone.forEach(o=>{try{o.stop()}catch(e){}});const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;const g=AC.createGain();g.gain.setValueAtTime(0,AC.currentTime);g.gain.linearRampToValueAtTime(0.18,AC.currentTime+3);lp.connect(g);g.connect(master);
+  drone=[55,55.4,82.5].map(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;o.connect(lp);o.start();return o});
+  lp.frequency.linearRampToValueAtTime(900,AC.currentTime+22);drone.g=g;}
+function hit(f=60,v=0.9,d=1.6){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f*2.2,AC.currentTime);o.frequency.exponentialRampToValueAtTime(f,AC.currentTime+0.25);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+d);
+  const n=AC.createBufferSource(),b=AC.createBuffer(1,AC.sampleRate*0.4,AC.sampleRate),dd=b.getChannelData(0);for(let i=0;i<dd.length;i++)dd[i]=(Math.random()*2-1)*Math.pow(1-i/dd.length,3);n.buffer=b;const ng=AC.createGain();ng.gain.value=v*0.35;n.connect(ng);ng.connect(master);n.start();}
+function tick(v=0.25){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1600;g.gain.setValueAtTime(v*0.25,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.05);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+0.06);}
+function shutter(){if(!AC)return;const n=AC.createBufferSource(),b=AC.createBuffer(1,AC.sampleRate*0.06,AC.sampleRate),dd=b.getChannelData(0);for(let i=0;i<dd.length;i++)dd[i]=(Math.random()*2-1)*(1-i/dd.length);n.buffer=b;const g=AC.createGain();g.gain.value=0.12;n.connect(g);g.connect(master);n.start();}
+function stopDrone(){if(drone&&AC){drone.g.gain.linearRampToValueAtTime(0,AC.currentTime+1.2);const d=drone;setTimeout(()=>d.forEach(o=>{try{o.stop()}catch(e){}}),1400);drone=null;}}
+const CUES=[...Array(9)].map((_,i)=>[1.6+i*2.8,()=>hit(i===3?70:i>=7?38:52,i>=7?1:0.6,i>=7?2.4:1.4)]).concat([[1.6+3*2.8+1.3,()=>hit(80,0.6,0.8)],[1.6+9*2.8,()=>hit(44,1.2,3)]]);
+let fired=new Set();
+// ---------- 鏡頭 ----------
+const SIX=['#3d6cf0','#27a854','#8a4fd8','#1599b5','#d0457a','#e09a1b'];
+const towers=[...Array(26)].map((_,i)=>{const r=rnd(100+i);return {x:i*52-20,w:40+r()*30,h:120+r()*260,l:r()}});
+function shotCity(lt){const bg=x.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#13234a');bg.addColorStop(1,'#33496e');x.fillStyle=bg;x.fillRect(0,0,1280,720);
+  const pan=lt*10;x.save();x.translate(-pan,0);
+  towers.forEach(b=>{x.fillStyle='#182440';x.fillRect(b.x,470-b.h,b.w,b.h);for(let yy=470-b.h+12;yy<460;yy+=18)for(let xx=b.x+6;xx<b.x+b.w-6;xx+=12){if(((xx*7+yy*13)%10)/10<b.l*0.6){x.fillStyle='rgba(255,214,140,.85)';x.fillRect(xx,yy,5,7);}}});
+  x.fillStyle='#0d1628';x.fillRect(560,150,30,320);x.fillRect(548,250,54,12);x.fillRect(552,330,46,12);x.beginPath();x.moveTo(575,90);x.lineTo(586,150);x.lineTo(564,150);x.fill();
+  x.restore();x.fillStyle='#141c2b';x.fillRect(0,470,1280,250);x.fillStyle='#232d40';x.fillRect(0,560,1280,10);
+  SIX.forEach((cc,i)=>{const on=ease((lt-2.4-i*0.3)/0.4);const hx=140+i*175;x.fillStyle='#1d2638';x.fillRect(hx,440,130,120);x.fillStyle='#10161f';x.beginPath();x.moveTo(hx-10,440);x.lineTo(hx+65,395);x.lineTo(hx+140,440);x.fill();
+    x.fillStyle=on>0?cc:'#2a3244';x.globalAlpha=0.3+0.7*on;x.fillRect(hx+20,470,90,60);x.globalAlpha=1;if(on>0){const g=x.createRadialGradient(hx+65,500,5,hx+65,500,120);g.addColorStop(0,cc+'88');g.addColorStop(1,cc+'00');x.fillStyle=g;x.globalAlpha=on;x.fillRect(hx-60,380,250,240);x.globalAlpha=1;}});}
+function shotSummit(lt){// 發表會
+  const push=1+lt*0.012;x.save();x.translate(640,360);x.scale(push,push);x.translate(-640,-360);
+  const bg=x.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#070a12');bg.addColorStop(1,'#111826');x.fillStyle=bg;x.fillRect(0,0,1280,720);
+  // 大螢幕
+  const on=ease((lt-1.3)/0.5);x.fillStyle='#0d1320';x.fillRect(250,90,780,330);
+  const sg=x.createLinearGradient(250,90,1030,420);sg.addColorStop(0,`rgba(61,108,240,${0.15+0.75*on})`);sg.addColorStop(1,`rgba(20,200,220,${0.1+0.6*on})`);x.fillStyle=sg;x.fillRect(262,102,756,306);
+  if(on>0){x.globalAlpha=on;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.font='900 30px '+NF;x.fillText('GLOBAL AI SUMMIT 2026',640,170);
+    x.font='900 92px '+NF;x.shadowColor='#7fb0ff';x.shadowBlur=40;x.fillText('OPEN MODEL',640,260);x.shadowBlur=0;
+    x.font='700 34px '+NF;x.fillText('模型・開發工具　全部免費開放',640,340);x.globalAlpha=1;}
+  // 白閃
+  if(lt>1.3&&lt<1.7){x.fillStyle=`rgba(255,255,255,${(1.7-lt)/0.4*0.8})`;x.fillRect(0,0,1280,720);}
+  // 聚光燈
+  [[380,0.6],[900,-0.6]].forEach(([sx,sk])=>{const g=x.createLinearGradient(sx,0,640,520);g.addColorStop(0,'rgba(255,240,200,.22)');g.addColorStop(1,'rgba(255,240,200,0)');x.fillStyle=g;x.beginPath();x.moveTo(sx-20,0);x.lineTo(sx+20,0);x.lineTo(640+180+sk*40,540);x.lineTo(640-180+sk*40,540);x.closePath();x.fill();});
+  // 講台與講者
+  x.fillStyle='#1a2233';x.fillRect(160,470,960,60);x.fillStyle='#232d42';x.fillRect(600,430,80,60);
+  x.fillStyle='#05070b';x.beginPath();x.arc(640,392,18,0,7);x.fill();x.fillRect(622,410,36,40);
+  // 觀眾與閃光燈
+  crowd.forEach(p=>{x.fillStyle='#03050a';x.beginPath();x.arc(p.x,p.y,16*p.s,0,7);x.fill();x.fillRect(p.x-22*p.s,p.y+12*p.s,44*p.s,80);
+    const fl=Math.sin(lt*3+p.f*7)>0.985;if(fl&&lt>1.4){x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.arc(p.x+10,p.y-22,6,0,7);x.fill();x.fillStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(p.x+10,p.y-22,60,0,7);x.fill();}});
+  x.restore();}
+function shotNetwork(lt){// 全球擴散
+  x.fillStyle='#04060c';x.fillRect(0,0,1280,720);
+  const z=1.05-lt*0.008;x.save();x.translate(640,360);x.scale(z,z);x.translate(-640,-360);
+  x.fillStyle='rgba(120,150,200,.18)';dots.forEach(([a,b])=>x.fillRect(a,b,2,2));
+  const reach=ease(lt/2.4)*560;
+  nodes.forEach((n,i)=>{if(n.d>reach)return;const k=cl((reach-n.d)/80);x.strokeStyle=`rgba(90,160,255,${0.45*k})`;x.lineWidth=1.4;x.beginPath();x.moveTo(640,360);x.quadraticCurveTo((640+n.x)/2,(360+n.y)/2-60,n.x,n.y);x.stroke();
+    // 沿線光點
+    const p=((lt*0.8+i*0.13)%1);const qx=(1-p)*(1-p)*640+2*(1-p)*p*((640+n.x)/2)+p*p*n.x,qy=(1-p)*(1-p)*360+2*(1-p)*p*((360+n.y)/2-60)+p*p*n.y;x.fillStyle=`rgba(200,230,255,${k})`;x.fillRect(qx-1.5,qy-1.5,3,3);
+    x.fillStyle=`rgba(120,200,255,${k})`;x.beginPath();x.arc(n.x,n.y,4+2*k,0,7);x.fill();x.fillStyle=`rgba(120,200,255,${0.15*k})`;x.beginPath();x.arc(n.x,n.y,16,0,7);x.fill();});
+  const g=x.createRadialGradient(640,360,0,640,360,90);g.addColorStop(0,'rgba(160,200,255,.95)');g.addColorStop(1,'rgba(60,110,240,0)');x.fillStyle=g;x.beginPath();x.arc(640,360,90,0,7);x.fill();
+  x.restore();
+  const cnt=Math.floor(Math.pow(ease(lt/2.6),2)*12800000);x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('全球下載次數',90,150);
+  x.fillStyle='#fff';x.font='900 64px '+NF;x.fillText(cnt.toLocaleString('en-US'),90,215);
+  x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('使用成本',90,270);x.fillStyle='#5ee0a0';x.font='900 40px '+NF;x.fillText('NT$ 0',90,318);}
+function shotShelf(lt){// 三個月後
+  x.fillStyle='#0a0d14';x.fillRect(0,0,1280,720);
+  const month=Math.min(3,1+Math.floor(lt/1.7));
+  // 貨架
+  const fill=Math.pow(ease(lt/5.2),1.4)*boxes.length;
+  for(let r=0;r<5;r++){x.fillStyle='#1c2433';x.fillRect(120,200+r*92+70,1040,8);}
+  boxes.forEach((b,i)=>{if(i>fill)return;const k=cl(fill-i);const bx=140+b.col*84,by=200+b.row*92+(1-k)*-30;x.globalAlpha=k;
+    x.fillStyle=`hsl(${215+b.h*20},${30+b.h*20}%,${42+b.h*8}%)`;x.fillRect(bx,by,64,70);x.fillStyle='rgba(255,255,255,.85)';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',bx+32,by+28);
+    x.font='700 11px '+NF;x.fillStyle='rgba(255,255,255,.55)';x.fillText('助理 Pro',bx+32,by+52);x.globalAlpha=1;});
+  // 月曆
+  x.save();x.translate(120,70);x.fillStyle='#f2efe6';x.fillRect(0,0,150,108);x.fillStyle='#c94040';x.fillRect(0,0,150,30);x.fillStyle='#fff';x.font='700 18px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('開源後',75,15);
+  const ft=(lt%1.7)/1.7;x.fillStyle='#111';x.font='900 46px '+NF;x.fillText('第 '+month+' 月',75,72);x.restore();
+  // 價格
+  const prices=['NT$ 990','NT$ 590','NT$ 290'];x.save();x.translate(1160,120);x.rotate(0.06);x.textAlign='right';x.textBaseline='middle';
+  x.fillStyle='#8a93a0';x.font='700 20px '+NF;x.fillText('市場均價',0,-30);x.fillStyle='#ff5a5a';x.font='900 58px '+NF;x.fillText(prices[month-1],0,20);x.restore();
+  x.textAlign='left';x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('相似產品數：'+Math.round(fill*37),300,128);}
+function shotYou(lt){// 你的公司
+  const z=1+ease(lt/4.5)*0.9;x.fillStyle='#07090e';x.fillRect(0,0,1280,720);x.save();x.translate(640,384);x.scale(z,z);x.translate(-640,-384);
+  boxes.forEach(b=>{const bx=140+b.col*84,by=200+b.row*92;const me=b.col===6&&b.row===2;if(me)return;x.fillStyle='#262a31';x.fillRect(bx,by,64,70);x.fillStyle='#3a3f48';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',bx+32,by+28);});
+  for(let r=0;r<5;r++){x.fillStyle='#14181f';x.fillRect(120,200+r*92+70,1040,8);}
+  x.restore();
+  const s=ease((lt-0.6)/1.2);const g=x.createRadialGradient(640,384,10,640,384,260);g.addColorStop(0,`rgba(255,235,190,${0.35*s})`);g.addColorStop(1,'rgba(255,235,190,0)');x.fillStyle=g;x.fillRect(0,0,1280,720);
+  x.save();x.translate(640,384);x.scale(z,z);const bx=-32,by=-35;x.fillStyle='#3d6cf0';x.shadowColor='#7fb0ff';x.shadowBlur=30*s;x.fillRect(bx,by,64,70);x.shadowBlur=0;x.fillStyle='#fff';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',0,by+28);x.font='700 10px '+NF;x.fillText('你的公司',0,by+52);x.restore();}
+function shotTitle(lt){x.fillStyle='#05070b';x.fillRect(0,0,1280,720);const a=ease(lt/0.8);x.globalAlpha=a;x.textAlign='center';x.textBaseline='middle';
+  x.fillStyle='#c9d1db';x.font='700 28px '+NF;x.fillText('第 1 回合 · 3.0 知識經濟',640,250);
+  x.save();x.shadowColor='#3d6cf0';x.shadowBlur=40;x.fillStyle='#fff';x.font='900 108px '+SF;x.fillText('AI 開源革命',640,352);x.restore();
+  const e=ease(lt/1);x.fillStyle='#3d6cf0';x.fillRect(640-170*e,430,340*e,4);x.fillStyle='#fff';x.font='700 34px '+NF;x.fillText('選擇你的說',640,486);x.globalAlpha=1;}
+const L=i=>T0+i*PER;const SHOTS=[[T0,L(2),shotCity],[L(2),L(4),shotSummit],[L(4),L(5),shotNetwork],[L(5),L(7),shotShelf],[L(7),TEND,shotYou],[TEND,DUR,shotTitle]];
+
+function wrapT(txt,w){if(txt.includes('\n'))return txt.split('\n');const out=[];let cur='';for(const ch of txt){if(x.measureText(cur+ch).width>w&&cur){out.push(cur);cur=ch;}else cur+=ch;}if(cur)out.push(cur);return out;}
+function sub(text,a){x.save();x.globalAlpha=a;x.textAlign='center';x.textBaseline='middle';x.font='900 40px '+SF;x.fillStyle='#fff';x.shadowColor='rgba(0,0,0,.9)';x.shadowBlur=16;x.fillText(text,640,590);x.restore();}
+function draw(){
+  x.globalAlpha=1;x.fillStyle='#000';x.fillRect(0,0,1280,720);
+  if(t<T0){const a=ease(t/0.5)*ease((T0-t)/0.4);x.globalAlpha=a;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#8a93a0';x.font='700 30px '+NF;x.fillText('風險卡',640,320);x.fillStyle='#fff';x.font='900 52px '+SF;x.fillText('第 1 回合',640,395);x.globalAlpha=1;}
+  SHOTS.forEach(([s,e,f])=>{if(t<s-0.01||t>e+0.6)return;let a=cl((t-s)/0.6);if(t>e)a*=cl(1-(t-e)/0.6);if(a<=0)return;x.save();x.globalAlpha=1;
+    const oc=draw.oc||(draw.oc=Object.assign(document.createElement('canvas'),{width:1280,height:720}));const ox=oc.getContext('2d');const keep=x;
+    // 先畫到離屏再合成，避免鏡頭間透明度互相干擾
+    ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.clearRect(0,0,1280,720);drawWith(ox,f,t-s);keep.globalAlpha=a;keep.drawImage(oc,0,0);x.restore();});
+  if(t>=T0&&t<TEND){const idx=Math.floor((t-T0)/PER),lt=(t-T0)-idx*PER;x.fillStyle='rgba(5,7,11,.32)';x.fillRect(0,0,1280,720);
+    const a=Math.min(1,lt/0.35)*Math.min(1,(PER-lt)/0.3);const sc=1.06-0.06*ease(lt/PER);x.save();x.globalAlpha=Math.max(0,a);x.translate(640,360);x.scale(sc,sc);
+    x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.font='900 54px '+SF;x.shadowColor='rgba(0,0,0,.8)';x.shadowBlur=16;
+    const ls=wrapT(LINES[idx],1040);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*74));x.restore();}
+  // 顆粒、暗角、遮幅
+  for(let k=0;k<160;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
+  const vg=x.createRadialGradient(640,360,260,640,360,780);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.75)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
+  x.fillStyle='#000';x.fillRect(0,0,1280,70);x.fillRect(0,650,1280,70);
+  x.textAlign='left';x.textBaseline='middle';x.fillStyle='#5d6674';x.font='700 18px '+NF;x.fillText('風險快訊 · 第 1 回合',30,36);x.textAlign='right';x.fillText('Esc 略過 · 空白鍵暫停',1250,682);
+  }
+function drawWith(ctx,f,lt){x=ctx;try{f(lt);}finally{x=MAIN;}}
+let nt=0;
+return {DUR,
+  reset(){fired=new Set();nt=0;t=0;},
+  start(){try{audio();if(AC.state==='suspended')AC.resume();master.gain.value=isMute()?0:0.5;startDrone();}catch(e){}},
+  stop(){try{stopDrone();}catch(e){}},
+  pause(p){try{if(AC)p?AC.suspend():AC.resume();}catch(e){}},
+  render(tt,ctx){t=tt;MAIN=x=ctx;
+    CUES.forEach((q,i)=>{if(t>=q[0]&&!fired.has(i)){fired.add(i);try{q[1]();}catch(e){}}});
+    if(t>L(2)&&t<L(4)&&Math.random()<0.04)shutter();if(t>L(5)&&t<L(7)){const iv=Math.max(0.12,0.6-(t-L(5))*0.08);if(!nt||t>=nt){tick(0.3);nt=t+iv;}}
+    ctx.save();draw();ctx.restore();}};})();
 function playFilm(i){return new Promise(then=>{
   uiBusy++;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;
   const rd=ROUNDS[i];const lines=rd.trailer||chunkLines(rd.event);const per=lines.length>8?2.3:2.8;
   film={i,then,t:0,prev:performance.now(),speed:1,paused:false,dur:1.6+lines.length*per+3.4,lines,per,last:null};
+  if(i===0){film.custom=FILM1;film.dur=FILM1.DUR;FILM1.reset();FILM1.start();}
   $('filmLabel').textContent='第 '+(i+1)+' 回合 · '+rd.title;$('filmProg').style.width='0%';$('filmPause').textContent='暫停';$('filmSpeed').textContent='2 倍速';
-  $('film').hidden=false;lookHint();boom(true);
+  $('film').hidden=false;lookHint();if(!film.custom)boom(true);
   setTimeout(()=>$('filmSkip').focus({preventScroll:true}),30);
-  const tick=now=>{if(!film)return;const dt=Math.min(0.1,(now-film.prev)/1000);film.prev=now;if(!film.paused)film.t+=dt*film.speed;drawFilm(film.t);requestAnimationFrame(tick);};requestAnimationFrame(tick);
+  const tick=now=>{if(!film)return;const dt=Math.min(0.1,(now-film.prev)/1000);film.prev=now;if(!film.paused)film.t+=dt*film.speed;if(film.custom){film.custom.render(film.t,$('filmC').getContext('2d'));$('filmProg').style.width=Math.min(100,film.t/film.dur*100)+'%';if(film.t>=film.dur){endFilm();return;}}else drawFilm(film.t);requestAnimationFrame(tick);};requestAnimationFrame(tick);
 });}
-function endFilm(){if(!film)return;const f=film;film=null;$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});lookHint();if(f.then)f.then();}
-function filmPause(){if(!film)return;film.paused=!film.paused;$('filmPause').textContent=film.paused?'繼續':'暫停';}
+function endFilm(){if(!film)return;const f=film;if(f.custom)f.custom.stop();film=null;$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});lookHint();if(f.then)f.then();}
+function filmPause(){if(!film)return;film.paused=!film.paused;if(film.custom)film.custom.pause(film.paused);$('filmPause').textContent=film.paused?'繼續':'暫停';}
 $('filmSkip').addEventListener('click',endFilm);
 $('filmPause').addEventListener('click',filmPause);
 $('filmSpeed').addEventListener('click',()=>{if(!film)return;film.speed=film.speed===1?2:1;$('filmSpeed').textContent=film.speed===1?'2 倍速':'1 倍速';});
@@ -1457,7 +1588,7 @@ function loop(){
   renderer.render(scene,camera);
 }
 setInterval(()=>{if(NPCS.length){checkWait();checkIncoming();tickTimer();}},500);
-if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H};
+if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H,playFilm};
 (async()=>{try{await Promise.race([Promise.all([document.fonts.load('44px Huninn'),document.fonts.load('600 20px Fredoka')]),sleep(3500)]);}catch(e){}
   buildWorld();buildNpcs();buildGuardBoards();refreshWorld();loop();})();
 (async()=>{renderLobby();await netInit();
