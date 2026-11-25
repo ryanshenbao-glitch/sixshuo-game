@@ -664,7 +664,8 @@ function buildBeacons(){const crystal=new THREE.OctahedronGeometry(0.9,0);
 /* ───────── 台北元素：台北 101、捷運站、公共自行車、夜市、機車、路牌 ───────── */
 function buildTaipei(){const g=new THREE.Group();scene.add(g);const labels=[];
   const signTex=(txt,bg,fg,W,H2,fs,sub)=>canvasTex(W,H2,(x)=>{x.fillStyle=bg;x.fillRect(0,0,W,H2);x.fillStyle=fg;x.textAlign='center';x.textBaseline='middle';x.font='900 '+fs+'px '+FONT;x.fillText(txt,W/2,sub?H2*0.4:H2/2+2);if(sub){x.font='700 '+Math.round(fs*0.42)+'px '+FONT;x.fillText(sub,W/2,H2*0.78);}});
-  const sign=(par,txt,bg,fg,w,h,px,py,pz,ry,fs,sub)=>{const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:signTex(txt,bg,fg,Math.round(w*110),Math.round(h*110),fs,sub),side:THREE.DoubleSide}));m.position.set(px,py,pz);m.rotation.y=ry||0;m.userData.keep=true;par.add(m);return m;};
+  const sign=(par,txt,bg,fg,w,h,px,py,pz,ry,fs,sub)=>{const mat=new THREE.MeshBasicMaterial({map:signTex(txt,bg,fg,Math.round(w*110),Math.round(h*110),fs,sub)});const m=new THREE.Group();m.position.set(px,py,pz);m.rotation.y=ry||0;m.userData.keep=true;
+    const f=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);f.position.z=0.02;const b=new THREE.Mesh(new THREE.PlaneGeometry(w,h),mat);b.rotation.y=Math.PI;b.position.z=-0.02;m.add(f,b);par.add(m);return m;};
   const grp=(x,z,ry)=>{const q=new THREE.Group();q.position.set(x,H(x,z),z);q.rotation.y=ry||0;g.add(q);return q;};
   // 台北 101（遠方地標）
   {const T={x:-58,z:-112};const tw=grp(T.x,T.z,0);tw.position.y-=0.6;
@@ -674,7 +675,7 @@ function buildTaipei(){const g=new THREE.Group();scene.add(g);const labels=[];
     const top=24+8*5.8;tw.add(mesh(new THREE.BoxGeometry(5,4.5,5),'#9fc7bb',0,top+2.2,0),mesh(new THREE.BoxGeometry(3.2,3,3.2),'#7fb8a8',0,top+6,0),mesh(new THREE.CylinderGeometry(0.3,0.55,13,8),'#e6ebf0',0,top+14,0));
     colliders.push({x:T.x,z:T.z,r:8});const lb=label('台北 101','#2e8a5a','#ffffff',1.6,true);lb.position.set(T.x,top+24,T.z);labels.push(lb);}
   // 捷運站出入口
-  {const st={x:-19,z:17},ry=Math.atan2(-st.x,-st.z);const q=grp(st.x,st.z,ry);
+  {const st={x:-15.6,z:9},ry=Math.atan2(-st.x,-st.z);const q=grp(st.x,st.z,ry);
     q.add(mesh(new THREE.BoxGeometry(5.6,0.3,4.6),'#c9ced6',0,0.15,0),mesh(new THREE.BoxGeometry(4.2,1.4,3.2),'#3a4250',0,-0.4,0));
     [[-2.6,-2.1],[2.6,-2.1],[-2.6,2.1],[2.6,2.1]].forEach(([a,b])=>q.add(mesh(new THREE.BoxGeometry(0.22,3.4,0.22),'#8a95a5',a,1.9,b)));
     const roof=mesh(new THREE.BoxGeometry(6.2,0.3,5.2),'#2b6fb0',0,3.7,0);q.add(roof);q.add(mesh(new THREE.BoxGeometry(5.9,0.6,0.2),'#e9f1fa',0,3.2,-2.5),mesh(new THREE.BoxGeometry(0.2,0.6,4.8),'#e9f1fa',-2.9,3.2,0),mesh(new THREE.BoxGeometry(0.2,0.6,4.8),'#e9f1fa',2.9,3.2,0));
@@ -683,7 +684,7 @@ function buildTaipei(){const g=new THREE.Group();scene.add(g);const labels=[];
     const pole=mesh(new THREE.BoxGeometry(0.2,4.6,0.2),'#8a95a5',3.6,2.3,2.6);q.add(pole);sign(q,'M','#2b6fb0','#ffffff',0.9,0.9,3.6,4.9,2.72,0,80);
     colliders.push({x:st.x,z:st.z,r:3.4});}
   // 公共自行車站
-  {const b0={x:10,z:19},ry=Math.atan2(-b0.x,-b0.z);const q=grp(b0.x,b0.z,ry);
+  {const b0={x:15.2,z:8.8},ry=Math.atan2(-b0.x,-b0.z);const q=grp(b0.x,b0.z,ry);
     q.add(mesh(new THREE.BoxGeometry(7.2,0.25,1.2),'#9aa3ad',0,0.12,0));sign(q,'公共自行車','#f0a020','#ffffff',2.4,0.7,-4.3,2.3,0,Math.PI/2,52,'租借站');q.add(mesh(new THREE.BoxGeometry(0.4,2.4,0.4),'#c97f12',-4.3,1.2,0));
     for(let i=0;i<5;i++){const bx=-2.8+i*1.4;[-0.55,0.55].forEach(dz=>{const w=new THREE.Mesh(new THREE.TorusGeometry(0.38,0.06,6,16),M('#2a2a2a'));w.position.set(bx,0.45,dz);w.castShadow=true;q.add(w);});
       const f=mesh(new THREE.BoxGeometry(0.1,0.1,1.1),'#f0a020',bx,0.75,0);q.add(f);q.add(mesh(new THREE.BoxGeometry(0.1,0.5,0.1),'#f0a020',bx,0.95,0.3),mesh(new THREE.BoxGeometry(0.5,0.08,0.08),'#333',bx,1.2,-0.5),mesh(new THREE.BoxGeometry(0.25,0.08,0.35),'#333',bx,1.22,0.3));}
