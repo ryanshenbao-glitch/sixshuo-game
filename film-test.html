@@ -695,7 +695,7 @@ function setLabel(n,text,bg,fg){n.ch.root.remove(n.lb);n.lb.material.map.dispose
 function buildNpcs(){
   addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:0,z:-4.6,fx:0,fz:6,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
   addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:-6.6,z:-5.2,fx:0,fz:4,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
-  for(let k=0;k<5;k++){const a=-1.12+k*0.56;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*9.2,z:Math.cos(a)*9.2-2.6,fx:Math.sin(a)*18.4,fz:Math.cos(a)*18.4-2.6});}
+  for(let k=0;k<5;k++){const a=-1.4+k*0.7;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*11,z:Math.cos(a)*11-2.6,fx:Math.sin(a)*22,fz:Math.cos(a)*22-2.6});}
   for(let k=0;k<2;k++)addNpc({id:'a'+k,kind:'plan',k:k+3,pk:k,name:'方案顧問',color:'#ee8a6c',x:0,z:0,opt:{hat:'#ffffff'}});
   NPCS.push({id:'board',kind:'board',name:'規則布告欄',color:'#20b2a4',pos:{x:5.6,z:-4.6},bang:null});
   COMP.forEach((c,i)=>{const d=doorPos(i);NPCS.push({id:'h'+c.id,kind:'house',co:c.id,name:c.name,color:c.color,pos:d,bang:null});});
