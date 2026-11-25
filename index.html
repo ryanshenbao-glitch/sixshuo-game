@@ -7,7 +7,7 @@
 <meta name="description" content="策略思維與永續發展第五組桌遊：六家 AI 新創在園區小島上闖過八回合，用九說做策略判斷、合作與永續投資。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Huninn&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Huninn&family=Noto+Sans+TC:wght@500;700;900&family=Noto+Serif+TC:wght@900&display=swap">
 <style>
 /* 版面：全螢幕斜俯瞰小島（動森視角），角落是圓胖的 HUD 泡泡，對話框貼底、選項浮在右上，資訊卡與園區手機置中。刻意只做一種明亮白天的世界觀。 */
 :root{
@@ -48,6 +48,7 @@ button{font-family:var(--f);color:inherit}
 #netBub.on i{background:var(--leafc);box-shadow:0 0 0 3px rgba(121,198,82,.25)}
 #phoneBtn{border:0;cursor:pointer;width:64px;height:64px;border-radius:22px;background:var(--teal);box-shadow:var(--pop);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;gap:0;padding:6px 0 4px}
 #phoneBtn svg{width:28px;height:28px}
+#evBtn{border:0;cursor:pointer;width:64px;height:64px;border-radius:22px;background:#f0bd2e;box-shadow:var(--pop);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px;padding:6px 0 4px;margin-top:10px}#evBtn svg{width:28px;height:28px}#evBtn:hover{transform:translateY(-1px)}
 #phoneBtn:hover{transform:translateY(-1px)}
 #dots{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);padding:8px 14px;gap:7px;pointer-events:none}
 #dots i{width:12px;height:12px;border-radius:50%;background:var(--line);display:block;transition:transform .3s}
@@ -71,6 +72,9 @@ button{font-family:var(--f);color:inherit}
 #dlg{position:absolute;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(780px,calc(100% - 28px));background:var(--paper);border-radius:52px/40px;padding:32px 44px 30px;box-shadow:var(--pop);cursor:pointer;animation:pop .22s ease-out}
 @keyframes pop{from{transform:translate(-50%,10px) scale(.97);opacity:0}}
 #dlgName{position:absolute;left:30px;top:-19px;transform:rotate(-4deg);background:var(--nc,var(--sun));color:#fff;font-weight:700;padding:6px 20px;border-radius:999px;font-size:17px;box-shadow:0 3px 0 rgba(0,0,0,.1);max-width:calc(100% - 60px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dside{position:absolute;left:calc(16px + env(safe-area-inset-left,0px));top:50%;transform:translateY(-58%);width:min(360px,calc(100% - 32px));max-height:52vh;overflow:auto;background:var(--paper);border-radius:26px;padding:18px 22px 20px;box-shadow:var(--pop);border-top:8px solid var(--sc,#20b2a4);animation:pop .22s ease-out;z-index:5}
+#dside small{display:block;color:var(--ink2);font-weight:700;font-size:13px;letter-spacing:.06em}#dside h3{margin:4px 0 8px;font-size:21px;color:var(--ink);text-wrap:balance}#dside p{margin:0 0 10px;font-size:15.5px;line-height:1.7;color:var(--ink)}#dside .note{font-size:14.5px;line-height:1.65}
+@media (max-width:760px){#dside{top:calc(12px + env(safe-area-inset-top,0px));transform:none;max-height:30vh;padding:12px 16px}#dside h3{font-size:17px}#dside p{font-size:14px}}
 #dlgText{font-size:19px;line-height:1.75;min-height:3.5em;max-height:42vh;overflow:auto;white-space:pre-line;max-width:44em}
 #dlgCaret{position:absolute;right:38px;bottom:14px;width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:13px solid var(--sun);animation:bob .7s ease-in-out infinite}
 #dlgSkip{position:absolute;right:28px;top:-16px;border:0;border-radius:999px;background:var(--cream);font-size:13px;font-weight:700;padding:5px 12px;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.08)}
@@ -169,19 +173,19 @@ th{color:var(--ink2);font-weight:400;font-size:13px}
   #hudL .ic{width:26px;height:26px;font-size:13px}
   #hudL{gap:6px}
   #hudL .bub b{font-size:18px}
-  #phoneBtn{width:56px;height:56px;border-radius:19px}
+  #phoneBtn,#evBtn{width:56px;height:56px;border-radius:19px}
   #toast{top:calc(196px + env(safe-area-inset-top,0px))}
   #waitBub{top:calc(248px + env(safe-area-inset-top,0px));font-size:13px}
   #prompt{bottom:calc(170px + env(safe-area-inset-bottom,0px));font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 body.talk #joy,body.talk #aBtn{display:none!important}
-#film{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:linear-gradient(#bfe9f7,#fff6df);padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+#film{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#05070b;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-bottom,0px));padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
 .film-box{width:min(100%,1100px);display:flex;flex-direction:column;gap:12px}
-#filmC{width:100%;max-width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 120px);object-fit:contain;border-radius:28px;background:#fff6df;display:block;border:6px solid #fff;box-shadow:var(--pop)}
-.film-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:var(--ink)}
+#filmC{width:100%;max-width:100%;aspect-ratio:16/9;max-height:calc(100dvh - 120px);object-fit:contain;border-radius:14px;background:#000;display:block;border:0;box-shadow:0 18px 60px rgba(0,0,0,.5)}
+.film-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#e8ecf2}
 #filmLabel{flex:1 1 200px;min-width:0;font-size:16px}
-.film-prog{flex:1 1 160px;height:8px;border-radius:4px;background:rgba(110,88,61,.12);overflow:hidden}
+.film-prog{flex:1 1 160px;height:8px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden}
 .film-prog i{display:block;height:100%;width:0;background:var(--teal)}
 .film-bar .btn{font-size:14px;padding:8px 16px}
 .film-bar label.btn{cursor:pointer}
@@ -216,14 +220,15 @@ body.talk #jBtn,body.talk #vBtn{display:none!important}
     <div class="bub" id="netBub"><i></i><span id="netTxt">單人模式</span></div>
     <div class="bub" id="timerBub" hidden><span class="ic clock">⏱</span><small>本回合剩</small><b id="timerTxt" class="num">1:30</b></div>
     <button id="phoneBtn" aria-label="打開園區手機（Tab）"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><rect x="6" y="2.5" width="12" height="19" rx="3.5"/><path d="M10.5 18.5h3"/></svg>手機</button>
+    <button id="evBtn" aria-label="看這回合的事件卡（C）"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>事件卡</button>
   </div>
   <div class="bub" id="waitBub" hidden><span id="waitTxt"></span><button id="skipWait">不等了</button></div>
   <div class="bub" id="toast" hidden></div>
   <div class="bub" id="prompt" hidden><span class="abtn">A</span><span id="promptTxt"></span></div>
   <div id="banner"><small id="bnTop"></small><b id="bnBig"></b></div>
-  <div class="bub" id="keys" hidden><kbd>WASD</kbd> 走 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳 · 滑鼠 轉視角 · <kbd>E</kbd> 對話 · <kbd>V</kbd> 視角 · <kbd>Tab</kbd> 手機 · <kbd>Esc</kbd> 放開滑鼠</div>
+  <div class="bub" id="keys" hidden><kbd>WASD</kbd> 走 · <kbd>Shift</kbd> 跑 · <kbd>空白</kbd> 跳 · 滑鼠 轉視角 · <kbd>E</kbd> 對話 · <kbd>V</kbd> 視角 · <kbd>Tab</kbd> 手機 · <kbd>C</kbd> 事件卡 · <kbd>Esc</kbd> 放開滑鼠</div>
   <div id="choices" hidden></div>
-  <div id="dlg" hidden role="dialog" aria-live="polite"><div id="dlgName"></div><button id="dlgSkip" hidden>略過</button><div id="dlgText"></div><div id="dlgCaret" hidden></div></div>
+  <div id="dside" hidden></div><div id="dlg" hidden role="dialog" aria-live="polite"><div id="dlgName"></div><button id="dlgSkip" hidden>略過</button><div id="dlgText"></div><div id="dlgCaret" hidden></div></div>
   <div id="joy" hidden><div id="knob"></div></div>
   <button id="aBtn" hidden aria-label="對話">A</button>
   <button id="jBtn" class="tb" hidden aria-label="跳">跳</button>
@@ -545,7 +550,7 @@ const TREES=[],FLW=[],ROCKS=[];
 const FLOWERC=['#ff8fa3','#ffd25e','#ffffff','#ff7b54','#c39bff'];
 function okSpot(x,z,pad){if(Math.hypot(x,z)>WORLD-4)return false;const h=H(x,z);if(h<0.35&&Math.hypot(x,z)>40)return false;if(Math.hypot(x-LAKE.x,z-LAKE.z)<LAKE.r+3)return false;
   if(colliders.some(c=>Math.hypot(c.x-x,c.z-z)<c.r+pad))return false;
-  if(Math.hypot(x,z)<12)return false;if(Math.abs(x)<7&&z>2&&z<34)return false;
+  if(Math.hypot(x,z)<15.5)return false;if(Math.abs(x)<14&&z<-6&&z>-27)return false;if(Math.abs(x)<7&&z>2&&z<34)return false;
   for(let i=0;i<6;i++){const ha=houseAng(i);const t=x*Math.sin(ha)+z*Math.cos(ha),off=Math.abs(x*Math.cos(ha)-z*Math.sin(ha));if(t>8&&t<HOUSE_R+6&&off<4)return false;}
   for(const zn of ZONES){if(zn.id==='hub')continue;const d=Math.hypot(zn.x,zn.z),ux=zn.x/d,uz=zn.z/d;const t=x*ux+z*uz,off=Math.abs(x*uz-z*ux);if(t>6&&t<d&&off<5.5)return false;if(Math.hypot(x-zn.x,z-zn.z)<24)return false;}
   return true;}
@@ -581,18 +586,19 @@ function boardTex(){const rd=ROUNDS[Math.min(S.round,ROUNDS.length-1)],col=rCol(
 
 function buildHub(){
   const g=new THREE.Group();scene.add(g);
-  g.add(mesh(new THREE.CylinderGeometry(11,11,0.1,48),'#ecd9ae',0,0.01,0));
-  const ring=mesh(new THREE.RingGeometry(7.8,8.6,48),'#e2c995',0,0.09,0);ring.rotation.x=-Math.PI/2;g.add(ring);
+  g.add(mesh(new THREE.CylinderGeometry(14,14,0.1,56),'#ecd9ae',0,0.01,0));
+  const ring=mesh(new THREE.RingGeometry(10.8,11.6,64),'#e2c995',0,0.09,0);ring.rotation.x=-Math.PI/2;g.add(ring);
   for(let i=0;i<6;i++){const a=houseAng(i);const len=HOUSE_R-5.6-10;const p=mesh(new THREE.BoxGeometry(3.2,0.06,len),'#ecd9ae',Math.sin(a)*(10+len/2),0.01,Math.cos(a)*(10+len/2));p.rotation.y=a;g.add(p);}
   // 服務處帳篷
-  const tent=new THREE.Group();tent.position.set(0,0,-8.6);g.add(tent);
+  g.add(mesh(new THREE.CylinderGeometry(7,7,0.1,40),'#ecd9ae',0,0.012,-17.5));
+  const tent=new THREE.Group();tent.position.set(0,0,-19);g.add(tent);
   tent.add(mesh(new THREE.CylinderGeometry(3.2,3.4,2.4,16),'#fffaf0',0,1.2,0),mesh(new THREE.ConeGeometry(4,2.6,16),'#20b2a4',0,3.7,0),mesh(new THREE.CylinderGeometry(0.06,0.06,1.6,6),'#6e583d',0,5.6,0),mesh(new THREE.BoxGeometry(0.9,0.5,0.05),'#f8d454',0.45,6.1,0));
-  const sign=label('園區服務處','#20b2a4','#ffffff',1.15,true);sign.position.set(0,5,-5.3);scene.add(sign);colliders.push({x:0,z:-8.6,r:3.7});
+  const sign=label('園區服務處','#20b2a4','#ffffff',1.15,true);sign.position.set(0,5,-15.7);scene.add(sign);colliders.push({x:0,z:-19,r:3.7});
   // 規則布告欄
-  const bb=new THREE.Group();bb.position.set(7.2,0,-6.2);bb.rotation.y=-0.62;g.add(bb);
+  const bb=new THREE.Group();bb.position.set(5.13,0,-13.6);bb.rotation.y=-0.35;g.add(bb);
   bb.add(mesh(new THREE.BoxGeometry(0.28,3.6,0.28),'#9a7650',-2.9,1.8,0),mesh(new THREE.BoxGeometry(0.28,3.6,0.28),'#9a7650',2.9,1.8,0),mesh(new THREE.BoxGeometry(6.2,3.9,0.2),'#b98d5f',0,2.75,-0.02));
   FX.boardMat=new THREE.MeshBasicMaterial({map:boardTex()});const board=new THREE.Mesh(new THREE.PlaneGeometry(5.8,3.6),FX.boardMat);
-  board.position.set(7.2,2.75,-6.2);board.rotation.y=-0.62;board.translateZ(0.11);scene.add(board);colliders.push({x:7.2,z:-6.2,r:2.2});
+  board.position.set(5.13,2.75,-13.6);board.rotation.y=-0.35;board.translateZ(0.11);scene.add(board);colliders.push({x:5.13,z:-13.6,r:2.2});
   // 六家公司
   COMP.forEach((c,i)=>{const p=housePos(i);const h=new THREE.Group();h.position.set(p.x,0,p.z);h.rotation.y=houseAng(i)+Math.PI;g.add(h);
     h.add(mesh(new THREE.BoxGeometry(7,4.2,6),'#fbf4e4',0,2.2,0));
@@ -687,23 +693,51 @@ function animChar(ch,dt,moving,t,run){
 
 /* ───────── NPC 與互動點 ───────── */
 const FX={boardMat:null};
-const NPCS=[];
+const NPCS=[];const GR={cz:0.5,r:9,br:10.3};
 function addNpc(o){const ch=chibi(o.color,o.k??0,o.opt||{});const y=H(o.x,o.z);ch.root.position.set(o.x,y,o.z);ch.root.rotation.y=Math.atan2(-o.x+(o.fx??0),-o.z+(o.fz??0));
   const lb=label(o.name,o.lbg||'#fffcf1',o.lfg||'#6e583d',0.8);lb.position.y=3.9;ch.root.add(lb);const bang=bangSprite();bang.position.y=4.9;bang.visible=false;ch.root.add(bang);
   ch.root.traverse(m=>{m.userData.npc=o.id;});scene.add(ch.root);const col={x:o.x,z:o.z,r:0.8,npc:o.id};colliders.push(col);const n=Object.assign(o,{ch,lb,bang,col,pos:{x:o.x,z:o.z}});NPCS.push(n);return n;}
 function setLabel(n,text,bg,fg){n.ch.root.remove(n.lb);n.lb.material.map.dispose();n.lb=label(text,bg,fg,0.8);n.lb.position.y=3.9;n.ch.root.add(n.lb);}
 function buildNpcs(){
-  addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:0,z:-4.6,fx:0,fz:6,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
-  addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:-6.6,z:-5.2,fx:0,fz:4,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
-  for(let k=0;k<5;k++){const a=-1.04+k*0.52;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*7.6,z:Math.cos(a)*7.6-2.6,fx:0,fz:-2.6});}
+  addNpc({id:'host',kind:'host',name:'主持人 阿綠',color:'#20b2a4',k:2,x:-4.79,z:-12.66,fx:0,fz:0.5,opt:{hat:'#f8d454',hair:'#6b4a2e'},lbg:'#20b2a4',lfg:'#fff'});
+  addNpc({id:'prof',kind:'prof',name:'思華老師',color:'#4f5a7a',k:4,x:Math.sin(3.75)*12.4,z:0.5+Math.cos(3.75)*12.4,fx:0,fz:0.5,opt:{hair:'#d9d6cf',glasses:true},lbg:'#4f5a7a',lfg:'#fff'});
+  /* 守護者排在遠端的半圈、面向圓心（0,0.5）；從 +z 入口走進來就看到全部正面 */
+  for(let k=0;k<5;k++){const a=(100+40*k)*Math.PI/180;addNpc({id:'g'+k,kind:'shuo',k,name:'守護者',color:'#ffffff',x:Math.sin(a)*GR.r,z:GR.cz+Math.cos(a)*GR.r,fx:0,fz:GR.cz});}
   for(let k=0;k<2;k++)addNpc({id:'a'+k,kind:'plan',k:k+3,pk:k,name:'方案顧問',color:'#ee8a6c',x:0,z:0,opt:{hat:'#ffffff'}});
-  NPCS.push({id:'board',kind:'board',name:'規則布告欄',color:'#20b2a4',pos:{x:5.6,z:-4.6},bang:null});
+  NPCS.push({id:'board',kind:'board',name:'規則布告欄',color:'#20b2a4',pos:{x:4.5,z:-11.9},bang:null});
   COMP.forEach((c,i)=>{const d=doorPos(i);NPCS.push({id:'h'+c.id,kind:'house',co:c.id,name:c.name,color:c.color,pos:d,bang:null});});
   FX.houseBang={};COMP.forEach((c,i)=>{const b=bangSprite();const p=housePos(i);b.position.set(p.x,9.6,p.z);b.scale.set(1.5,1.75,1);b.visible=false;scene.add(b);FX.houseBang[c.id]=b;});
   FOLK.forEach((f,i)=>{const zn=ZONES.find(z=>z.id===f.zone);addNpc({id:'f'+i,kind:'folk',name:f.name,color:f.color,k:i,x:zn.x+f.dx,z:zn.z+f.dz,fx:zn.x,fz:zn.z,opt:f.opt||{},lines:f.lines});});
 }
 function placeAdvisors(){const i=CI[S.co];const d=doorPos(i),a=houseAng(i);const inX=-Math.sin(a),inZ=-Math.cos(a),sx=Math.cos(a),sz=-Math.sin(a);
   [-1,1].forEach((s,k)=>{const n=NPCS.find(n=>n.id==='a'+k);const x=d.x+inX*1.5+sx*s*2.4,z=d.z+inZ*1.5+sz*s*2.4;n.pos={x,z};n.ch.root.position.set(x,0,z);n.ch.root.rotation.y=Math.atan2(inX,inZ);});}
+
+/* ───────── 說的告示牌（守護者身後，朝圓心） ───────── */
+function guardBoardTex(head,col,ctx,main,dim){
+  const NF='"Noto Sans TC","PingFang TC",sans-serif',SF='"Noto Serif TC","Songti TC",serif';
+  const c=document.createElement('canvas');c.width=640;c.height=520;const x=c.getContext('2d');
+  rr(x,0,0,640,520,26);x.fillStyle='#d5dae0';x.fill();
+  rr(x,10,10,620,500,20);x.fillStyle='#fffdf7';x.fill();
+  rr(x,10,10,620,100,20);x.fillStyle=col;x.fill();x.fillRect(10,66,620,44);
+  x.fillStyle='#fff';x.font='900 64px '+SF;x.textBaseline='middle';x.textAlign='left';x.fillText(head,32,62);
+  let y=160;x.font='700 36px '+NF;x.fillStyle='#6e7380';for(const l of wrap(x,ctx,576).slice(0,2)){x.fillText(l,32,y);y+=46;}y+=10;
+  let fs=80;x.font='900 '+fs+'px '+NF;let ls=wrap(x,main,580);
+  for(const f of [72,64,56,48,40]){if(ls.length*fs*1.24<=512-y)break;fs=f;x.font='900 '+fs+'px '+NF;ls=wrap(x,main,580);}
+  x.fillStyle=dim?'#a8a296':'#1d2233';y+=6;for(const l of ls.slice(0,8)){x.fillText(l,30,y);y+=fs*1.24;}
+  const t=new THREE.CanvasTexture(c);t.anisotropy=renderer.capabilities.getMaxAnisotropy();return t;}
+function buildGuardBoards(){NPCS.filter(n=>n.kind==='shuo').forEach(n=>{
+  const a=Math.atan2(n.pos.x,n.pos.z-GR.cz),bx=Math.sin(a)*GR.br,bz=GR.cz+Math.cos(a)*GR.br;
+  const g=new THREE.Group();g.position.set(bx,H(bx,bz),bz);g.rotation.y=Math.atan2(-bx,GR.cz-bz);
+  const mat=new THREE.MeshBasicMaterial({map:guardBoardTex('守護者','#b9b2a1','','',true)});
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(4.4,3.575),mat);face.position.set(0,4.9,0.07);g.add(face);
+  const back=new THREE.Mesh(new THREE.BoxGeometry(4.58,3.75,0.1),M('#c9ccc8'));back.position.y=4.9;g.add(back);
+  [-2.18,2.18].forEach(px=>{const q=new THREE.Mesh(new THREE.BoxGeometry(0.14,6.8,0.14),M('#9aa3ad'));q.position.set(px,3.4,-0.02);g.add(q);});
+  g.visible=false;scene.add(g);const col={x:999,z:999,r:1.2};colliders.push(col);n.gb={g,mat,col,key:'',bx,bz};});}
+function refreshGuardBoards(rd){NPCS.filter(n=>n.kind==='shuo'&&n.gb).forEach(n=>{const v=n.ch.root.visible&&!!rd&&rd.type==='risk'&&!!S.co;
+  n.gb.g.visible=v;n.gb.col.x=v?n.gb.bx:999;n.gb.col.z=v?n.gb.bz:999;if(!v)return;
+  const d=rd.data[S.co],o=d.opts[n.k],gone=S.removed.includes(n.k),key=S.round+'|'+S.co+'|'+n.k+'|'+gone;
+  if(n.gb.key!==key){n.gb.key=key;n.gb.mat.map.dispose();n.gb.mat.map=guardBoardTex(gone?o.s+'（已刪除）':o.s,gone?'#b9b2a1':TH[o.s].color,d.ctx?'你的處境：'+d.ctx:'你的公司：'+COMP[CI[S.co]].name,o.a,gone);n.gb.mat.needsUpdate=true;}
+  if(n.lb)n.lb.visible=false;});}
 
 /* 玩家與其他真人 */
 const P={x:0,z:13,y:0,vy:0,ry:Math.PI,tx:null,tz:null,goNpc:null,run:false};
@@ -726,6 +760,7 @@ function toggleView(){CAM.fp=!CAM.fp;if(meCh)meCh.root.visible=!CAM.fp;if(CAM.fp
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;K[e.code]=true;
   if(film){if(e.code==='Escape'){endFilm();}if(e.code==='KeyP'||e.code==='Space'){e.preventDefault();filmPause();}return;}
   if(e.code==='Tab'){if(S.phase==='lobby'||dlgActive()||!$('cardWrap').hidden)return;e.preventDefault();togglePhone();return;}
+  if(e.code==='KeyC'&&!e.repeat&&!/INPUT|TEXTAREA/.test((document.activeElement||{}).tagName||'')){if(S.phase!=='lobby'&&$('cardWrap').hidden){e.preventDefault();showEventCard();return;}}
   if(e.code==='Escape'){if(!$('phone').hidden)togglePhone(false);return;}
   if(dlgActive()){if(['KeyE','Space','Enter'].includes(e.code)){e.preventDefault();dlgAdvance();}
     if(/^Digit[1-9]$/.test(e.code)){const b=$('choices').querySelectorAll('.ch')[+e.code.slice(5)-1];if(b&&!b.disabled)b.click();}return;}
@@ -761,7 +796,7 @@ $('vBtn').addEventListener('click',()=>{if(!uiBusy)toggleView();});
 $('prompt').addEventListener('click',()=>{if(!uiBusy)interact();});
 
 function blocked(x,z){const d=Math.hypot(x,z);if(d>WORLD-2)return true;if(H(x,z)<-0.3&&d>40)return true;if(Math.hypot(x-LAKE.x,z-LAKE.z)<LAKE.r)return true;
-  for(const c of colliders){if(Math.abs(c.x-x)<c.r+0.5&&Math.abs(c.z-z)<c.r+0.5&&Math.hypot(c.x-x,c.z-z)<c.r+0.45)return true;}return false;}
+  for(const c of colliders){if(Math.abs(c.x-x)<c.r+0.5&&Math.abs(c.z-z)<c.r+0.5){const d2=Math.hypot(c.x-x,c.z-z);if(d2<c.r+0.45&&d2<=Math.hypot(c.x-P.x,c.z-P.z))return true;}}return false;}
 function stepPlayer(dt){
   if(!meCh)return false;
   let ix=0,iz=0;const free=!uiBusy&&!overlayOpen();
@@ -824,6 +859,7 @@ function refreshWorld(){
   if(rd&&rd.type==='risk'&&S.co){const d=rd.data[S.co];NPCS.filter(n=>n.kind==='shuo').forEach(n=>{const s=d.opts[n.k].s;const col=TH[s].color;const gone=S.removed.includes(n.k);
     setLabel(n,gone?s+'（已刪除）':s,gone?'#d8d0bb':col,'#fff');n.ch.g.children[2].material=M(gone?'#d8d0bb':col);n.ch.g.children[3].material=M(gone?'#d8d0bb':col);n.ch.root.rotation.x=0;n.ch.g.scale.setScalar(gone?0.82:1);});}
   if(rd&&rd.type==='invest'&&S.co){placeAdvisors();NPCS.filter(n=>n.kind==='plan').forEach(n=>{const p=rd.plans[S.co][n.pk];setLabel(n,`方案${'AB'[n.pk]}・${p.cost} 資本`,'#ee8a6c','#fff');});}
+  refreshGuardBoards(rd);
   NPCS.forEach(n=>{if(n.col){const v=n.ch.root.visible;n.col.x=v?n.pos.x:999;n.col.z=v?n.pos.z:999;}});
   if(plumb)plumb.material.color.set(S.phase==='act'?'#5fe36a':S.phase==='wait'||S.phase==='inviting'?'#f8d454':'#7ad0f0');
   if(FX.boardMat&&FX.boardR!==S.round){FX.boardR=S.round;FX.boardMat.map.dispose();FX.boardMat.map=boardTex();FX.boardMat.needsUpdate=true;}
@@ -842,7 +878,7 @@ const dlgActive=()=>!!D;
 function dialog(name,color,text,opts,o={}){
   return new Promise(res=>{uiBusy++;unlockMouse();lookHint();document.body.classList.add('talk');D={res,text,opts,i:0,done:false,timer:null};
     $('dlgName').textContent=name;$('dlg').style.setProperty('--nc',color||'#f8d454');$('dlg').hidden=false;$('dlgCaret').hidden=true;$('choices').hidden=true;
-    $('dlgSkip').hidden=!o.skip;D.skip=o.skip;$('dlgText').textContent='';
+    $('dlgSkip').hidden=!o.skip;D.skip=o.skip;const sd=$('dside');if(o.side){sd.innerHTML=o.side;sd.style.setProperty('--sc',o.sideColor||color||HOSTC);sd.hidden=false;}else sd.hidden=true;$('dlgText').textContent='';
     const tick=()=>{if(!D)return;D.i=Math.min(text.length,D.i+1);$('dlgText').textContent=text.slice(0,D.i);if(D.i%2===0&&text[D.i-1]&&text[D.i-1].trim())blip(380+Math.random()*320,0.045,0.025);
       if(D.i>=text.length){finishType();return;}D.timer=setTimeout(tick,/[，。？！：]/.test(text[D.i-1])?110:26);};
     tick();});
@@ -851,7 +887,7 @@ function finishType(){if(!D)return;clearTimeout(D.timer);D.i=D.text.length;$('dl
   if(D.opts&&D.opts.length){const box=$('choices');box.className=D.opts.length>4?'grid':'';box.innerHTML=D.opts.map((t,i)=>{const dis=typeof t==='object'&&t.dis;const lab=typeof t==='object'?t.t:t;return `<button class="ch" data-i="${i}" ${dis?'disabled':''}>${esc(lab)}</button>`;}).join('');
     box.hidden=false;box.style.bottom=($('dlg').offsetHeight+28)+'px';const f=box.querySelector('.ch:not(:disabled)');if(f)f.focus({preventScroll:true});}
   else $('dlgCaret').hidden=false;}
-function closeDlg(v){if(!D)return;const r=D.res;clearTimeout(D.timer);D=null;document.body.classList.remove('talk');$('dlg').hidden=true;$('choices').hidden=true;uiBusy=Math.max(0,uiBusy-1);r(v);setTimeout(lookHint,0);}
+function closeDlg(v){if(!D)return;const r=D.res;clearTimeout(D.timer);D=null;document.body.classList.remove('talk');$('dlg').hidden=true;$('dside').hidden=true;$('choices').hidden=true;uiBusy=Math.max(0,uiBusy-1);r(v);setTimeout(lookHint,0);}
 function dlgAdvance(){if(!D)return;if(!D.done){finishType();return;}if(!(D.opts&&D.opts.length))closeDlg(0);}
 $('dlg').addEventListener('click',e=>{if(e.target.id==='dlgSkip'){closeDlg('skip');return;}dlgAdvance();});
 $('choices').addEventListener('click',e=>{const b=e.target.closest('.ch');if(!b||b.disabled)return;blip(660,0.06,0.04);closeDlg(+b.dataset.i);});
@@ -949,7 +985,7 @@ function startGame(resumed){
   if(S.picks[S.round]){S.phase='wait';S.waitT0=Date.now();refreshWorld();checkWait();return;}
   if(!resumed)welcome();else beginRound();
 }
-async function welcome(){S.phase='intro';refreshWorld();FX.focus={x:0,z:-3};
+async function welcome(){S.phase='intro';refreshWorld();FX.focus={x:-1.5,z:-5};
   await talk('主持人 阿綠',HOSTC,[`歡迎來到 AI 園區小島，${S.nick}！我是主持人阿綠。`,`你代表「${coOf(S.co).name}」，手上有 6 資本、0 策略分。接下來八回合，每回合開始我都會在這裡宣布事件。`,`你的初始優勢是「${ADV[S.co].name}」：${ADV[S.co].text}全場只能用 1 次，時機到了我會問你。`,'WASD 走路、Shift 跑、空白鍵跳；點一下畫面就能用滑鼠轉視角，V 切換第一／第三人稱。走到人旁邊按 E（手機按 A）就能對話。','島上不只這座廣場：沿著小路可以走到幸福社區、AI 科技園區、綠能海岸和水源山丘。每個區域都有傳送信標，手機地圖也能直接傳送。','廣場上的規則布告欄隨時可以看，思華老師也在旁邊。卡住的時候可以請教他，不過他只會問問題，不會直接告訴你答案。']);
   beginRound();}
 
@@ -1028,41 +1064,455 @@ function boom(big){if(S.mute)return;(big?[784,988,1319]:[659]).forEach((fq,i)=>s
 function cloud(x,cx,cy,k){x.beginPath();[[0,0,46],[44,-14,38],[86,4,34],[40,16,40]].forEach(([dx,dy,r])=>{x.moveTo(cx+dx*k+r*k,cy+dy*k);x.arc(cx+dx*k,cy+dy*k,r*k,0,Math.PI*2);});x.fill();}
 function drawFilm(t){
   const c=$('filmC'),x=c.getContext('2d');const rd=ROUNDS[film.i];const col=rCol(rd);
-  const g=x.createLinearGradient(0,0,0,720);g.addColorStop(0,'#bfe9f7');g.addColorStop(0.75,'#fff6df');x.fillStyle=g;x.fillRect(0,0,1280,720);
-  x.fillStyle='rgba(255,255,255,.9)';for(let k=0;k<4;k++){cloud(x,((t*16+k*380)%1700)-200,80+(k%2)*46,0.9+(k%2)*0.3);}
-  x.fillStyle='#cdeaa6';x.beginPath();x.ellipse(640,900,980,330,0,0,Math.PI*2);x.fill();
-  x.save();SCENES[rd.scene](x,t,col);x.restore();
-  const L=film.lines,per=film.per,t0=1.8,tEnd=t0+L.length*per;
+  const SF='"Noto Serif TC","Songti TC",serif',NF='"Noto Sans TC","PingFang TC",sans-serif';
+  x.globalAlpha=1;x.shadowBlur=0;x.fillStyle='#0b0f17';x.fillRect(0,0,1280,720);
+  if(!drawFilm.off){drawFilm.off=document.createElement('canvas');drawFilm.off.width=1280;drawFilm.off.height=720;}
+  {const oc=drawFilm.off,ox=oc.getContext('2d');ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.clearRect(0,0,1280,720);ox.save();SCENES[rd.scene](ox,t,col);ox.restore();
+   const L0=film.lines.length,tE=1.6+L0*film.per;x.save();x.globalAlpha=t>=tE?0.12:0.2;x.drawImage(oc,0,0);x.restore();}
+  const vg=x.createRadialGradient(640,360,200,640,360,760);vg.addColorStop(0,'rgba(11,15,23,0)');vg.addColorStop(1,'rgba(11,15,23,.85)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
+  for(let k=0;k<120;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
+  const L=film.lines,per=film.per,t0=1.6,tEnd=t0+L.length*per;
   x.textAlign='center';x.textBaseline='middle';
-  const bubble=(txt,a)=>{x.save();x.globalAlpha=a;x.fillStyle='rgba(110,88,61,.16)';rr(x,150,592,980,112,50);x.fill();x.fillStyle='#fffcf1';rr(x,150,586,980,112,50);x.fill();
-    x.fillStyle=col;rr(x,184,566,200,42,21);x.fill();x.fillStyle='#fff';x.font='24px '+FONT;x.fillText('園區快報',284,588);
-    x.fillStyle='#6e583d';x.font='36px '+FONT;const ls=wrap(x,txt,900).slice(0,2);ls.forEach((l,j)=>x.fillText(l,640,642+(j-(ls.length-1)/2)*44));x.restore();};
-  if(t<t0){const a=Math.min(1,t/0.5)*Math.min(1,(t0-t)/0.4);x.save();x.globalAlpha=Math.max(0,a);
-    x.fillStyle='#fffcf1';rr(x,400,250,480,190,46);x.fill();x.fillStyle=col;rr(x,520,228,240,50,25);x.fill();
-    x.fillStyle='#fff';x.font='26px '+FONT;x.fillText(TYPENAME[rd.type],640,253);x.fillStyle='#6e583d';x.font='72px '+FONT;x.fillText('第 '+(film.i+1)+' 回合',640,350);x.fillStyle='#a08a6b';x.font='26px '+FONT;x.fillText(rd.eraName,640,410);x.restore();}
+  if(t<t0){const a=Math.min(1,t/0.5)*Math.min(1,(t0-t)/0.4);x.globalAlpha=Math.max(0,a);
+    x.fillStyle='#c9d1db';x.font='700 30px '+NF;x.fillText(rd.type==='coop'?'合作回合':rd.type==='invest'?'永續投資回合':'風險卡',640,320);
+    x.font='900 68px '+SF;x.fillStyle='#fff';x.fillText('第 '+(film.i+1)+' 回合',640,395);x.globalAlpha=1;}
   else if(t<tEnd){const idx=Math.floor((t-t0)/per);const lt=(t-t0)-idx*per;if(film.last!==idx){film.last=idx;boom(false);}
-    bubble(L[idx].slice(0,Math.ceil(L[idx].length*Math.min(1,lt/(per*0.5)))),Math.min(1,lt/0.25)*Math.min(1,(per-lt)/0.25)+0.001);}
-  else{const lt=t-tEnd;if(film.last!=='end'){film.last='end';boom(true);}const a=Math.min(1,lt/0.5);x.save();x.globalAlpha=a;
-    const s2=0.92+0.08*ease(lt/0.5);x.translate(640,360);x.scale(s2,s2);x.translate(-640,-360);
-    x.fillStyle='rgba(110,88,61,.16)';rr(x,170,206,940,300,60);x.fill();x.fillStyle='#fffcf1';rr(x,170,198,940,300,60);x.fill();
-    x.fillStyle=col;rr(x,470,174,340,52,26);x.fill();x.fillStyle='#fff';x.font='26px '+FONT;x.fillText('第 '+(film.i+1)+' 回合 · '+rd.eraName,640,200);
-    x.fillStyle='#6e583d';let fs=84;x.font=fs+'px '+FONT;while(x.measureText(rd.title).width>860&&fs>44){fs-=4;x.font=fs+'px '+FONT;}x.fillText(rd.title,640,330);
-    const e=ease(lt/0.8);x.fillStyle=col;rr(x,640-150*e,392,300*e,8,4);x.fill();
-    x.fillStyle='#a08a6b';x.font='32px '+FONT;x.fillText(rd.type==='coop'?'找到你的夥伴':rd.type==='invest'?'押上你的資本':'選擇你的說',640,448);x.restore();}
+    const a=Math.min(1,lt/0.35)*Math.min(1,(per-lt)/0.3);const sc=1.06-0.06*ease(lt/per);
+    x.save();x.globalAlpha=Math.max(0,a);x.translate(640,360);x.scale(sc,sc);x.fillStyle='#ffffff';x.font='900 54px '+SF;x.shadowColor='rgba(0,0,0,.7)';x.shadowBlur=14;
+    const ls=wrap(x,L[idx],1040).slice(0,3);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*74));x.restore();}
+  else{const lt=t-tEnd;if(film.last!=='end'){film.last='end';boom(true);}const a=Math.min(1,lt/0.6);x.globalAlpha=a;
+    x.fillStyle='#c9d1db';x.font='700 28px '+NF;x.fillText('第 '+(film.i+1)+' 回合 · '+rd.eraName,640,250);
+    x.save();x.shadowColor=col;x.shadowBlur=36;x.fillStyle='#fff';let fs=104;x.font='900 '+fs+'px '+SF;while(x.measureText(rd.title).width>1120&&fs>56){fs-=6;x.font='900 '+fs+'px '+SF;}x.fillText(rd.title,640,350);x.restore();
+    const e=ease(lt/0.8);x.fillStyle=col;x.fillRect(640-160*e,428,320*e,4);
+    x.fillStyle='#fff';x.font='700 34px '+NF;x.fillText(rd.type==='coop'?'找到你的夥伴':rd.type==='invest'?'押上你的資本':'選擇你的說',640,482);x.globalAlpha=1;}
+  x.fillStyle='#000';x.fillRect(0,0,1280,78);x.fillRect(0,642,1280,78);
+  x.textAlign='left';x.fillStyle='#7d8693';x.font='700 20px '+NF;x.fillText((rd.type==='coop'?'合作':rd.type==='invest'?'投資':'風險')+'快訊 · 第 '+(film.i+1)+' 回合',32,40);
+  x.textAlign='right';x.fillText('Esc 略過 · 空白鍵暫停',1248,682);
   $('filmProg').style.width=Math.min(100,t/film.dur*100)+'%';
   if(t>=film.dur)endFilm();
 }
+/* ───────── 八回合電影預告：旁白大字＋劇情鏡頭＋動森風人物＋配樂 ───────── */
+const FILMS=(()=>{const isMute=()=>!!S.mute;let MAIN=null,x=null;
+const SF='"Noto Serif TC","Songti TC",serif',NF='"Noto Sans TC","PingFang TC",sans-serif';
+const cl=v=>Math.max(0,Math.min(1,v)),ease=v=>{v=cl(v);return v*v*(3-2*v)};
+function rnd(s){return()=>{s=(s*16807)%2147483647;return s/2147483647}}
+const T0=1.6,PER=2.8;
+// ---------- 共用小工具 ----------
+function bgGrad(a,b){const g=x.createLinearGradient(0,0,0,720);g.addColorStop(0,a);g.addColorStop(1,b);x.fillStyle=g;x.fillRect(0,0,1280,720);}
+function push(lt,k=0.012){const s=1+lt*k;x.translate(640,360);x.scale(s,s);x.translate(-640,-360);}
+function rr(cx,cy,w,h,r){x.beginPath();x.moveTo(cx+r,cy);x.arcTo(cx+w,cy,cx+w,cy+h,r);x.arcTo(cx+w,cy+h,cx,cy+h,r);x.arcTo(cx,cy+h,cx,cy,r);x.arcTo(cx,cy,cx+w,cy,r);x.closePath();}
+function label(t,px,py,size,col,w=700,al='left'){x.textAlign=al;x.textBaseline='alphabetic';x.font=w+' '+size+'px '+NF;x.fillStyle=col;x.fillText(t,px,py);}
+function person(px,py,s,col){x.fillStyle=col;x.beginPath();x.arc(px,py,16*s,0,7);x.fill();rr(px-22*s,py+20*s,44*s,70*s,14*s);x.fill();}
+function bars(lt,col,vals){const bx=200,by=560;x.strokeStyle='#2a3448';x.lineWidth=3;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+880,by);x.stroke();
+  vals.forEach((v,k)=>{const h=v*ease((lt-0.2-k*0.18)/0.6);x.fillStyle=k===vals.length-1?col:'#2f3a52';x.fillRect(bx+30+k*120,by-h,80,h);});}
+
+// ---------- 動森風小人 ----------
+// px,py=腳底；o: body 衣服色, hair 頭髮色, face normal|happy|shock|worried|angry, hat hard|cap|band, hatCol, glasses, arm up|wave|both|hold, item phone|box|bag|sign, sign 文字, walk 走路相位, bob 上下, sweat, say 對話泡泡
+function chibi(px,py,s,o={}){const sk='#f6d7b8',hair=o.hair||'#5a3b26',body=o.body||'#3d6cf0';x.save();x.translate(px,py+(o.bob||0));x.scale(s,s);
+  x.fillStyle='rgba(0,0,0,.28)';x.beginPath();x.ellipse(0,2,34,8,0,0,7);x.fill();
+  const w=o.walk!=null?Math.sin(o.walk)*8:0;x.fillStyle='#3a2d22';rr(-15,-30+Math.max(0,w)*0.4,12,30,5);x.fill();rr(3,-30+Math.max(0,-w)*0.4,12,30,5);x.fill();
+  // 手
+  const arm=(side,up)=>{x.save();x.translate(side*24,-66);x.rotate(side*(up?-2.4:0.25)+(o.walk!=null?side*Math.sin(o.walk)*0.3:0));x.fillStyle=body;rr(-7,-4,14,34,7);x.fill();x.fillStyle=sk;x.beginPath();x.arc(0,32,8,0,7);x.fill();x.restore();};
+  const t=o.t||0;arm(-1,o.arm==='both'||o.arm==='up');arm(1,o.arm==='both'||(o.arm==='wave'&&Math.sin(t*8)>-0.2)||o.arm==='up2');
+  x.fillStyle=body;rr(-25,-82,50,58,18);x.fill();x.fillStyle='rgba(255,255,255,.18)';rr(-25,-82,50,14,10);x.fill();
+  if(o.coat){x.fillStyle='#f4f6f8';rr(-25,-82,50,58,18);x.fill();x.fillStyle=body;x.fillRect(-4,-82,8,58);}
+  // 頭
+  const hy=-124;x.fillStyle=sk;x.beginPath();x.arc(0,hy,44,0,7);x.fill();
+  x.fillStyle=hair;x.beginPath();x.arc(0,hy-4,46,Math.PI*1.02,Math.PI*1.98);x.fill();x.beginPath();x.ellipse(-26,hy-14,22,16,0.5,0,7);x.fill();x.beginPath();x.ellipse(24,hy-18,24,14,-0.4,0,7);x.fill();
+  if(o.hat==='hard'){x.fillStyle=o.hatCol||'#f8d454';x.beginPath();x.arc(0,hy-14,44,Math.PI,0);x.fill();x.fillRect(-54,hy-16,108,9);x.fillStyle='rgba(0,0,0,.12)';x.fillRect(-4,hy-58,8,42);}
+  if(o.hat==='cap'){x.fillStyle=o.hatCol||'#27a854';x.beginPath();x.arc(0,hy-16,42,Math.PI,0);x.fill();x.beginPath();x.ellipse(26,hy-16,30,8,0,0,7);x.fill();}
+  if(o.hat==='band'){x.fillStyle='#f4f6f8';x.fillRect(-44,hy-26,88,12);x.fillStyle='#e04a4a';x.fillRect(-6,hy-30,12,20);x.fillRect(-10,hy-26,20,12);}
+  // 臉
+  const f=o.face||'normal';x.fillStyle='#2a1f18';x.strokeStyle='#2a1f18';x.lineWidth=4;x.lineCap='round';
+  if(f==='happy'){[-15,15].forEach(ex=>{x.beginPath();x.arc(ex,hy+2,7,Math.PI*1.1,Math.PI*1.9);x.stroke();});}
+  else if(f==='shock'){[-15,15].forEach(ex=>{x.fillStyle='#fff';x.beginPath();x.arc(ex,hy,9,0,7);x.fill();x.fillStyle='#2a1f18';x.beginPath();x.arc(ex,hy,4,0,7);x.fill();});}
+  else{[-15,15].forEach(ex=>{x.beginPath();x.ellipse(ex,hy,5,7,0,0,7);x.fill();});}
+  if(f==='worried'){x.beginPath();x.moveTo(-22,hy-16);x.lineTo(-9,hy-12);x.moveTo(22,hy-16);x.lineTo(9,hy-12);x.stroke();}
+  if(f==='angry'){x.beginPath();x.moveTo(-22,hy-18);x.lineTo(-8,hy-11);x.moveTo(22,hy-18);x.lineTo(8,hy-11);x.stroke();}
+  if(o.glasses){x.lineWidth=3;x.beginPath();x.arc(-15,hy,11,0,7);x.moveTo(26,hy);x.arc(15,hy,11,0,7);x.moveTo(-4,hy);x.lineTo(4,hy);x.stroke();}
+  x.fillStyle='rgba(255,120,130,.55)';x.beginPath();x.arc(-27,hy+14,8,0,7);x.arc(27,hy+14,8,0,7);x.fill();
+  x.fillStyle='#2a1f18';x.lineWidth=3;if(f==='shock'){x.beginPath();x.ellipse(0,hy+22,6,8,0,0,7);x.fill();}else if(f==='happy'){x.beginPath();x.arc(0,hy+16,8,0.1,Math.PI-0.1);x.fill();}else if(f==='worried'||f==='angry'){x.beginPath();x.arc(0,hy+26,7,Math.PI*1.15,Math.PI*1.85);x.stroke();}else{x.beginPath();x.arc(0,hy+15,5,0.2,Math.PI-0.2);x.stroke();}
+  if(o.sweat){x.fillStyle='#8fd3ff';x.beginPath();x.moveTo(48,hy-30);x.quadraticCurveTo(58,hy-14,48,hy-8);x.quadraticCurveTo(38,hy-14,48,hy-30);x.fill();}
+  // 道具
+  if(o.item==='phone'){x.fillStyle='#1d2433';rr(18,-80,22,36,5);x.fill();x.fillStyle='#8fd3ff';x.fillRect(21,-76,16,26);}
+  if(o.item==='box'){x.fillStyle='#c9a46a';x.fillRect(-30,-74,60,40);x.fillStyle='#a8854e';x.fillRect(-30,-58,60,6);}
+  if(o.item==='bag'){x.fillStyle='#7a5a3a';rr(-34,-84,16,44,6);x.fill();}
+  x.restore();
+  if(o.say){const by=py-(170+(o.hat?10:0))*s-26;x.font='900 '+Math.round(22)+'px '+NF;const tw=x.measureText(o.say).width+28;x.fillStyle='#fffdf5';rr(px-tw/2,by-24,tw,44,18);x.fill();x.beginPath();x.moveTo(px-8,by+20);x.lineTo(px+4,by+34);x.lineTo(px+10,by+20);x.fill();x.fillStyle='#2a1f18';x.textAlign='center';x.textBaseline='middle';x.fillText(o.say,px,by-1);}}
+// ---------- 第 1 回合：AI 開源革命 ----------
+const R=rnd(7);
+const crowd=[...Array(70)].map(()=>({x:R()*1280,y:560+R()*120,s:0.7+R()*0.6,f:R()*20}));
+const nodes=[];{const r=rnd(11);while(nodes.length<70){const a=r()*Math.PI*2,d=Math.sqrt(r());const nx=640+Math.cos(a)*d*520,ny=360+Math.sin(a)*d*230;if(Math.hypot(nx-640,ny-360)>70)nodes.push({x:nx,y:ny,d:Math.hypot(nx-640,ny-360)})}nodes.sort((a,b)=>a.d-b.d)}
+const dots=[];{const r=rnd(3);for(let i=0;i<900;i++){const a=r()*Math.PI*2,d=Math.sqrt(r());dots.push([640+Math.cos(a)*d*600,360+Math.sin(a)*d*270])}}
+const boxes=[];{const r=rnd(5);for(let row=0;row<5;row++)for(let col=0;col<12;col++)boxes.push({col,row,t:r(),h:r()})}
+const SIX=['#3d6cf0','#27a854','#8a4fd8','#1599b5','#d0457a','#e09a1b'];
+const towers=[...Array(26)].map((_,i)=>{const r=rnd(100+i);return {x:i*52-20,w:40+r()*30,h:120+r()*260,l:r()}});
+function shotCity(lt){const bg=x.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#13234a');bg.addColorStop(1,'#33496e');x.fillStyle=bg;x.fillRect(0,0,1280,720);
+  const pan=lt*10;x.save();x.translate(-pan,0);
+  towers.forEach(b=>{x.fillStyle='#182440';x.fillRect(b.x,470-b.h,b.w,b.h);for(let yy=470-b.h+12;yy<460;yy+=18)for(let xx=b.x+6;xx<b.x+b.w-6;xx+=12){if(((xx*7+yy*13)%10)/10<b.l*0.6){x.fillStyle='rgba(255,214,140,.85)';x.fillRect(xx,yy,5,7);}}});
+  x.fillStyle='#0d1628';x.fillRect(560,150,30,320);x.fillRect(548,250,54,12);x.fillRect(552,330,46,12);x.beginPath();x.moveTo(575,90);x.lineTo(586,150);x.lineTo(564,150);x.fill();
+  x.restore();x.fillStyle='#141c2b';x.fillRect(0,470,1280,250);x.fillStyle='#232d40';x.fillRect(0,560,1280,10);
+  SIX.forEach((cc,i)=>{const on=ease((lt-2.4-i*0.3)/0.4);const hx=140+i*175;x.fillStyle='#1d2638';x.fillRect(hx,440,130,120);x.fillStyle='#10161f';x.beginPath();x.moveTo(hx-10,440);x.lineTo(hx+65,395);x.lineTo(hx+140,440);x.fill();
+    x.fillStyle=on>0?cc:'#2a3244';x.globalAlpha=0.3+0.7*on;x.fillRect(hx+20,470,90,60);x.globalAlpha=1;if(on>0){const g=x.createRadialGradient(hx+65,500,5,hx+65,500,120);g.addColorStop(0,cc+'88');g.addColorStop(1,cc+'00');x.fillStyle=g;x.globalAlpha=on;x.fillRect(hx-60,380,250,240);x.globalAlpha=1;}});}
+function shotSummit(lt){// 發表會
+  const push=1+lt*0.012;x.save();x.translate(640,360);x.scale(push,push);x.translate(-640,-360);
+  const bg=x.createLinearGradient(0,0,0,720);bg.addColorStop(0,'#070a12');bg.addColorStop(1,'#111826');x.fillStyle=bg;x.fillRect(0,0,1280,720);
+  // 大螢幕
+  const on=ease((lt-1.3)/0.5);x.fillStyle='#0d1320';x.fillRect(250,90,780,330);
+  const sg=x.createLinearGradient(250,90,1030,420);sg.addColorStop(0,`rgba(61,108,240,${0.15+0.75*on})`);sg.addColorStop(1,`rgba(20,200,220,${0.1+0.6*on})`);x.fillStyle=sg;x.fillRect(262,102,756,306);
+  if(on>0){x.globalAlpha=on;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';x.font='900 30px '+NF;x.fillText('GLOBAL AI SUMMIT 2026',640,170);
+    x.font='900 92px '+NF;x.shadowColor='#7fb0ff';x.shadowBlur=40;x.fillText('OPEN MODEL',640,260);x.shadowBlur=0;
+    x.font='700 34px '+NF;x.fillText('模型・開發工具　全部免費開放',640,340);x.globalAlpha=1;}
+  // 白閃
+  if(lt>1.3&&lt<1.7){x.fillStyle=`rgba(255,255,255,${(1.7-lt)/0.4*0.8})`;x.fillRect(0,0,1280,720);}
+  // 聚光燈
+  [[380,0.6],[900,-0.6]].forEach(([sx,sk])=>{const g=x.createLinearGradient(sx,0,640,520);g.addColorStop(0,'rgba(255,240,200,.22)');g.addColorStop(1,'rgba(255,240,200,0)');x.fillStyle=g;x.beginPath();x.moveTo(sx-20,0);x.lineTo(sx+20,0);x.lineTo(640+180+sk*40,540);x.lineTo(640-180+sk*40,540);x.closePath();x.fill();});
+  // 講台與講者
+  x.fillStyle='#1a2233';x.fillRect(160,470,960,60);x.fillStyle='#232d42';x.fillRect(600,430,80,60);
+  
+  // 觀眾與閃光燈
+  crowd.forEach(p=>{x.fillStyle='#03050a';x.beginPath();x.arc(p.x,p.y,16*p.s,0,7);x.fill();x.fillRect(p.x-22*p.s,p.y+12*p.s,44*p.s,80);
+    const fl=Math.sin(lt*3+p.f*7)>0.985;if(fl&&lt>1.4){x.fillStyle='rgba(255,255,255,.95)';x.beginPath();x.arc(p.x+10,p.y-22,6,0,7);x.fill();x.fillStyle='rgba(255,255,255,.12)';x.beginPath();x.arc(p.x+10,p.y-22,60,0,7);x.fill();}});
+  x.restore();}
+function shotNetwork(lt){// 全球擴散
+  x.fillStyle='#04060c';x.fillRect(0,0,1280,720);
+  const z=1.05-lt*0.008;x.save();x.translate(640,360);x.scale(z,z);x.translate(-640,-360);
+  x.fillStyle='rgba(120,150,200,.18)';dots.forEach(([a,b])=>x.fillRect(a,b,2,2));
+  const reach=ease(lt/2.4)*560;
+  nodes.forEach((n,i)=>{if(n.d>reach)return;const k=cl((reach-n.d)/80);x.strokeStyle=`rgba(90,160,255,${0.45*k})`;x.lineWidth=1.4;x.beginPath();x.moveTo(640,360);x.quadraticCurveTo((640+n.x)/2,(360+n.y)/2-60,n.x,n.y);x.stroke();
+    // 沿線光點
+    const p=((lt*0.8+i*0.13)%1);const qx=(1-p)*(1-p)*640+2*(1-p)*p*((640+n.x)/2)+p*p*n.x,qy=(1-p)*(1-p)*360+2*(1-p)*p*((360+n.y)/2-60)+p*p*n.y;x.fillStyle=`rgba(200,230,255,${k})`;x.fillRect(qx-1.5,qy-1.5,3,3);
+    x.fillStyle=`rgba(120,200,255,${k})`;x.beginPath();x.arc(n.x,n.y,4+2*k,0,7);x.fill();x.fillStyle=`rgba(120,200,255,${0.15*k})`;x.beginPath();x.arc(n.x,n.y,16,0,7);x.fill();});
+  const g=x.createRadialGradient(640,360,0,640,360,90);g.addColorStop(0,'rgba(160,200,255,.95)');g.addColorStop(1,'rgba(60,110,240,0)');x.fillStyle=g;x.beginPath();x.arc(640,360,90,0,7);x.fill();
+  x.restore();
+  const cnt=Math.floor(Math.pow(ease(lt/2.6),2)*12800000);x.textAlign='left';x.textBaseline='alphabetic';x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('全球下載次數',90,150);
+  x.fillStyle='#fff';x.font='900 64px '+NF;x.fillText(cnt.toLocaleString('en-US'),90,215);
+  x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('使用成本',90,270);x.fillStyle='#5ee0a0';x.font='900 40px '+NF;x.fillText('NT$ 0',90,318);}
+function shotShelf(lt){// 三個月後
+  x.fillStyle='#0a0d14';x.fillRect(0,0,1280,720);
+  const month=Math.min(3,1+Math.floor(lt/1.7));
+  // 貨架
+  const fill=Math.pow(ease(lt/5.2),1.4)*boxes.length;
+  for(let r=0;r<5;r++){x.fillStyle='#1c2433';x.fillRect(120,200+r*92+70,1040,8);}
+  boxes.forEach((b,i)=>{if(i>fill)return;const k=cl(fill-i);const bx=140+b.col*84,by=200+b.row*92+(1-k)*-30;x.globalAlpha=k;
+    x.fillStyle=`hsl(${215+b.h*20},${30+b.h*20}%,${42+b.h*8}%)`;x.fillRect(bx,by,64,70);x.fillStyle='rgba(255,255,255,.85)';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',bx+32,by+28);
+    x.font='700 11px '+NF;x.fillStyle='rgba(255,255,255,.55)';x.fillText('助理 Pro',bx+32,by+52);x.globalAlpha=1;});
+  // 月曆
+  x.save();x.translate(120,70);x.fillStyle='#f2efe6';x.fillRect(0,0,150,108);x.fillStyle='#c94040';x.fillRect(0,0,150,30);x.fillStyle='#fff';x.font='700 18px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('開源後',75,15);
+  const ft=(lt%1.7)/1.7;x.fillStyle='#111';x.font='900 46px '+NF;x.fillText('第 '+month+' 月',75,72);x.restore();
+  // 價格
+  const prices=['NT$ 990','NT$ 590','NT$ 290'];x.save();x.translate(1160,120);x.rotate(0.06);x.textAlign='right';x.textBaseline='middle';
+  x.fillStyle='#8a93a0';x.font='700 20px '+NF;x.fillText('市場均價',0,-30);x.fillStyle='#ff5a5a';x.font='900 58px '+NF;x.fillText(prices[month-1],0,20);x.restore();
+  x.textAlign='left';x.fillStyle='#8a93a0';x.font='700 22px '+NF;x.fillText('相似產品數：'+Math.round(fill*37),300,128);}
+function shotYou(lt){// 你的公司
+  const z=1+ease(lt/4.5)*0.9;x.fillStyle='#07090e';x.fillRect(0,0,1280,720);x.save();x.translate(640,384);x.scale(z,z);x.translate(-640,-384);
+  boxes.forEach(b=>{const bx=140+b.col*84,by=200+b.row*92;const me=b.col===6&&b.row===2;if(me)return;x.fillStyle='#262a31';x.fillRect(bx,by,64,70);x.fillStyle='#3a3f48';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',bx+32,by+28);});
+  for(let r=0;r<5;r++){x.fillStyle='#14181f';x.fillRect(120,200+r*92+70,1040,8);}
+  x.restore();
+  const s=ease((lt-0.6)/1.2);const g=x.createRadialGradient(640,384,10,640,384,260);g.addColorStop(0,`rgba(255,235,190,${0.35*s})`);g.addColorStop(1,'rgba(255,235,190,0)');x.fillStyle=g;x.fillRect(0,0,1280,720);
+  x.save();x.translate(640,384);x.scale(z,z);const bx=-32,by=-35;x.fillStyle='#3d6cf0';x.shadowColor='#7fb0ff';x.shadowBlur=30*s;x.fillRect(bx,by,64,70);x.shadowBlur=0;x.fillStyle='#fff';x.font='900 22px '+NF;x.textAlign='center';x.textBaseline='middle';x.fillText('AI',0,by+28);x.font='700 10px '+NF;x.fillText('你的公司',0,by+52);x.restore();}
+
+const R1={n:1,intro:'風險卡',era:'3.0 知識經濟',title:'AI 開源革命',tag:'選擇你的說',col:'#3d6cf0',
+  lines:['台北，一座正在長大的 AI 園區','六家新創，在同一條街上起跑','這一天，全球科技巨頭開了一場發表會','「最新 AI 模型和開發工具，全部開放！」\n（蛤？？？免費的？）','先進 AI，人人都能低成本取得','短短三個月，市場湧進大量相似產品～～～','你有 AI 助理，他有 AI 助理\n連隔壁早餐店都有 AI 助理><','到了 3.0，問題不再是「會不會用 AI」','而是「大家都會用的時候，\n你憑什麼被選中？」'],
+  tense:[5,7],shutter:[2,4],
+  shots:[[0,2,shotCity],[2,4,shotSummit],[4,5,shotNetwork],[5,7,shotShelf],[7,9,shotYou]],
+  people:[
+   lt=>{SIX.forEach((c,i)=>{const k=ease((lt-2.6-i*0.3)/0.4);if(k<=0)return;x.globalAlpha=k;chibi(205+i*175,648,0.52,{body:c,hair:i%2?'#2a2420':'#5a3b26',face:'happy',arm:i%2?'up':'',t:lt+i,bob:-Math.abs(Math.sin(lt*5+i))*5});x.globalAlpha=1;});},
+   lt=>{chibi(640,500,0.62,{body:'#2a3448',hair:'#2a2420',glasses:true,face:'happy',arm:lt>1.3?'up':'',t:lt});},
+   lt=>{chibi(1150,648,0.85,{body:'#1599b5',face:'happy',item:'phone',say:lt>0.8?'免費耶！':''});},
+   lt=>{chibi(1190,650,0.75,{body:'#d0457a',hair:'#2a2420',face:lt>2.8?'shock':'worried',sweat:lt>2.8,say:lt>2.8?'又一家？':''});},
+   lt=>{chibi(160,648,0.95,{body:'#3d6cf0',face:'worried',sweat:lt>2.8,say:lt>2.8?'怎麼辦…':''});}]};
+// ---------- 第 2 回合：園區對外連線中斷 ----------
+const R2={n:2,intro:'合作回合',era:'3.0 知識經濟',title:'園區對外連線中斷',tag:'找到你的夥伴',col:'#a454c6',
+  lines:['前情提要：開源浪潮過後，AI 訂單突然暴增','工廠加開產線，資料中心加開運算班次','就在大家忙著擴充的時候','園區的對外網路，反覆中斷\n（蛤？？？又斷了？）','工廠收不到瑕疵判讀，場站等不到調度指令','醫院也連不上外部的影像分析','園區內部的網路和設備，還能用','找一個夥伴，讓一項關鍵工作在本地繼續'],
+  tense:[2,6],
+  shots:[[0,2,function(lt){bgGrad('#0a0f1c','#141b2c');x.save();push(lt);bars(lt,'#a454c6',[90,120,150,210,300,410]);
+      label('AI 訂單量',200,600,24,'#8a93a0');const n=Math.round(ease(lt/3)*320);label('+'+n+'%',1080,170,96,'#e7b6ff',900,'right');
+      // 產線燈號
+      for(let i=0;i<14;i++){const on=Math.sin(lt*6+i)>0;x.fillStyle=on?'#ffd27a':'#3a3220';x.fillRect(220+i*60,620,30,8);}x.restore();}],
+    [2,4,function(lt){bgGrad('#070a12','#10141f');x.save();push(lt,0.008);
+      // 園區內六點、外面雲端
+      const P=[[300,420],[440,520],[600,440],[760,520],[900,420],[600,600]];const cloud=[640,190];
+      label('外部雲端服務',640,128,26,'#8a93a0',700,'center');x.fillStyle='#1c2640';x.beginPath();x.arc(cloud[0],cloud[1],48,0,7);x.fill();
+      const broken=lt>3.8,flick=lt>2.8&&Math.sin(lt*40)>0.2;
+      P.forEach(([px,py],i)=>{const ok=!broken&&!flick;x.strokeStyle=ok?'rgba(120,200,255,.6)':'rgba(255,80,80,.7)';x.setLineDash(ok?[]:[10,12]);x.lineWidth=2;x.beginPath();x.moveTo(px,py);x.lineTo(cloud[0],cloud[1]);x.stroke();x.setLineDash([]);
+        x.fillStyle='#2f3a52';x.beginPath();x.arc(px,py,20,0,7);x.fill();});
+      x.strokeStyle='rgba(255,255,255,.15)';x.setLineDash([6,8]);rr(240,370,720,290,40);x.stroke();x.setLineDash([]);label('AI 園區',260,400,20,'#8a93a0');
+      if(lt>2.8){const a=Math.abs(Math.sin(lt*5));x.globalAlpha=0.6+0.4*a;x.save();x.translate(640,260);x.rotate(-0.06);x.strokeStyle='#ff5a5a';x.lineWidth=6;x.strokeRect(-170,-46,340,92);label('連線中斷',0,22,58,'#ff5a5a',900,'center');x.restore();x.globalAlpha=1;}
+      x.restore();
+      if(lt>2.8&&Math.random()<0.25){x.fillStyle='rgba(255,255,255,.06)';x.fillRect(0,Math.random()*720,1280,6+Math.random()*30);}}],
+    [4,6,function(lt){bgGrad('#0b0e16','#121826');
+      const P=[['工廠','瑕疵判讀',0],['綠能場站','調度指令',0.5],['醫院','影像分析',2.9]];
+      P.forEach(([n,w,d],i)=>{const px=150+i*340,py=180;const k=ease((lt-d)/0.5);x.globalAlpha=k;x.fillStyle='#161d2c';rr(px,py,300,330,26);x.fill();
+        label(n,px+30,py+60,34,'#fff',900);label('等待：'+w,px+30,py+104,22,'#8a93a0');
+        const sp=lt*5+i;x.strokeStyle='#5d6b85';x.lineWidth=8;x.lineCap='round';x.beginPath();x.arc(px+150,py+200,44,sp,sp+4.2);x.stroke();
+        const to=lt-d>1.8;if(to){label('逾時 TIMEOUT',px+150,py+300,26,'#ff6b6b',900,'center');}x.globalAlpha=1;});}],
+    [6,8,function(lt){bgGrad('#07100d','#0e1a18');x.save();push(lt,0.01);
+      const P=[[340,300],[520,220],[760,220],[940,300],[820,470],[460,470]];const cols=['#3d6cf0','#27a854','#8a4fd8','#1599b5','#d0457a','#e09a1b'];
+      x.strokeStyle='rgba(255,90,90,.5)';x.setLineDash([8,10]);x.beginPath();x.moveTo(640,60);x.lineTo(640,130);x.stroke();x.setLineDash([]);label('✕ 對外',660,100,22,'#ff6b6b');
+      x.strokeStyle='rgba(94,224,160,.25)';x.lineWidth=2;P.forEach((a,i)=>P.forEach((b,j)=>{if(j>i){x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke();}}));
+      const pick=lt>2.8;if(pick){const e=ease((lt-2.8)/0.8);x.strokeStyle='#e7b6ff';x.lineWidth=8;x.shadowColor='#a454c6';x.shadowBlur=30;x.beginPath();x.moveTo(P[0][0],P[0][1]);x.lineTo(P[0][0]+(P[3][0]-P[0][0])*e,P[0][1]+(P[3][1]-P[0][1])*e);x.stroke();x.shadowBlur=0;}
+      P.forEach(([px,py],i)=>{x.fillStyle=cols[i];x.beginPath();x.arc(px,py,26,0,7);x.fill();});
+      x.strokeStyle='rgba(94,224,160,.5)';x.lineWidth=3;rr(250,150,780,400,60);x.stroke();label('園區內網・還能用',270,185,22,'#5ee0a0',900);x.restore();}]]};
+// ---------- 第 3 回合：關鍵人才流動 ----------
+const R3={n:3,intro:'風險卡',era:'3.0 知識經濟',title:'關鍵人才流動',tag:'選擇你的說',col:'#2b6fb0',
+  lines:['前情提要：園區撐過了斷線，訂單還在湧入','AI 人才的爭奪戰跟著升溫','關鍵工程師，陸續收到對手的高薪邀約','公司這才發現','製程、系統調校、客戶經驗','只掌握在少數資深員工的腦袋裡\n（蛤？？？都沒寫下來？）','人會走，知識要怎麼留下來？'],
+  tense:[1,3],
+  shots:[[0,2,function(lt){bgGrad('#0a0f1c','#131a2b');x.save();push(lt);bars(lt,'#2b6fb0',[200,230,260,300,340,380]);label('訂單仍在湧入',200,600,24,'#8a93a0');
+      // 搶人：各家頭上的徵才牌
+      for(let i=0;i<5;i++){const k=ease((lt-2.8-i*0.25)/0.4);if(k<=0)continue;x.globalAlpha=k;const px=230+i*190,py=150;x.fillStyle='#1d2740';rr(px,py,160,64,14);x.fill();label('急徵 AI 工程師',px+80,py+40,20,'#ffd27a',900,'center');}
+      x.globalAlpha=1;x.restore();}],
+    [2,4,function(lt){bgGrad('#0a0d16','#111725');x.save();push(lt,0.02);
+      const g=x.createRadialGradient(640,420,10,640,420,240);g.addColorStop(0,'rgba(43,111,176,.35)');g.addColorStop(1,'rgba(43,111,176,0)');x.fillStyle=g;x.fillRect(0,0,1280,720);
+      const offers=['年薪 +50%','簽約金 200 萬','遠距上班','股票選擇權','職稱升兩級','明天就能報到'];
+      offers.forEach((o,i)=>{const k=ease((lt-0.3-i*0.45)/0.35);if(k<=0)return;const a=i/offers.length*Math.PI*2-1.2;const px=640+Math.cos(a)*330,py=360+Math.sin(a)*190;
+        x.globalAlpha=k;x.fillStyle='#f2f4f8';rr(px-120,py-36,240,72,18);x.fill();x.fillStyle='#ff4d4d';x.beginPath();x.arc(px+112,py-30,12,0,7);x.fill();label('新訊息・高薪邀約',px-102,py-6,16,'#6a7383',700);label(o,px-102,py+22,24,'#111',900);x.globalAlpha=1;});
+      x.restore();}],
+    [4,6,function(lt){bgGrad('#090c14','#10141f');x.save();push(lt,0.015);
+      const K=[['製程','#ffb347'],['系統調校','#6ec6ff'],['客戶經驗','#7be0a5']];
+      K.forEach(([n,col],i)=>{const a=lt*0.9+i*2.09;const k=ease((lt-i*0.5)/0.6);const tx=1050+Math.cos(a)*105,ty=440+Math.sin(a)*28;const sx=330+i*275,sy=580;const px=sx+(tx-sx)*ease((lt-2.6)/1.2),py=sy+(ty-sy)*ease((lt-2.6)/1.2);
+        x.globalAlpha=k;const g=x.createRadialGradient(px,py,4,px,py,70);g.addColorStop(0,col);g.addColorStop(1,col+'00');x.fillStyle=g;x.beginPath();x.arc(px,py,70,0,7);x.fill();label(n,px,py+10,30,'#fff',900,'center');x.globalAlpha=1;});
+      x.restore();}],
+    [6,7,function(lt){bgGrad('#07090e','#0d1119');
+      // 門
+      x.fillStyle='#1a2130';x.fillRect(900,170,200,380);const open=ease(lt/0.8);x.fillStyle='rgba(255,230,180,.85)';x.fillRect(900,170,200*open,380);
+      const wx=640+ease((lt-0.4)/2)*360;
+      ['#ffb347','#6ec6ff','#7be0a5'].forEach((col,i)=>{const px=wx-40+i*40,py=400+Math.sin(lt*3+i)*8;x.fillStyle=col;x.globalAlpha=0.9;x.beginPath();x.arc(px,py,12,0,7);x.fill();x.globalAlpha=1;});
+      // 空桌
+      x.fillStyle='#1c2433';x.fillRect(220,430,300,20);x.fillRect(240,450,16,100);x.fillRect(484,450,16,100);x.fillStyle='#262f42';x.fillRect(300,360,140,70);
+      label('空位',370,410,24,'#5d6674',700,'center');}]]};
+// ---------- 第 4 回合：AI 電力危機 ----------
+const R4={n:4,intro:'風險卡',era:'4.0 人文永續',title:'AI 電力危機',tag:'選擇你的說',col:'#2e8a5a',
+  lines:['前情提要：知識留住了，算力卻越擴越大','AI 算力擴張讓用電暴增','夏季備轉容量告急～～～Hot Hot><','政府宣布碳費上路','大用電戶都要提出減碳計畫（蛤？？？可惡）','社區也開始抗議新建資料中心','到了 4.0，問題不再是「賺不賺錢」','而是「你還能不能被允許繼續營運」'],
+  tense:[1,3],
+  shots:[[0,2,function(lt){bgGrad('#070b12','#0f1620');x.save();push(lt,0.01);
+      const n=Math.min(10,2+Math.floor(lt*1.8));for(let i=0;i<n;i++){const px=150+i*100,py=260;x.fillStyle='#161e2c';x.fillRect(px,py,80,260);for(let j=0;j<10;j++){x.fillStyle=Math.sin(lt*9+i*3+j)>0?'#5ee0a0':'#1f4d39';x.fillRect(px+10,py+14+j*24,10,6);x.fillStyle='#232d40';x.fillRect(px+26,py+14+j*24,44,10);}}
+      label('用電量',150,170,24,'#8a93a0');const kw=Math.round(80+ease(lt/5)*920);label(kw+' MW',150,232,64,'#ffd27a',900);x.restore();}],
+    [2,3,function(lt){const heat=ease(lt/2);bgGrad(`rgb(${40+120*heat},${20+30*heat},20)`,'#1a0f0a');
+      const sx=1040,sy=170,g=x.createRadialGradient(sx,sy,10,sx,sy,260);g.addColorStop(0,'rgba(255,220,120,.95)');g.addColorStop(1,'rgba(255,120,40,0)');x.fillStyle=g;x.beginPath();x.arc(sx,sy,260,0,7);x.fill();
+      for(let i=0;i<14;i++){const yy=360+i*24;x.strokeStyle='rgba(255,200,140,.08)';x.lineWidth=3;x.beginPath();for(let xx=0;xx<=1280;xx+=20)x.lineTo(xx,yy+Math.sin(xx/40+lt*4+i)*6);x.stroke();}
+      const pct=(10-ease(lt/2.2)*7.6).toFixed(1);label('備轉容量率',160,480,26,'#ffd9b0');label(pct+'%',160,575,90,pct<6?'#ff4d4d':'#ffd27a',900);
+      x.fillStyle='#2a1810';x.fillRect(520,540,420,22);x.fillStyle=pct<6?'#ff4d4d':'#ffb347';x.fillRect(520,540,420*pct/10,22);
+      if(pct<6&&Math.sin(lt*10)>0)label('⚠ 供電警戒',1120,575,40,'#ff4d4d',900,'right');}],
+    [3,5,function(lt){bgGrad('#0e100c','#161a12');x.save();push(lt,0.01);
+      x.save();x.translate(640,370);x.rotate(-0.03);x.fillStyle='#f2eee2';x.fillRect(-300,-250,600,470);label('碳費徵收辦法',0,-180,40,'#222',900,'center');
+      for(let i=0;i<6;i++){x.fillStyle='#c9c3b2';x.fillRect(-240,-120+i*40,480-(i%3)*90,12);}
+      x.restore();
+      const k=lt>1?Math.max(0,1-(lt-1)/0.25):0;const s=1+k*1.4;if(lt>1){x.save();x.translate(820,250);x.rotate(-0.18);x.scale(s,s);x.globalAlpha=Math.min(1,(lt-1)/0.15);x.strokeStyle='#d33';x.lineWidth=8;x.strokeRect(-140,-50,280,100);label('正式上路',0,22,56,'#d33',900,'center');x.restore();}
+      if(lt>3){const items=['盤查排放量','提出減碳計畫','每年檢核進度'];items.forEach((it,i)=>{const k2=ease((lt-3-i*0.45)/0.3);x.globalAlpha=k2;label('✔ '+it,420,520+i*44,28,'#2e8a5a',900);x.globalAlpha=1;});}
+      x.restore();}],
+    [5,6,function(lt){bgGrad('#0c0f16','#151a24');
+      x.fillStyle='#10141d';x.fillRect(380,120,520,260);label('新建資料中心 預定地',640,260,32,'#5d6674',900,'center');
+      const signs=['反對新建資料中心','還我用電','缺電誰負責？','先說清楚再蓋'];
+      for(let i=0;i<9;i++){const px=120+i*130,py=560+Math.sin(lt*4+i)*6;chibi(px,652,0.72,{body:['#3d6cf0','#27a854','#8a4fd8','#1599b5','#d0457a','#e09a1b'][i%6],hair:i%3?'#5a3b26':'#2a2420',face:i%2?'angry':'worried',arm:i%2===0?'up':'',bob:Math.sin(lt*4+i)*6,t:lt});
+        if(i%2===0){const s=signs[(i/2)%signs.length|0];const up=Math.sin(lt*3+i)*6;x.fillStyle='#f2eee2';x.fillRect(px-80,py-140+up,160,64);x.fillStyle='#05070b';x.fillRect(px-3,py-76+up,6,60);label(s,px,py-98+up,18,'#b22',900,'center');}}}],
+    [6,8,function(lt){bgGrad('#06080d','#0d1118');x.save();push(lt,0.015);
+      for(let i=0;i<5;i++){const px=380+i*110,py=420;x.fillStyle='#161e2c';x.fillRect(px,py,80,220);for(let j=0;j<9;j++){const off=lt>3.2&&(i+j)%3===0;x.fillStyle=off?'#3a1414':'#5ee0a0';x.fillRect(px+10,py+14+j*24,10,6);}}
+      const k=ease((lt-2.9)/0.3);if(k>0){const s=1+(1-k)*1.2;x.save();x.translate(640,190);x.rotate(-0.06);x.scale(s,s);x.globalAlpha=k;x.strokeStyle='#ffd27a';x.lineWidth=8;x.strokeRect(-230,-60,460,120);label('營運許可？',0,24,68,'#ffd27a',900,'center');x.restore();}
+      x.restore();}]]};
+R2.people=[
+  lt=>{chibi(130,640,0.95,{hat:'hard',body:'#e09a1b',face:'happy',arm:Math.sin(lt*5)>0?'up':'',t:lt});chibi(1150,640,0.95,{hat:'hard',hatCol:'#ff8a3d',body:'#1599b5',face:'happy',item:'box',bob:Math.abs(Math.sin(lt*6))*-6,say:lt>2.2?'又要加班囉！':''});},
+  lt=>{const bad=lt>2.8;chibi(170,645,0.95,{body:'#3d6cf0',glasses:true,face:bad?'shock':'normal',sweat:bad,say:bad?'！？':''});chibi(1110,645,0.95,{body:'#8a4fd8',hair:'#2a2420',face:bad?'worried':'happy',item:'phone',sweat:bad,say:bad?'又斷了…':''});},
+  lt=>{[[300,{hat:'hard',body:'#e09a1b'}],[640,{hat:'cap',hatCol:'#27a854',body:'#27a854'}],[980,{hat:'band',coat:true,body:'#d0457a'}]].forEach(([px,o],i)=>{if(lt<(i===2?2.9:0))return;chibi(px,648,0.6,Object.assign(o,{face:'worried',sweat:lt>1.8,bob:Math.abs(Math.sin(lt*7+i))*-4,say:lt>2?['判讀咧？','指令咧？','影像咧？'][i]:''}));});},
+  lt=>{const ok=lt>3.3;chibi(160,640,0.95,{body:'#3d6cf0',face:ok?'happy':'normal',arm:ok?'up2':'',t:lt,say:ok?'一起來！':''});chibi(1120,640,0.95,{body:'#1599b5',hair:'#2a2420',face:ok?'happy':'normal',arm:ok?'up':'',t:lt,say:ok?'走！':''});}];
+R3.people=[
+  lt=>{[[95,'#d0457a'],[1185,'#27a854']].forEach(([px,c],i)=>chibi(px,640,0.9,{body:c,hair:i?'#2a2420':'#5a3b26',face:'happy',arm:'wave',t:lt+i,say:lt>3?'來我們這！':''}));},
+  lt=>{chibi(640,650,1.15,{body:'#2b6fb0',glasses:true,face:lt>1.2?'happy':'normal',item:'phone',say:lt>3.2?'這麼多…？':''});},
+  lt=>{chibi(1050,640,1.3,{body:'#5a6a85',hair:'#cfcac2',glasses:true,face:'normal'});chibi(120,640,1.05,{body:'#2b6fb0',hair:'#2a2420',face:lt>2.8?'shock':'normal',sweat:lt>2.8,say:lt>2.8?'蛤？？？':''});},
+  lt=>{const wx=640+ease((lt-0.4)/2)*360;chibi(wx,640,1.3,{body:'#5a6a85',hair:'#cfcac2',glasses:true,face:'happy',item:'bag',arm:lt>1.6?'wave':'',walk:lt<2.4?lt*9:null,t:lt,say:lt>1.6?'掰掰～':''});chibi(150,640,1.05,{body:'#2b6fb0',hair:'#2a2420',face:'shock',sweat:true,arm:'up',say:'等等！'});}];
+R4.people=[
+  lt=>{chibi(1210,645,0.8,{hat:'hard',body:'#2e8a5a',face:'happy',item:'box',walk:lt*8,t:lt});chibi(70,645,0.8,{hat:'hard',hatCol:'#ff8a3d',body:'#3d6cf0',face:'happy',arm:'up',t:lt,say:lt>3.2?'再加十櫃！':''});},
+  lt=>{chibi(1190,470,0.85,{body:'#e09a1b',face:'worried',sweat:true,arm:Math.sin(lt*10)>0?'up2':'',t:lt,bob:Math.sin(lt*3)*3,say:'熱熱熱～'});},
+  lt=>{chibi(1120,640,1.05,{body:'#2e8a5a',hair:'#2a2420',glasses:true,face:lt>2.8?'shock':'worried',sweat:lt>2.8,say:lt>2.8?'可惡！':''});},
+  null,
+  lt=>{chibi(190,640,1,{body:'#2e8a5a',hair:'#2a2420',glasses:true,face:'worried',sweat:true,say:lt>2.9?'我們還能營運嗎？':''});chibi(1090,640,1,{body:'#5a6a85',hair:'#cfcac2',face:'normal',arm:'both',t:lt});}];
+// ---------- 共用：方案卡、硬幣 ----------
+function planCards(lt,col,last){[[200,'方案 A','5 資本'],[740,'方案 B','8 資本']].forEach(([px,n,c],i)=>{const k=ease((lt-0.2-i*0.3)/0.5);x.globalAlpha=k;x.fillStyle='#fbf6ea';rr(px,100+(1-k)*30,340,150,22);x.fill();x.fillStyle=col;rr(px,100+(1-k)*30,340,44,22);x.fill();x.fillRect(px,124+(1-k)*30,340,20);
+  label(n,px+24,134+(1-k)*30,24,'#fff',900);label(c,px+316,134+(1-k)*30,24,'#fff',900,'right');label(last?'最後一筆投資':'三年公共服務',px+24,190+(1-k)*30,24,'#3a2d22',900);label('買下後判斷它是哪一說',px+24,228+(1-k)*30,18,'#8a7a62',700);x.globalAlpha=1;});
+  for(let i=0;i<8;i++){const k=ease((lt-1-i*0.12)/0.3);if(k<=0)continue;const cx=620+((i%2)?14:-14),cy=250-i*10+(1-k)*-40;x.globalAlpha=k;x.fillStyle='#f0bd2e';x.beginPath();x.ellipse(cx,cy,26,9,0,0,7);x.fill();x.fillStyle='#c99a1a';x.fillRect(cx-26,cy,52,6);x.globalAlpha=1;}}
+const ADV={hat:'cap',hatCol:'#ffffff',body:'#ee8a6c'};
+// ---------- 第 5 回合：社區三年公共服務計畫 ----------
+const R5={n:5,intro:'永續投資回合',era:'4.0 人文永續',title:'社區三年公共服務計畫',tag:'押上你的資本',col:'#c7922a',
+  lines:['前情提要：電力危機過後，園區擴張滿一年','地方政府召開檢討會','企業、居民、診所和學校，第一次坐在同一張桌子','館員說：圖書館的電腦，一壞就停用好幾週','診所說：遠距追蹤試辦過，補助一到期就沒人力','居民代表問：','「園區有這麼多懂技術的公司」','「能不能一起做幾年後還在的服務？」','三年公共服務計畫，邀你投入'],
+  tense:[3,5],
+  shots:[[0,3,function(lt){bgGrad('#15111a','#211a26');x.save();push(lt,0.006);
+      x.fillStyle='#c7922a';rr(340,96,600,64,16);x.fill();label('園區擴張檢討會',640,140,34,'#fff',900,'center');
+      const P=[[280,{body:'#3d6cf0',hair:'#2a2420'},'企業'],[520,{body:'#e09a1b',hair:'#cfcac2'},'居民'],[760,{body:'#d0457a',coat:true,hat:'band'},'診所'],[1000,{body:'#27a854',glasses:true},'學校']];
+      P.forEach(([px,o,n],i)=>{const k=ease((lt-0.6-i*0.35)/0.5);if(k<=0)return;x.globalAlpha=k;chibi(px,560,0.88,Object.assign({face:lt>5.6?'happy':'normal',t:lt},o));x.globalAlpha=1;});
+      x.fillStyle='#5a4632';x.fillRect(150,548,980,24);x.fillStyle='#3f3123';x.fillRect(150,572,980,80);
+      P.forEach(([px,o,n],i)=>{const k=ease((lt-5.6-i*0.3)/0.4);if(k<=0)return;x.globalAlpha=k;x.fillStyle='#fbf6ea';rr(px-58,590,116,42,8);x.fill();label(n,px,620,24,'#3a2d22',900,'center');x.globalAlpha=1;});x.restore();}],
+    [3,4,function(lt){bgGrad('#101520','#182031');
+      for(let i=0;i<5;i++)for(let j=0;j<22;j++){const r=rnd(i*31+j+3);x.fillStyle=['#6b3d3d','#3d5a6b','#6b5a3d','#3d6b4a','#4a3d6b'][(i+j)%5];x.globalAlpha=0.55;x.fillRect(60+j*24,120+i*90,18,70+r()*10);x.globalAlpha=1;}
+      x.fillStyle='#2a3448';x.fillRect(740,600,380,20);x.fillStyle='#1b2230';rr(800,430,250,170,12);x.fill();x.fillStyle='#0b0f17';x.fillRect(818,448,214,132);
+      x.save();x.translate(925,515);x.rotate(-0.08);x.fillStyle='#fff6d0';x.fillRect(-90,-34,180,68);label('停用中',0,12,36,'#c33',900,'center');x.restore();
+      x.fillStyle='#f2efe6';x.fillRect(1080,110,150,110);x.fillStyle='#c94040';x.fillRect(1080,110,150,30);label('報修後',1155,132,18,'#fff',700,'center');label('第 '+Math.min(3,1+Math.floor(lt*1.2))+' 週',1155,195,40,'#111',900,'center');
+      chibi(470,645,1.05,{body:'#7a8a3a',hair:'#5a3b26',glasses:true,face:'worried',sweat:lt>1.4,say:lt>0.6?'又壞了…':''});}],
+    [4,5,function(lt){bgGrad('#0f1a1c','#162629');
+      x.fillStyle='#e04a4a';x.fillRect(1100,120,24,80);x.fillRect(1072,148,80,24);
+      x.fillStyle='#1b2a2e';rr(640,90,360,220,18);x.fill();x.fillStyle='#0b1416';x.fillRect(660,108,320,184);label('遠距追蹤・試辦',820,150,26,'#7be0c8',900,'center');
+      for(let i=0;i<10;i++){x.fillStyle='#7be0c8';const h=20+Math.sin(i*1.3+lt*2)*14;x.fillRect(690+i*28,280-h,16,h);}
+      if(lt>1){const k=Math.max(0,1-(lt-1)/0.2);x.save();x.translate(820,215);x.rotate(-0.15);x.scale(1+k,1+k);x.globalAlpha=Math.min(1,(lt-1)/0.12);x.strokeStyle='#ff5a5a';x.lineWidth=7;x.strokeRect(-130,-40,260,80);label('補助到期',0,16,46,'#ff5a5a',900,'center');x.restore();}
+      x.fillStyle='#2a3a3e';x.fillRect(1030,560,100,16);x.fillRect(1040,500,14,60);x.fillRect(1100,576,10,60);x.fillRect(1040,576,10,60);
+      chibi(340,645,1.05,{body:'#d0457a',coat:true,hat:'band',face:'worried',sweat:true,say:lt>1.3?'沒人力了…':''});}],
+    [5,8,function(lt){bgGrad('#17121c','#221a28');
+      const yrs=['第 1 年','第 2 年','第 3 年'];x.strokeStyle='#5d4a66';x.lineWidth=4;x.beginPath();x.moveTo(360,140);x.lineTo(920,140);x.stroke();
+      yrs.forEach((y,i)=>{const on=lt>5.6+i*0.6;x.fillStyle=on?'#f0bd2e':'#3a2f44';x.beginPath();x.arc(360+i*280,140,16,0,7);x.fill();label(y,360+i*280,190,22,on?'#f0bd2e':'#8a7a92',900,'center');});
+      x.fillStyle='#3a3a44';x.fillRect(392,500,8,140);x.fillStyle='#222';x.beginPath();x.arc(396,494,12,0,7);x.fill();
+      chibi(320,645,1.12,{body:'#e09a1b',hair:'#cfcac2',face:'normal',arm:'up2',t:lt,say:lt<2.8?'我想問…':lt<5.6?'這麼多懂技術的公司':'能一起做嗎？'});
+      [[900,'#3d6cf0'],[1080,'#8a4fd8']].forEach(([px,c],i)=>chibi(px,645,0.92,{body:c,hair:i?'#5a3b26':'#2a2420',face:lt>2.8&&lt<5.6?'shock':lt>=5.6?'happy':'normal',sweat:lt>2.8&&lt<5.6}));}],
+    [8,9,function(lt){bgGrad('#17130b','#231c10');planCards(lt,'#c7922a',false);
+      chibi(380,645,0.95,Object.assign({face:'happy',arm:'wave',t:lt,say:'方案 A 了解一下'},ADV));chibi(900,645,0.95,Object.assign({face:'happy',arm:'wave',t:lt+1,say:'方案 B 也不錯喔'},ADV));}]]};
+// ---------- 第 6 回合：AI 供應鏈信任危機 ----------
+const R6={n:6,intro:'風險卡',era:'4.0 人文永續',title:'AI 供應鏈信任危機',tag:'選擇你的說',col:'#2e8a5a',
+  lines:['前情提要：公共服務計畫，進行到第二年','永續報告書，一份比一份漂亮','直到一份國際調查報告出爐','綠電來源不明、碳排不透明\n（蛤？？？說好的永續呢）','館員說：有些公司修了一季電腦，就沒再出現','診所的病患資料存在哪、誰看得到，沒人說得清楚','居民代表只問一句：','「去年答應我們的事，還算數嗎？」','被懷疑的時候，你要拿什麼證明自己？'],
+  tense:[2,4],
+  shots:[[0,2,function(lt){bgGrad('#0b1610','#12241a');x.save();push(lt,0.01);
+      const n=Math.min(7,1+Math.floor(lt*1.6));for(let i=0;i<n;i++){const py=600-i*34;x.fillStyle=['#27a854','#2e8a5a','#5ec27a','#1f6e45'][i%4];rr(200+(i%2)*14,py,380,30,6);x.fill();label('永續報告書 '+(2020+i),220+(i%2)*14,py+22,18,'#eafff0',900);}
+      for(let i=0;i<10;i++){const a=lt*2+i;const sx=390+Math.cos(a*1.7)*230,sy=420+Math.sin(a*1.3)*140;x.fillStyle=`rgba(255,255,220,${0.5+0.5*Math.sin(a*5)})`;x.font='900 22px '+NF;x.textAlign='center';x.fillText('✦',sx,sy);}
+      x.restore();chibi(1000,645,1.05,{body:'#27a854',hair:'#2a2420',face:'happy',arm:'up',t:lt,say:lt>2.8?'超漂亮！':''});}],
+    [2,4,function(lt){bgGrad('#1a0b0b','#2a1212');
+      const k=Math.max(0,1-lt/0.25);x.save();x.translate(330,200);x.rotate(-0.06);x.scale(0.72*(1+k*1.5),0.72*(1+k*1.5));x.fillStyle='#f2eee2';x.fillRect(-190,-140,380,280);x.fillStyle='#b22';x.fillRect(-190,-140,380,46);label('國際調查報告',0,-106,30,'#fff',900,'center');
+      for(let i=0;i<6;i++){x.fillStyle=i%2?'#d9a3a3':'#c9c3b2';x.fillRect(-150,-60+i*30,300-(i%3)*60,12);}x.restore();
+      const Q=['綠電來源','碳排資訊','資料安全','產品責任'];Q.forEach((q,i)=>{const k2=ease((lt-1.2-i*0.35)/0.3);if(k2<=0)return;x.globalAlpha=k2;x.fillStyle='rgba(255,255,255,.06)';rr(720,92+i*52,420,44,12);x.fill();label(q,750,123+i*52,24,'#fff',900);label(lt>2.8?'✕':'？',1110,125+i*52,30,lt>2.8?'#ff5a5a':'#ffd27a',900,'right');x.globalAlpha=1;});
+      chibi(1100,648,0.85,{body:'#27a854',hair:'#2a2420',face:lt>2.8?'shock':'worried',sweat:true,say:lt>3.2?'說好的永續呢？':''});}],
+    [4,5,function(lt){bgGrad('#101520','#182031');
+      x.fillStyle='#2a3448';x.fillRect(700,500,420,20);x.fillStyle='#1b2230';rr(760,330,270,170,12);x.fill();x.fillStyle='#0b0f17';x.fillRect(778,348,234,132);
+      x.strokeStyle='rgba(220,220,220,.35)';x.lineWidth=1.5;for(let i=0;i<6;i++){x.beginPath();x.moveTo(1030,330);x.lineTo(1030-i*14,330+i*9);x.stroke();}x.beginPath();x.arc(1030,330,30,Math.PI/2,Math.PI);x.arc(1030,330,50,Math.PI/2,Math.PI);x.stroke();
+      x.save();x.translate(895,420);x.rotate(0.06);x.fillStyle='#fff6d0';x.fillRect(-110,-34,220,68);label('維修中',0,-2,28,'#c33',900,'center');label('（三個月前）',0,24,16,'#8a7a62',700,'center');x.restore();
+      chibi(430,645,1.05,{body:'#7a8a3a',hair:'#5a3b26',glasses:true,face:'worried',say:lt>0.8?'人呢？':''});}],
+    [5,6,function(lt){bgGrad('#0f1a1c','#162629');
+      x.fillStyle='#1b2a2e';x.fillRect(800,160,220,420);for(let j=0;j<12;j++){x.fillStyle=Math.sin(lt*8+j)>0?'#7be0c8':'#1f4d45';x.fillRect(820,180+j*32,12,6);x.fillStyle='#24363b';x.fillRect(840,178+j*32,160,12);}
+      for(let i=0;i<6;i++){const a=lt*1.5+i*1.05;const fx=910+Math.cos(a)*240,fy=360+Math.sin(a)*170;x.fillStyle='#f0c96a';rr(fx-22,fy-16,44,32,4);x.fill();x.fillStyle='#d8ad4a';x.fillRect(fx-22,fy-16,18,8);}
+      for(let i=0;i<4;i++){const y=520-((lt*60+i*90)%300);label('？',600+i*60,y,40,'rgba(255,255,255,.5)',900,'center');}
+      chibi(330,645,1.05,{body:'#d0457a',coat:true,hat:'band',face:'worried',sweat:true,say:'資料在哪？誰看得到？'});}],
+    [6,8,function(lt){bgGrad('#0c0c12','#16141c');
+      const g=x.createRadialGradient(640,520,10,640,520,300);g.addColorStop(0,'rgba(255,235,190,.28)');g.addColorStop(1,'rgba(255,235,190,0)');x.fillStyle=g;x.fillRect(0,0,1280,720);
+      const fy=150+Math.sin(lt*1.5)*8;x.save();x.translate(640,fy);x.rotate(-0.05);x.fillStyle='#f6f1e2';x.fillRect(-170,-60,340,120);label('去年的承諾書',0,-18,28,'#3a2d22',900,'center');label('我們會長期支持社區服務',0,22,20,'#8a7a62',700,'center');x.restore();
+      chibi(640,650,1.15,{body:'#e09a1b',hair:'#cfcac2',face:'normal',arm:'up2',t:lt});
+      [[220,'#3d6cf0'],[1060,'#8a4fd8']].forEach(([px,c],i)=>chibi(px,645,0.9,{body:c,hair:i?'#5a3b26':'#2a2420',face:lt>2.8?'shock':'worried',sweat:true}));}],
+    [8,9,function(lt){bgGrad('#0b0d12','#141821');
+      chibi(640,650,1.15,{body:'#2e8a5a',hair:'#2a2420',face:'worried',sweat:true});
+      const mx=640+Math.cos(lt*1.8)*120,my=480+Math.sin(lt*2.4)*40;x.strokeStyle='#d7dde6';x.lineWidth=10;x.beginPath();x.arc(mx,my,70,0,7);x.stroke();x.fillStyle='rgba(180,220,255,.12)';x.fill();x.lineWidth=16;x.beginPath();x.moveTo(mx+50,my+50);x.lineTo(mx+110,my+110);x.stroke();
+      label('信任度',160,150,24,'#8a93a0');const v=1-ease(lt/2.4)*0.7;x.fillStyle='#232b38';x.fillRect(160,170,360,20);x.fillStyle=v<0.5?'#ff5a5a':'#5ee0a0';x.fillRect(160,170,360*v,20);}]]};
+// ---------- 第 7 回合：少用的電，還是少做的服務？ ----------
+const R7={n:7,intro:'合作回合',era:'4.0 人文永續',title:'少用的電，還是少做的服務？',tag:'找到你的夥伴',col:'#a454c6',
+  lines:['前情提要：審查結束，國際買方要看共同減碳成果','說明會上，企業拿出機房電表','「上季的用電，降了。」','診所主任舉手：「我們有兩天沒開診。」','「少看了病人，也會少用電。\n你們怎麼知道是哪一種？」','完成同樣的工作，排放有沒有下降？','需要這項服務的人，還能不能照常使用？','找一個夥伴，拿出雙方都能核對的成果'],
+  tense:[3,5],
+  shots:[[0,1,function(lt){bgGrad('#0e1020','#171a30');
+      ['#3d6cf0','#e04a4a','#f0bd2e','#27a854','#8a4fd8'].forEach((c,i)=>{const wv=Math.sin(lt*3+i)*6;x.fillStyle='#555';x.fillRect(180+i*120,110,5,150);x.fillStyle=c;x.beginPath();x.moveTo(185+i*120,112);x.quadraticCurveTo(225+i*120,112+wv,265+i*120,118);x.lineTo(265+i*120,168);x.quadraticCurveTo(225+i*120,162+wv,185+i*120,162);x.fill();});
+      chibi(980,645,1.1,{body:'#2a3448',hair:'#2a2420',glasses:true,face:'normal',item:'box',say:lt>0.8?'減碳成果呢？':''});}],
+    [1,3,function(lt){bgGrad('#0d1018','#151a26');
+      x.fillStyle='#1b2232';rr(200,86,700,220,18);x.fill();x.fillStyle='#0b0f17';x.fillRect(222,106,656,182);label('機房用電（MWh）',250,140,22,'#8a93a0');
+      const pts=[0,1,2,3,4,5].map(i=>[270+i*115,170+[20,10,30,60,110,150][i]*0.7*ease((lt-0.3)/2)]);x.strokeStyle='#5ee0a0';x.lineWidth=5;x.beginPath();pts.forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.stroke();
+      if(lt>2.8)label('−18%',870,150,48,'#5ee0a0',900,'right');
+      chibi(1100,645,1.05,{body:'#3d6cf0',hair:'#2a2420',face:'happy',arm:lt>2.8?'up':'',t:lt,say:lt>2.8?'降了！':''});}],
+    [3,5,function(lt){bgGrad('#120f18','#1c1724');
+      x.fillStyle='#f2efe6';x.fillRect(720,84,400,196);x.fillStyle='#c94040';x.fillRect(720,84,400,36);label('上季門診表',920,109,22,'#fff',900,'center');
+      for(let i=0;i<14;i++){const cx=740+(i%7)*54,cy=130+Math.floor(i/7)*72;x.fillStyle='#e6e0d0';x.fillRect(cx,cy,46,62);label(String(i+1),cx+23,cy+26,18,'#555',700,'center');
+        if((i===4||i===9)&&lt>0.6){x.strokeStyle='#e04a4a';x.lineWidth=6;x.beginPath();x.moveTo(cx+6,cy+8);x.lineTo(cx+40,cy+54);x.moveTo(cx+40,cy+8);x.lineTo(cx+6,cy+54);x.stroke();label('休診',cx+23,cy+58,13,'#e04a4a',900,'center');}}
+      chibi(300,645,1.12,{body:'#d0457a',coat:true,glasses:true,hair:'#cfcac2',arm:'up',face:lt>2.8?'angry':'normal',t:lt,say:lt<2.8?'我們有兩天沒開診':'是哪一種？'});
+      chibi(1080,645,0.95,{body:'#3d6cf0',hair:'#2a2420',face:lt>2.8?'shock':'happy',sweat:lt>2.8});}],
+    [5,7,function(lt){bgGrad('#0c1016','#131a22');
+      x.fillStyle='#161d2c';rr(140,84,470,210,22);x.fill();label('每完成一件工作的排放',170,124,24,'#fff',900);
+      [['改善前',120,'#5d6b85'],['改善後',120*(1-ease((lt-0.5)/1.5)*0.35),'#5ee0a0']].forEach(([n,h,c],i)=>{x.fillStyle=c;x.fillRect(230+i*190,262-h,110,h);label(n,285+i*190,284,18,'#8a93a0',700,'center');});
+      x.fillStyle='#161d2c';rr(670,84,470,210,22);x.fill();label('服務還能照常使用嗎？',700,124,24,'#fff',900);
+      for(let i=0;i<5;i++){chibi(730+i*88,256,0.4,{body:['#e09a1b','#27a854','#8a4fd8','#d0457a','#1599b5'][i],face:lt>2.8+i*0.2?'happy':'normal'});if(lt>2.8+i*0.2)label('✔',730+i*88,286,24,'#5ee0a0',900,'center');}
+      chibi(170,648,0.9,{body:'#3d6cf0',hair:'#2a2420',face:'normal',say:lt>0.6?'用電少了…':''});chibi(1110,648,0.9,{body:'#e09a1b',hair:'#cfcac2',face:lt>2.8?'happy':'worried',say:lt>2.8?'看得到病就好':''});}],
+    [7,8,function(lt){bgGrad('#120d18','#1d1526');
+      const k=ease(lt/0.8);x.save();x.translate(640,520);x.rotate(-0.03);x.fillStyle='#f6f1e2';x.fillRect(-120,-80,240,160);label('共同成果',0,-40,26,'#3a2d22',900,'center');for(let i=0;i<3;i++){x.fillStyle='#c9c3b2';x.fillRect(-90,-10+i*28,180,10);}
+      if(lt>1.2){label('✔',-70,70,40,'#5ee0a0',900,'center');}if(lt>1.6){label('✔',70,70,40,'#5ee0a0',900,'center');}x.restore();
+      chibi(400,645,1.05,{body:'#3d6cf0',hair:'#2a2420',face:'happy',arm:'up2',t:lt,say:lt>1.2?'數字對得上！':''});chibi(880,645,1.05,{body:'#d0457a',coat:true,glasses:true,hair:'#cfcac2',face:'happy',arm:'up',t:lt,say:lt>1.6?'服務也沒少！':''});}]]};
+// ---------- 第 8 回合：園區要用的水，誰來決定？ ----------
+const R8={n:8,intro:'永續投資回合',era:'4.0 人文永續',title:'園區要用的水，誰來決定？',tag:'押上你的資本',col:'#c7922a',
+  lines:['前情提要：減碳成果，居民一起幫忙核對了','旱季進入第三個月','下個月，園區供水還要再減','工廠的月用水量，確實下降了','但改在傍晚清洗後，住戶煮晚餐只剩細細一條水','「你們的總表，看得見我們什麼時候沒水用嗎？」','「如果再減供，誰可以要求你們改？」','這是最後一輪','你的最後一筆資本，要投在哪裡？'],
+  tense:[4,7],
+  shots:[[0,2,function(lt){const d=ease(lt/3);bgGrad(`rgb(${60+60*d},${40+20*d},${20})`,'#2a1a0c');
+      const g=x.createRadialGradient(1040,160,10,1040,160,240);g.addColorStop(0,'rgba(255,220,120,.9)');g.addColorStop(1,'rgba(255,120,40,0)');x.fillStyle=g;x.beginPath();x.arc(1040,160,240,0,7);x.fill();
+      x.fillStyle='#6b4a2a';x.fillRect(0,560,1280,90);x.strokeStyle='#3e2a16';x.lineWidth=3;for(let i=0;i<16;i++){x.beginPath();let px=i*85,py=565;x.moveTo(px,py);for(let k=0;k<4;k++){px+=18-(k%2)*30;py+=20;x.lineTo(px,py);}x.stroke();}
+      label('水庫蓄水率',160,150,26,'#ffe3c0');const v=(42-ease(lt/4)*24).toFixed(0);label(v+'%',160,240,90,v<25?'#ff5a5a':'#ffd27a',900);
+      chibi(1120,560,0.85,{body:'#e09a1b',hair:'#5a3b26',face:'worried',sweat:true,arm:Math.sin(lt*10)>0?'up2':'',t:lt});}],
+    [2,3,function(lt){bgGrad('#14110c','#1e1912');
+      x.save();x.translate(640,200);x.rotate(-0.02);x.fillStyle='#f6f1e2';x.fillRect(-280,-100,560,190);x.fillStyle='#1599b5';x.fillRect(-280,-100,560,44);label('供水調整公告',0,-68,28,'#fff',900,'center');label('下月起　園區供水',-30,10,30,'#3a2d22',900,'center');label('−20%',170,14,52,'#e04a4a',900,'center');x.restore();
+      chibi(200,645,1,{body:'#e09a1b',hair:'#cfcac2',face:'worried'});chibi(1080,645,1,{hat:'hard',body:'#1599b5',face:'shock',sweat:true,say:'又要減？'});}],
+    [3,4,function(lt){bgGrad('#0b1418','#112028');bars(lt,'#1599b5',[0,0,0,0,0,0]);
+      [300,270,240,200,160,120].forEach((v,k)=>{const h=v*ease((lt-0.1-k*0.12)/0.5);x.fillStyle=k===5?'#5ee0a0':'#2f4a5a';x.fillRect(230+k*120,560-h,80,h);});label('工廠月用水量',200,600,24,'#8a93a0');label('↓ 省水 40%',1080,180,48,'#5ee0a0',900,'right');
+      chibi(1150,645,0.9,{hat:'hard',body:'#1599b5',face:'happy',arm:'up',t:lt,say:'省水成功！'});}],
+    [4,6,function(lt){bgGrad('#14120f','#1e1a15');
+      x.fillStyle='#2a2620';x.fillRect(0,470,1280,20);x.fillStyle='#8a8f96';x.fillRect(600,140,80,22);x.fillRect(660,140,20,60);
+      const w=1.5+Math.sin(lt*20)*0.6;x.fillStyle='#8fd3ff';x.fillRect(669-w/2,200,w,240);
+      x.fillStyle='#4a4f57';x.beginPath();x.ellipse(670,450,70,18,0,0,7);x.fill();x.fillRect(600,430,140,30);
+      x.save();x.translate(1100,170);x.fillStyle='#f2efe6';x.beginPath();x.arc(0,0,70,0,7);x.fill();x.strokeStyle='#222';x.lineWidth=6;x.beginPath();x.moveTo(0,0);x.lineTo(0,-46);x.moveTo(0,0);x.lineTo(0,52);x.stroke();label('18:00',0,110,30,'#ffd27a',900,'center');x.restore();
+      chibi(330,645,1.05,{body:'#e09a1b',hair:'#cfcac2',face:'worried',item:'box',sweat:true,say:lt<2.8?'只剩一條水…':'看得見嗎？'});
+      if(lt>2.8)chibi(960,645,0.95,{body:'#27a854',hair:'#2a2420',face:'angry',arm:'up',t:lt,say:'總表看不到啦'});}],
+    [6,7,function(lt){bgGrad('#141018','#1e1724');
+      x.save();x.translate(640,170);x.rotate(-0.03);x.fillStyle='#f6f1e2';x.fillRect(-200,-50,400,100);label('誰來決定？',0,18,52,'#b22',900,'center');x.restore();
+      for(let i=0;i<7;i++)chibi(150+i*165,650,0.72,{body:['#e09a1b','#27a854','#8a4fd8','#1599b5','#d0457a','#3d6cf0','#e09a1b'][i],hair:i%2?'#cfcac2':'#2a2420',face:i%2?'angry':'worried',arm:Math.sin(lt*4+i)>0?'up':'',t:lt,bob:Math.sin(lt*5+i)*4});}],
+    [7,9,function(lt){bgGrad('#17130b','#231c10');planCards(lt,'#c7922a',true);
+      if(lt<2.8){const k=Math.max(0,1-(lt-0.2)/0.2);x.save();x.translate(640,560);x.rotate(-0.08);x.scale(1+k,1+k);x.globalAlpha=cl((lt-0.2)/0.1);x.strokeStyle='#ff5a5a';x.lineWidth=7;x.strokeRect(-160,-44,320,88);label('最後一輪',0,18,52,'#ff5a5a',900,'center');x.restore();}
+      else{chibi(380,645,0.95,Object.assign({face:'happy',arm:'wave',t:lt,say:'最後一筆了喔'},ADV));chibi(900,645,0.95,Object.assign({face:'happy',arm:'wave',t:lt+1,say:'想清楚再下手'},ADV));}}]]};
+
+const ROUNDS=[R1,R2,R3,R4,R5,R6,R7,R8];
+// ---------- 引擎 ----------
+let cur=R1,t=0,fired=new Set(),nt=0,Q=[];
+const TEND=()=>T0+cur.lines.length*PER,DUR=()=>TEND()+3.6,L=i=>T0+i*PER;
+let AC,master,drone;
+function audio(){if(AC)return;AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=isMute()?0:0.5;master.connect(AC.destination);}
+function startDrone(){audio();stopDrone(true);const lp=AC.createBiquadFilter();lp.type='lowpass';lp.frequency.value=380;const g=AC.createGain();g.gain.setValueAtTime(0,AC.currentTime);g.gain.linearRampToValueAtTime(0.18,AC.currentTime+3);lp.connect(g);g.connect(master);
+  drone=[55,55.4,82.5].map(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;o.connect(lp);o.start();return o});lp.frequency.linearRampToValueAtTime(900,AC.currentTime+22);drone.g=g;}
+function stopDrone(now){if(drone&&AC){const d=drone;drone=null;if(now){d.forEach(o=>{try{o.stop()}catch(e){}});return;}d.g.gain.linearRampToValueAtTime(0,AC.currentTime+1.2);setTimeout(()=>d.forEach(o=>{try{o.stop()}catch(e){}}),1400);}}
+function hit(f=60,v=0.9,d=1.6){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='sine';o.frequency.setValueAtTime(f*2.2,AC.currentTime);o.frequency.exponentialRampToValueAtTime(f,AC.currentTime+0.25);g.gain.setValueAtTime(v,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+d);
+  const n=AC.createBufferSource(),b=AC.createBuffer(1,AC.sampleRate*0.4,AC.sampleRate),dd=b.getChannelData(0);for(let i=0;i<dd.length;i++)dd[i]=(Math.random()*2-1)*Math.pow(1-i/dd.length,3);n.buffer=b;const ng=AC.createGain();ng.gain.value=v*0.35;n.connect(ng);ng.connect(master);n.start();}
+function shutter(){if(!AC)return;const n=AC.createBufferSource(),b=AC.createBuffer(1,AC.sampleRate*0.06,AC.sampleRate),dd=b.getChannelData(0);for(let i=0;i<dd.length;i++)dd[i]=(Math.random()*2-1)*(1-i/dd.length);n.buffer=b;const g=AC.createGain();g.gain.value=0.12;n.connect(g);g.connect(master);n.start();}
+function tick(v=0.25){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=1600;g.gain.setValueAtTime(v*0.25,AC.currentTime);g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.05);o.connect(g);g.connect(master);o.start();o.stop(AC.currentTime+0.06);}
+function cues(){const n=cur.lines.length;const q=[...Array(n)].map((_,i)=>[L(i),()=>hit(i>=n-2?38:52,i>=n-2?1:0.6,i>=n-2?2.4:1.4)]);q.push([TEND(),()=>hit(44,1.2,3)]);return q;}
+function wrapT(txt,w){if(txt.includes('\n'))return txt.split('\n');const out=[];let cu='';for(const ch of txt){if(x.measureText(cu+ch).width>w&&cu){out.push(cu);cu=ch;}else cu+=ch;}if(cu)out.push(cu);return out;}
+function shotTitle(lt){x.fillStyle='#05070b';x.fillRect(0,0,1280,720);const a=ease(lt/0.8);x.globalAlpha=a;x.textAlign='center';x.textBaseline='middle';
+  x.fillStyle='#c9d1db';x.font='700 28px '+NF;x.fillText('第 '+cur.n+' 回合 · '+cur.era,640,250);
+  x.save();x.shadowColor=cur.col;x.shadowBlur=40;x.fillStyle='#fff';let fs=108;x.font='900 '+fs+'px '+SF;while(x.measureText(cur.title).width>1120&&fs>56){fs-=6;x.font='900 '+fs+'px '+SF;}x.fillText(cur.title,640,352);x.restore();
+  const e=ease(lt/1);x.fillStyle=cur.col;x.fillRect(640-170*e,430,340*e,4);x.fillStyle='#fff';x.font='700 34px '+NF;x.fillText(cur.tag,640,486);x.globalAlpha=1;}
+function drawWith(ctx,f,lt){x=ctx;try{f(lt);}finally{x=MAIN;}}
+function draw(){
+  x.globalAlpha=1;x.fillStyle='#000';x.fillRect(0,0,1280,720);
+  if(t<T0){const a=ease(t/0.5)*ease((T0-t)/0.4);x.globalAlpha=a;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#8a93a0';x.font='700 30px '+NF;x.fillText(cur.intro,640,320);x.fillStyle='#fff';x.font='900 68px '+SF;x.fillText('第 '+cur.n+' 回合',640,395);x.globalAlpha=1;}
+  const spans=cur.shots.map(([a,b,f],i)=>{const pf=cur.people&&cur.people[i];return [L(a),L(b),pf?(lt=>{f(lt);pf(lt);}):f];}).concat([[TEND(),DUR(),shotTitle]]);
+  spans.forEach(([s,e,f])=>{if(t<s-0.01||t>e+0.6)return;let a=cl((t-s)/0.6);if(t>e)a*=cl(1-(t-e)/0.6);if(a<=0)return;
+    const oc=draw.oc||(draw.oc=Object.assign(document.createElement('canvas'),{width:1280,height:720}));const ox=oc.getContext('2d');
+    ox.setTransform(1,0,0,1,0,0);ox.globalAlpha=1;ox.clearRect(0,0,1280,720);drawWith(ox,f,t-s);x.save();x.globalAlpha=a;x.drawImage(oc,0,0);x.restore();});
+  if(t>=T0&&t<TEND()){const idx=Math.floor((t-T0)/PER),lt=(t-T0)-idx*PER;x.fillStyle='rgba(5,7,11,.32)';x.fillRect(0,0,1280,720);
+    const a=Math.min(1,lt/0.35)*Math.min(1,(PER-lt)/0.3);const sc=1.06-0.06*ease(lt/PER);x.save();x.globalAlpha=Math.max(0,a);x.translate(640,360);x.scale(sc,sc);
+    x.textAlign='center';x.textBaseline='middle';x.fillStyle='#fff';let fs=54;x.font='900 54px '+SF;const one=cur.lines[idx];if(!one.includes('\n'))while(x.measureText(one).width>1140&&fs>42){fs-=2;x.font='900 '+fs+'px '+SF;}x.shadowColor='rgba(0,0,0,.85)';x.shadowBlur=18;
+    const ls=wrapT(one,1140);ls.forEach((l,j)=>x.fillText(l,0,(j-(ls.length-1)/2)*74));x.restore();}
+  for(let k=0;k<160;k++){x.fillStyle=`rgba(255,255,255,${Math.random()*0.05})`;x.fillRect(Math.random()*1280,Math.random()*720,2,2);}
+  const vg=x.createRadialGradient(640,360,260,640,360,780);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.75)');x.fillStyle=vg;x.fillRect(0,0,1280,720);
+  x.fillStyle='#000';x.fillRect(0,0,1280,70);x.fillRect(0,650,1280,70);
+  x.textAlign='left';x.textBaseline='middle';x.fillStyle='#5d6674';x.font='700 18px '+NF;x.fillText((cur.intro==='合作回合'?'合作':cur.intro==='永續投資回合'?'投資':'風險')+'快訊 · 第 '+cur.n+' 回合',30,36);
+  x.textAlign='right';x.fillText('Esc 略過 · 空白鍵暫停',1250,682);
+}
+return {
+  has:i=>i>=0&&i<ROUNDS.length,
+  set(i){cur=ROUNDS[i];},
+  DUR:()=>DUR(),
+  reset(){fired=new Set();nt=0;t=0;Q=cues();},
+  start(){try{audio();if(AC.state==='suspended')AC.resume();master.gain.value=isMute()?0:0.5;startDrone();}catch(e){}},
+  stop(){try{stopDrone();}catch(e){}},
+  pause(p){try{if(AC)p?AC.suspend():AC.resume();}catch(e){}},
+  render(tt,ctx){t=tt;MAIN=x=ctx;
+    Q.forEach((q,i)=>{if(t>=q[0]&&!fired.has(i)){fired.add(i);try{q[1]();}catch(e){}}});
+    if(cur.shutter&&t>L(cur.shutter[0])&&t<L(cur.shutter[1])&&Math.random()<0.04)shutter();
+    if(t>L(cur.tense[0])&&t<L(cur.tense[1])){const iv=Math.max(0.12,0.6-(t-L(cur.tense[0]))*0.08);if(!nt||t>=nt){tick(0.3);nt=t+iv;}}
+    ctx.save();draw();ctx.restore();}};})();
 function playFilm(i){return new Promise(then=>{
   uiBusy++;unlockMouse();for(const k in K)K[k]=false;$('prompt').hidden=true;
   const rd=ROUNDS[i];const lines=rd.trailer||chunkLines(rd.event);const per=lines.length>8?2.3:2.8;
-  film={i,then,t:0,prev:performance.now(),speed:1,paused:false,dur:1.8+lines.length*per+3.2,lines,per,last:null};
+  film={i,then,t:0,prev:performance.now(),speed:1,paused:false,dur:1.6+lines.length*per+3.4,lines,per,last:null};
+  if(FILMS.has(i)){FILMS.set(i);film.custom=FILMS;film.dur=FILMS.DUR();FILMS.reset();FILMS.start();}
   $('filmLabel').textContent='第 '+(i+1)+' 回合 · '+rd.title;$('filmProg').style.width='0%';$('filmPause').textContent='暫停';$('filmSpeed').textContent='2 倍速';
-  $('film').hidden=false;lookHint();boom(true);
+  $('film').hidden=false;lookHint();if(!film.custom)boom(true);
   setTimeout(()=>$('filmSkip').focus({preventScroll:true}),30);
-  const tick=now=>{if(!film)return;const dt=Math.min(0.1,(now-film.prev)/1000);film.prev=now;if(!film.paused)film.t+=dt*film.speed;drawFilm(film.t);requestAnimationFrame(tick);};requestAnimationFrame(tick);
+  const tick=now=>{if(!film)return;const dt=Math.min(0.1,(now-film.prev)/1000);film.prev=now;if(!film.paused)film.t+=dt*film.speed;if(film.custom){film.custom.render(film.t,$('filmC').getContext('2d'));$('filmProg').style.width=Math.min(100,film.t/film.dur*100)+'%';if(film.t>=film.dur){endFilm();return;}}else drawFilm(film.t);requestAnimationFrame(tick);};requestAnimationFrame(tick);
 });}
-function endFilm(){if(!film)return;const f=film;film=null;$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});lookHint();if(f.then)f.then();}
-function filmPause(){if(!film)return;film.paused=!film.paused;$('filmPause').textContent=film.paused?'繼續':'暫停';}
+function endFilm(){if(!film)return;const f=film;if(f.custom)f.custom.stop();film=null;$('film').hidden=true;uiBusy=Math.max(0,uiBusy-1);canvas.focus({preventScroll:true});lookHint();if(f.then)f.then();}
+function filmPause(){if(!film)return;film.paused=!film.paused;if(film.custom)film.custom.pause(film.paused);$('filmPause').textContent=film.paused?'繼續':'暫停';}
 $('filmSkip').addEventListener('click',endFilm);
 $('filmPause').addEventListener('click',filmPause);
 $('filmSpeed').addEventListener('click',()=>{if(!film)return;film.speed=film.speed===1?2:1;$('filmSpeed').textContent=film.speed===1?'2 倍速':'1 倍速';});
@@ -1150,7 +1600,7 @@ const myRisk=()=>ROUNDS[S.round].data[S.co];
 function taskHint(){const rd=ROUNDS[S.round];return rd.type==='risk'?'去廣場找頭上有「!」的說守護者，選一個說。':rd.type==='coop'?'走到其他公司家門口，邀請一家合作。':'回你自己的公司門口，跟兩位方案顧問談投資。';}
 async function beginRound(){
   const r=S.round,rd=ROUNDS[r];S.phase='intro';S.cur={ch:[]};S.removed=[];S.inviting=null;S.skipWait=false;
-  push({round:r});hud();refreshWorld();P.x=0;P.z=9.5;P.y=0;P.vy=0;P.tx=null;P.ry=Math.PI;CAM.yaw=0;S.deadline=0;FX.focus={x:0,z:-3};
+  push({round:r});hud();refreshWorld();P.x=0;P.z=13.5;P.y=0;P.vy=0;P.tx=null;P.ry=Math.PI;CAM.yaw=0;S.deadline=0;FX.focus={x:-1.5,z:-5};
   banner(`第 ${r+1} 回合・${rd.eraName}`,rd.title,rCol(rd));blip(523,0.15,0.05,'sine');setTimeout(()=>blip(784,0.2,0.05,'sine'),160);
   await sleep(1200);
   await playFilm(r);
@@ -1234,10 +1684,10 @@ async function talkHouse(n){
 async function talkAdvisor(n){
   const rd=ROUNDS[S.round];if(rd.type!=='invest')return;const p=rd.plans[S.co][n.pk];
   if(S.phase!=='act'){await dialog('方案顧問','#ee8a6c',S.picks[S.round]&&S.picks[S.round].plan===n.pk?'你買了我的方案，等亮牌吧！':'這回合你已經決定好了。');return;}
-  const can=S.cap>=p.cost;
-  const i=await dialog(`方案${'AB'[n.pk]}顧問`,'#ee8a6c',`「${p.short}」\n${p.text}\n成本 ${p.cost} 資本（你有 ${S.cap}）。`,[{t:can?`付 ${p.cost} 資本買下`:'資本不足',dis:!can},'這回合不投資','再想想']);
+  const can=S.cap>=p.cost;const ev=`<small>第 ${S.round+1} 回合・永續投資・事件</small><h3>${esc(rd.title)}</h3><p>${esc(rd.event||'')}</p>`;
+  const i=await dialog(`方案${'AB'[n.pk]}顧問`,'#ee8a6c',`「${p.short}」\n${p.text}\n成本 ${p.cost} 資本（你有 ${S.cap}）。`,[{t:can?`付 ${p.cost} 資本買下`:'資本不足',dis:!can},'這回合不投資','再想想'],{side:ev,sideColor:rCol(rd)});
   if(i===1){submit({kind:'invest',plan:-1});return;}if(i!==0)return;
-  if(!live())return;const j=await dialog('主持人 阿綠',HOSTC,`你買下了「${p.short}」。這個方案主要靠什麼產生效果？從九說選一個。`,SHUO9);if(j<0||!live())return;
+  if(!live())return;const j=await dialog('主持人 阿綠',HOSTC,`你買下了「${p.short}」。這個方案主要靠什麼產生效果？從九說選一個。`,SHUO9,{side:ev+`<div class="note"><b>你買的方案：${esc(p.short)}</b><br>${esc(p.text)}</div>`,sideColor:rCol(rd)});if(j<0||!live())return;
   submit({kind:'invest',plan:n.pk,guess:SHUO9[j]});chime(true);
 }
 
@@ -1329,7 +1779,7 @@ async function reveal(){
 function standings(){const list=COMP.map(c=>{if(c.id===S.co)return {c,who:S.nick+'（你）',sc:S.sc,cap:S.cap,me:true};const h=humanAny(c.id);if(h)return {c,who:h.nick||'真人',sc:h.sc||0,cap:h.cap??6};const b=S.bots[c.id]||{sc:0,cap:6};return {c,who:'電腦代打',sc:b.sc,cap:b.cap};});
   return list.sort((a,b)=>b.sc-a.sc||b.cap-a.cap);}
 const stars=n=>'★'.repeat(n)+`<s>${'★'.repeat(5-n)}</s>`;
-async function ending(){S.phase='end';refreshWorld();simBots(ROUNDS.length-1);FX.focus={x:0,z:-3};
+async function ending(){S.phase='end';refreshWorld();simBots(ROUNDS.length-1);FX.focus={x:-1.5,z:-5};
   const st=standings();const avg=st.reduce((a,x)=>a+x.sc,0)/st.length;const isl=Math.max(1,Math.min(5,Math.round(avg/2)));const mine=Math.max(1,Math.min(5,Math.ceil(S.sc/2)));
   const top=st[0].sc;const winners=st.filter(x=>x.sc===top).map(x=>x.c.name);
   await talk('主持人 阿綠',HOSTC,['八回合結束了！大家辛苦了。',`這次策略分最高的是：${winners.join('、')}，${top} 分！`,`整座園區的平均是 ${avg.toFixed(1)} 分，園區評價 ${isl} 顆星。`]);
@@ -1354,7 +1804,14 @@ map:'<path d="M4 6l5-2 6 2 5-2v14l-5 2-6-2-5 2z" fill="#fff"/><path d="M9 4v14M1
 const APPS=[['map','地圖','#5cb8e6'],['prof','思華老師','#4f5a7a'],['card','事件卡','#20b2a4'],['rank','排行','#f0bd2e'],['adv','我的優勢','#ee8a6c'],['shuo','九說小抄','#a454c6'],['rule','規則','#79c652'],['snd','音效','#7ab8e8']];
 function togglePhone(on){const el=$('phone');const show=on===undefined?el.hidden:on;if(show&&(uiBusy&&!cardRes))return;
   if(show){if(cardRes)return;unlockMouse();el.hidden=false;phoneHome();}else el.hidden=true;lookHint();}
-$('phoneBtn').addEventListener('click',()=>togglePhone());$('phClose').addEventListener('click',()=>{if($('phTitle').textContent!=='園區手機')phoneHome();else togglePhone(false);});
+$('phoneBtn').addEventListener('click',()=>togglePhone());
+function showEventCard(){if(S.phase==='lobby'||!S.co||!$('cardWrap').hidden)return;if(!$('phone').hidden)togglePhone(false);
+  const r=Math.min(S.round,ROUNDS.length-1),rd=ROUNDS[r];let extra='';
+  if(rd.type==='risk'&&rd.data[S.co]&&rd.data[S.co].ctx)extra+=`<div class="note"><b>你的處境：</b>${esc(rd.data[S.co].ctx)}</div>`;
+  if(rd.hand)extra+=`<div class="note"><b>你的手卡：</b>${esc(rd.hand[S.co])}</div>`;
+  const pk=S.picks&&S.picks[r];if(rd.type==='invest'&&pk&&pk.plan>=0){const p=rd.plans[S.co][pk.plan];extra+=`<div class="note"><b>你買的方案：${esc(p.short)}</b><br>${esc(p.text)}</div>`;}
+  card({top:`第 ${r+1} 回合・${TYPENAME[rd.type]}`,title:esc(rd.title)},rCol(rd),`<p style="font-size:17px;line-height:1.8">${esc(rd.event)}</p>${extra}<div class="note">${taskHint()}</div>`,[['知道了','ok']]);}
+$('evBtn').addEventListener('click',e=>{e.stopPropagation();showEventCard();});$('phClose').addEventListener('click',()=>{if($('phTitle').textContent!=='園區手機')phoneHome();else togglePhone(false);});
 $('phone').addEventListener('click',e=>{if(e.target.id==='phone')togglePhone(false);const tp=e.target.closest('[data-tp]');if(tp){togglePhone(false);teleport(tp.dataset.tp);return;}const a=e.target.closest('[data-app]');if(a)openApp(a.dataset.app);});
 function phoneHome(){$('phTitle').textContent='園區手機';$('phClose').textContent='關閉';$('phBody').innerHTML=`<div class="apps">${APPS.map(([k,t,c])=>`<button class="app" data-app="${k}"><i style="background:${c}"><svg viewBox="0 0 24 24">${ICONS[k]}</svg></i>${t}</button>`).join('')}</div>
   <div class="note" style="margin-top:22px">${S.co?`${esc(coOf(S.co).name)}・${esc(S.nick)}<br>第 ${Math.min(S.round+1,8)} / 8 回合・${S.sc} 分・${S.cap} 資本`:''}</div>`;}
@@ -1379,6 +1836,18 @@ function tuneQuality(raw){if(Q.lv>=3||document.hidden)return;Q.acc+=raw;Q.n++;if
   if(Q.lv===2){renderer.shadowMap.enabled=false;scene.traverse(o=>{if(o.material)o.material.needsUpdate=true;});}
   if(Q.lv===3)renderer.setPixelRatio(0.75);
   resize();}
+/* 思華老師在廣場外圈散步：沿著守護者圈外走一段、停下來看看，再換方向；玩家靠近或對話時停下 */
+const WAND={R:12.4,a:3.75,to:null,wait:2,dir:1};
+function wanderProf(dt){const n=NPCS.find(n=>n.id==='prof');if(!n||!n.ch.root.visible)return;n.moving=false;
+  const near=Math.hypot(P.x-n.pos.x,P.z-n.pos.z)<3.2;if(near||n.ch.talk>0||uiBusy&&promptNpc===n)return;
+  if(WAND.wait>0){WAND.wait-=dt;return;}
+  if(WAND.to===null){const R=Math.random;WAND.dir=R()<0.5?-1:1;WAND.to=WAND.a+WAND.dir*(0.6+R()*1.4);}
+  const step=dt*1.25/WAND.R;let na=WAND.a+WAND.dir*step;if((WAND.to-na)*WAND.dir<=0){na=WAND.to;WAND.to=null;WAND.wait=3+Math.random()*4;}
+  const x=Math.sin(na)*WAND.R,z=GR.cz+Math.cos(na)*WAND.R;
+  if(colliders.some(c=>!c.npc&&Math.abs(c.x-x)<c.r+0.3&&Math.hypot(c.x-x,c.z-z)<c.r+0.3)&&!colliders.some(c=>!c.npc&&Math.hypot(c.x-n.pos.x,c.z-n.pos.z)<c.r+0.3)){WAND.dir*=-1;WAND.to=WAND.a+WAND.dir*(0.5+Math.random());return;}
+  WAND.a=na;n.pos.x=x;n.pos.z=z;n.col.x=x;n.col.z=z;n.moving=true;
+  n.ch.root.position.set(x,H(x,z),z);n.ch.root.rotation.y=Math.atan2(Math.cos(na)*WAND.dir,-Math.sin(na)*WAND.dir);
+  if(WAND.to===null)n.ch.root.rotation.y=Math.atan2(-x,GR.cz-z);}
 function loop(){
   requestAnimationFrame(loop);
   const raw=clock.getDelta();if(film)return;
@@ -1386,7 +1855,8 @@ function loop(){
   const moving=stepPlayer(dt);
   if(meCh){meCh.root.position.set(P.x,P.y,P.z);meCh.root.rotation.y=P.ry;animChar(meCh,dt,moving&&P.grounded,t,P.run);plumb.rotation.y=t*1.6;plumb.position.y=4.1+Math.sin(t*2.2)*0.12;}
   for(const id in remote){const r=remote[id];const dx=r.tx-r.x,dz=r.tz-r.z;const mv=Math.hypot(dx,dz)>0.05;r.x+=dx*Math.min(1,dt*8);r.z+=dz*Math.min(1,dt*8);if(mv)r.ry=Math.atan2(dx,dz);r.ch.root.position.set(r.x,H(r.x,r.z),r.z);r.ch.root.rotation.y=r.ry;animChar(r.ch,dt,mv,t);}
-  NPCS.forEach(n=>{if(n.ch&&n.ch.root.visible)animChar(n.ch,dt,false,t);if(n.bang&&n.bang.visible)n.bang.position.y=4.9+Math.abs(Math.sin(t*3+(n.k||0)))*0.35;});
+  wanderProf(dt);
+  NPCS.forEach(n=>{if(n.ch&&n.ch.root.visible)animChar(n.ch,dt,!!n.moving,t);if(n.bang&&n.bang.visible)n.bang.position.y=4.9+Math.abs(Math.sin(t*3+(n.k||0)))*0.35;});
   for(const k in FX.houseBang){const b=FX.houseBang[k];if(b.visible)b.position.y=9.6+Math.abs(Math.sin(t*3))*0.4;}
   ROTORS.forEach((r,i)=>{r.rotation.z=t*(1.1+i*0.07);});
   BEACONS.forEach(b=>{b.cr.rotation.y=t*1.2;b.cr.position.y=b.y+2.2+Math.sin(t*2)*0.2;b.ring.position.y=b.cr.position.y;b.ring.scale.setScalar(1+Math.sin(t*2)*0.06);});
@@ -1398,9 +1868,9 @@ function loop(){
   renderer.render(scene,camera);
 }
 setInterval(()=>{if(NPCS.length){checkWait();checkIncoming();tickTimer();}},500);
-if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H};
+if(/[?&]tab\b/.test(location.search))window.__six={S,P,NPCS,players,talkTo,camera,renderer,ending,hud,scene,Q,CAM,teleport,H,playFilm};
 (async()=>{try{await Promise.race([Promise.all([document.fonts.load('44px Huninn'),document.fonts.load('600 20px Fredoka')]),sleep(3500)]);}catch(e){}
-  buildWorld();buildNpcs();refreshWorld();loop();})();
+  buildWorld();buildNpcs();buildGuardBoards();refreshWorld();loop();})();
 (async()=>{renderLobby();await netInit();
   if(db){const last=lsGet('six-room');const q=(location.hash.match(/^#([A-Za-z0-9]{4})$/)||[])[1];const code=(q||last||'').toUpperCase();if(/^[A-Z0-9]{4}$/.test(code))joinRoom(code);}
   renderLobby();})();
